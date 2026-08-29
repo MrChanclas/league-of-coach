@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String       @id @default(cuid())
+  clerkId   String       @unique
+  name      String
+  email     String       @unique
+  createdAt DateTime     @default(now())
+  accounts  LolAccount[]
+}
+
+model LolAccount {
+  id        String             @id @default(cuid())
+  summoner  String
+  tag       String
+  server    String
+  division  String
+  tier      String
+  lp        Int                @default(0)
+  userId    String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime           @default(now())
+  learnings ChampionLearning[]
+  goals     Goal[]
+}
+
+model ChampionLearning {
+  id        String            @id @default(cuid())
+  champion  String
+  role      String
+  games     Int               @default(0)
+  wins      Int               @default(0)
+  kdaK      Float             @default(0)
+  kdaD      Float             @default(0)
+  kdaA      Float             @default(0)
+  csMin     Float             @default(0)
+  accountId String
+  account   LolAccount        @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  sessions  LearningSession[]
+  createdAt DateTime          @default(now())
+}
+
+model LearningSession {
+  id         String   @id @default(cuid())
+  date       DateTime
+  duration   Int
+  focus      String
+  ratings    Json
+  learningId String
+  learning   ChampionLearning @relation(fields: [learningId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+}
+
+model Goal {
+  id        String    @id @default(cuid())
+  type      String
+  title     String
+  progress  Int       @default(0)
+  deadline  DateTime?
+  accountId String
+  account   LolAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+}
