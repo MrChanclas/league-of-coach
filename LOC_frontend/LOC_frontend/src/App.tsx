@@ -1,226 +1,325 @@
+import { useEffect, useMemo, useState } from 'react'
 import './App.css'
+import { AuthScreen } from './components/AuthScreen'
+import { DashboardScreen } from './components/DashboardScreen'
+import type {
+  AccountForm,
+  AuthPayload,
+  AuthUser,
+  DashboardPayload,
+  TabKey,
+} from './types/dashboard'
 
-const dashboard = {
-  user: {
-    name: 'Cristian Chala',
-    email: 'cris@leagueofcoach.com',
-  },
-  summary: {
-    totalAccounts: 2,
-    totalGoals: 4,
-    totalLearnings: 3,
-    activeFocus: 'Yasao',
-  },
-  accounts: [
-    {
-      id: 'acc-1',
-      summoner: 'Lolcito',
-      tag: 'EUW',
-      server: 'EUW',
-      tier: 'Gold',
-      division: 'II',
-      lp: 42,
-      learnings: [
-        {
-          champion: 'Yasuo',
-          role: 'Top',
-          games: 18,
-          wins: 11,
-          kdaK: 5.4,
-          kdaD: 3.1,
-          kdaA: 7.3,
-          csMin: 7.2,
-        },
-        {
-          champion: 'Gnar',
-          role: 'Top',
-          games: 15,
-          wins: 9,
-          kdaK: 4.8,
-          kdaD: 3.6,
-          kdaA: 6.9,
-          csMin: 6.8,
-        },
-      ],
-      goals: [
-        { type: 'rank', title: 'Llegar a Platinum', progress: 64, deadline: '2026-12-31' },
-        { type: 'role', title: 'Aprender Top Jungle', progress: 52, deadline: '2026-09-30' },
-      ],
-    },
-    {
-      id: 'acc-2',
-      summoner: 'CoachTio',
-      tag: 'NA',
-      server: 'NA',
-      tier: 'Silver',
-      division: 'III',
-      lp: 21,
-      learnings: [
-        {
-          champion: 'Riven',
-          role: 'Mid',
-          games: 12,
-          wins: 6,
-          kdaK: 4.9,
-          kdaD: 3.8,
-          kdaA: 7.2,
-          csMin: 8.1,
-        },
-      ],
-      goals: [
-        { type: 'rank', title: 'Subir a Gold', progress: 38, deadline: '2026-10-15' },
-        { type: 'champion', title: 'Dominar Riven', progress: 71, deadline: '2026-09-21' },
-      ],
-    },
-  ],
+const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:4100').replace(/\/$/, '')
+
+const blankAccountForm: AccountForm = {
+  summoner: '',
+  tag: '',
+  server: 'LAS',
 }
 
 function App() {
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
+  const [form, setForm] = useState({ name: '', email: '', password: '' })
+  const [status, setStatus] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [activeTab, setActiveTab] = useState<TabKey>('cuentas')
+  const [currentAccountId, setCurrentAccountId] = useState('')
+  const [accountForm, setAccountForm] = useState<AccountForm>(blankAccountForm)
+  const [dashboard, setDashboard] = useState<DashboardPayload | null>(null)
+  const [isLoadingDashboard, setIsLoadingDashboard] = useState(false)
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
+    const storedUser = localStorage.getItem('loc_user')
+    return storedUser ? (JSON.parse(storedUser) as AuthUser) : null
+  })
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('loc_token'))
+
+  useEffect(() => {
+    if (token) {
+      localStorage.setItem('loc_token', token)
+    } else {
+      localStorage.removeItem('loc_token')
+    }
+  }, [token])
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('loc_user', JSON.stringify(currentUser))
+    } else {
+      localStorage.removeItem('loc_user')
+    }
+  }, [currentUser])
+
+  useEffect(() => {
+    if (!currentUser) {
+      setDashboard(null)
+      setCurrentAccountId('')
+      return
+    }
+
+    const loadDashboard = async () => {
+      try {
+        setIsLoadingDashboard(true)
+        const response = await fetch(`${API_URL}/users/${currentUser.id}/dashboard`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        })
+
+        if (!response.ok) {
+          throw new Error('No se pudo cargar el dashboard del usuario.')
+        }
+
+        const payload = (await response.json()) as DashboardPayload
+        setDashboard(payload)
+        if (payload.accounts.length > 0) {
+          setCurrentAccountId(payload.accounts[0].id)
+        }
+      } catch (error) {
+        setStatus(error instanceof Error ? error.message : 'No se pudo cargar el dashboard.')
+      } finally {
+        setIsLoadingDashboard(false)
+      }
+    }
+
+    loadDashboard()
+  }, [currentUser?.id, token])
+
+  useEffect(() => {
+    if (!currentUser) return
+
+    const params = new URLSearchParams(window.location.search)
+    const code = params.get('code')
+    const state = params.get('state')
+
+    if (!code || !state) return
+
+    const finalizeRiotConnection = async () => {
+      try {
+        const response = await fetch(
+          `${API_URL}/auth/riot/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`,
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          },
+        )
+
+        const payload = (await response.json()) as { message?: string; pending?: boolean; userId?: string }
+
+        if (!response.ok) {
+          throw new Error(payload.message ?? 'No se pudo completar la conexión con Riot.')
+        }
+
+        if (payload.pending) {
+          setStatus('Riot OAuth está listo pero falta configurar las credenciales del cliente en el backend.')
+        } else {
+          setStatus(payload.message ?? 'Cuenta de Riot vinculada correctamente.')
+        }
+
+        const dashboardResponse = await fetch(`${API_URL}/users/${currentUser.id}/dashboard`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        })
+
+        if (dashboardResponse.ok) {
+          const nextDashboard = (await dashboardResponse.json()) as DashboardPayload
+          setDashboard(nextDashboard)
+          if (nextDashboard.accounts.length > 0) {
+            setCurrentAccountId(nextDashboard.accounts[0].id)
+          }
+        }
+      } catch (error) {
+        setStatus(error instanceof Error ? error.message : 'No se pudo completar la vinculación con Riot.')
+      } finally {
+        window.history.replaceState({}, '', window.location.pathname)
+      }
+    }
+
+    finalizeRiotConnection()
+  }, [currentUser?.id, token])
+
+  const userDisplayName = useMemo(() => currentUser?.name ?? 'League of Coach', [currentUser])
+  const userDisplayEmail = useMemo(() => currentUser?.email ?? 'coach@leagueofcoach.com', [currentUser])
+  const userAccounts = useMemo(() => dashboard?.accounts ?? [], [dashboard])
+
+  const activeAccount = useMemo(
+    () => userAccounts.find((account) => account.id === currentAccountId) ?? userAccounts[0],
+    [currentAccountId, userAccounts],
+  )
+
+  const goalsByAccount = useMemo(
+    () => (dashboard?.goals ?? []).filter((goal) => goal.accountId === (activeAccount?.id ?? '')),
+    [activeAccount, dashboard],
+  )
+
+  const championData = useMemo(() => dashboard?.learnings ?? [], [dashboard])
+
+  const dashboardSummary = useMemo(
+    () =>
+      dashboard?.summary ?? {
+        totalAccounts: 0,
+        totalGoals: 0,
+        totalLearnings: 0,
+        activeFocus: 'Sin foco',
+      },
+    [dashboard],
+  )
+
+  const handleFieldChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target
+    setForm((previous) => ({ ...previous, [name]: value }))
+  }
+
+  const handleAccountFieldChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target
+    setAccountForm((previous: AccountForm) => ({
+      ...previous,
+      [name]: value,
+    }))
+  }
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setStatus('')
+    setIsSubmitting(true)
+
+    try {
+      const response = await fetch(`${API_URL}/auth/${authMode}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          password: form.password,
+        }),
+      })
+
+      const payload = (await response.json()) as AuthPayload & { message?: string }
+
+      if (!response.ok) {
+        throw new Error(payload.message ?? 'No se pudo completar la autenticación.')
+      }
+
+      setCurrentUser(payload.user)
+      setToken(payload.token)
+      setStatus(authMode === 'register' ? 'Cuenta creada correctamente.' : 'Sesión iniciada correctamente.')
+      setForm({ name: '', email: '', password: '' })
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Hubo un error al conectar con la API.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleCreateAccount = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!currentUser) return
+
+    try {
+      const response = await fetch(`${API_URL}/accounts/search`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          summoner: accountForm.summoner,
+          tag: accountForm.tag,
+          server: accountForm.server,
+          userId: currentUser.id,
+        }),
+      })
+
+      const payload = (await response.json()) as {
+        message?: string
+        found?: boolean
+        created?: boolean
+      }
+
+      if (!response.ok || !payload.found) {
+        throw new Error(payload?.message ?? 'No se pudo detectar la cuenta de Riot.')
+      }
+
+      setAccountForm(blankAccountForm)
+      const updatedDashboard = await fetch(`${API_URL}/users/${currentUser.id}/dashboard`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      })
+
+      if (updatedDashboard.ok) {
+        const data = (await updatedDashboard.json()) as DashboardPayload
+        setDashboard(data)
+        if (data.accounts.length > 0) {
+          setCurrentAccountId(data.accounts[0].id)
+        }
+      }
+
+      setStatus(payload.message ?? 'Cuenta detectada y vinculada correctamente.')
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'No se pudo detectar la cuenta.')
+    }
+  }
+
+  const handleAddRiotAccount = async () => {
+    if (!currentUser || !token) return
+
+    try {
+      const response = await fetch(`${API_URL}/auth/riot/authorize`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      const payload = (await response.json()) as { url?: string; message?: string }
+
+      if (!response.ok || !payload.url) {
+        throw new Error(payload.message ?? 'No se pudo iniciar la autenticación con Riot.')
+      }
+
+      window.location.href = payload.url
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'No se pudo redirigir a Riot.')
+    }
+  }
+
+  const handleLogout = () => {
+    setCurrentUser(null)
+    setToken(null)
+    setDashboard(null)
+    setStatus('Sesión cerrada.')
+  }
+
+  if (!token || !currentUser) {
+    return (
+      <AuthScreen
+        authMode={authMode}
+        form={form}
+        status={status}
+        isSubmitting={isSubmitting}
+        apiUrl={API_URL}
+        onModeChange={setAuthMode}
+        onFieldChange={handleFieldChange}
+        onSubmit={handleSubmit}
+      />
+    )
+  }
+
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand-block">
-          <div className="brand-mark">LC</div>
-          <div>
-            <p className="eyebrow">Dashboard</p>
-            <h1>League of Coach</h1>
-          </div>
-        </div>
-
-        <nav className="nav">
-          <button className="nav-item active">Resumen</button>
-          <button className="nav-item">Cuentas</button>
-          <button className="nav-item">Aprendizaje</button>
-          <button className="nav-item">Objetivos</button>
-        </nav>
-
-        <div className="profile-card">
-          <span className="status-dot" />
-          <div>
-            <strong>{dashboard.user.name}</strong>
-            <small>{dashboard.user.email}</small>
-          </div>
-        </div>
-      </aside>
-
-      <main className="main-panel">
-        <header className="topbar">
-          <div>
-            <p className="eyebrow">Bienvenido</p>
-            <h2>Tu progreso semanal</h2>
-          </div>
-          <button className="primary-btn">+ Nueva cuenta</button>
-        </header>
-
-        <section className="stats-grid">
-          <article className="stat-card">
-            <span>Cuentas</span>
-            <strong>{dashboard.summary.totalAccounts}</strong>
-            <small>Activas</small>
-          </article>
-          <article className="stat-card">
-            <span>Objetivos</span>
-            <strong>{dashboard.summary.totalGoals}</strong>
-            <small>Personales</small>
-          </article>
-          <article className="stat-card">
-            <span>Aprendizaje</span>
-            <strong>{dashboard.summary.totalLearnings}</strong>
-            <small>Campeones</small>
-          </article>
-          <article className="stat-card focus">
-            <span>Foco actual</span>
-            <strong>{dashboard.summary.activeFocus}</strong>
-            <small>En revisión</small>
-          </article>
-        </section>
-
-        <section className="panel-grid">
-          <div className="panel">
-            <div className="panel-header">
-              <h3>Cuentas de LOL</h3>
-              <span>2 perfiles</span>
-            </div>
-
-            {dashboard.accounts.map((account) => (
-              <div key={account.id} className="account-card">
-                <div className="account-head">
-                  <div>
-                    <h4>{account.summoner}</h4>
-                    <small>{account.server} • #{account.tag}</small>
-                  </div>
-                  <span className="tier-pill">{account.tier} {account.division}</span>
-                </div>
-
-                <div className="rank-row">
-                  <div>
-                    <label>LP</label>
-                    <strong>{account.lp}</strong>
-                  </div>
-                  <div>
-                    <label>Rol foco</label>
-                    <strong>{account.learnings[0]?.role ?? 'Sin datos'}</strong>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="panel">
-            <div className="panel-header">
-              <h3>Aprendizaje manual</h3>
-              <span>Comparación</span>
-            </div>
-
-            {dashboard.accounts.flatMap((account) =>
-              account.learnings.map((learning) => (
-                <div key={`${account.id}-${learning.champion}`} className="learning-card">
-                  <div className="learning-topline">
-                    <strong>{learning.champion}</strong>
-                    <span>{learning.role}</span>
-                  </div>
-                  <div className="metrics-row">
-                    <span>Partidas: {learning.games}</span>
-                    <span>Victorias: {learning.wins}</span>
-                  </div>
-                  <div className="progress-bar">
-                    <div style={{ width: `${Math.min(100, Math.round((learning.wins / Math.max(learning.games, 1)) * 100))}%` }} />
-                  </div>
-                  <small>KDA {learning.kdaK} / {learning.kdaD} / {learning.kdaA}</small>
-                </div>
-              )),
-            )}
-          </div>
-        </section>
-
-        <section className="panel goals-panel">
-          <div className="panel-header">
-            <h3>Objetivos personales</h3>
-            <span>Meta mensual</span>
-          </div>
-
-          <div className="goals-list">
-            {dashboard.accounts.flatMap((account) =>
-              account.goals.map((goal) => (
-                <div key={`${account.id}-${goal.title}`} className="goal-item">
-                  <div>
-                    <p className="goal-type">{goal.type}</p>
-                    <h4>{goal.title}</h4>
-                  </div>
-                  <div className="goal-meta">
-                    <strong>{goal.progress}%</strong>
-                    <span>{goal.deadline}</span>
-                  </div>
-                  <div className="progress-bar">
-                    <div style={{ width: `${goal.progress}%` }} />
-                  </div>
-                </div>
-              )),
-            )}
-          </div>
-        </section>
-      </main>
-    </div>
+    <DashboardScreen
+      userDisplayName={userDisplayName}
+      userDisplayEmail={userDisplayEmail}
+      activeTab={activeTab}
+      userAccounts={userAccounts}
+      currentAccountId={currentAccountId}
+      activeAccount={activeAccount}
+      dashboardSummary={dashboardSummary}
+      goalsByAccount={goalsByAccount}
+      championData={championData}
+      status={status}
+      isLoadingDashboard={isLoadingDashboard}
+      accountForm={accountForm}
+      onTabChange={setActiveTab}
+      onLogout={handleLogout}
+      onAddRiotAccount={handleAddRiotAccount}
+      onSetCurrentAccountId={setCurrentAccountId}
+      onAccountFieldChange={handleAccountFieldChange}
+      onCreateAccount={handleCreateAccount}
+    />
   )
 }
 

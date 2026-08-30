@@ -15,6 +15,8 @@ async function main() {
       clerkId: 'user_seed_bastian',
       name: 'Bastián',
       email: 'bastian@example.com',
+      passwordHash: 'seed-password-hash',
+      role: 'user',
     },
   });
 
@@ -23,6 +25,8 @@ async function main() {
       clerkId: 'user_seed_fer',
       name: 'Fer',
       email: 'fer@example.com',
+      passwordHash: 'seed-password-hash',
+      role: 'user',
     },
   });
 

@@ -62,6 +62,8 @@ describe('UsersService', () => {
         name: 'Cris',
         email: 'cris@leagueofcoach.com',
         clerkId: 'clerk-1',
+        passwordHash: 'internal-user',
+        role: 'user',
       },
     });
   });
