@@ -4,9 +4,12 @@ import { AuthScreen } from './components/AuthScreen'
 import { DashboardScreen } from './components/DashboardScreen'
 import type {
   AccountForm,
+  AccountStatsSummary,
   AuthPayload,
   AuthUser,
   DashboardPayload,
+  MasteryEntry,
+  MatchParticipantEntry,
   TabKey,
 } from './types/dashboard'
 
@@ -28,6 +31,10 @@ function App() {
   const [accountForm, setAccountForm] = useState<AccountForm>(blankAccountForm)
   const [dashboard, setDashboard] = useState<DashboardPayload | null>(null)
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false)
+  const [matches, setMatches] = useState<MatchParticipantEntry[]>([])
+  const [mastery, setMastery] = useState<MasteryEntry[]>([])
+  const [statsSummary, setStatsSummary] = useState<AccountStatsSummary | null>(null)
+  const [isLoadingMatches, setIsLoadingMatches] = useState(false)
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
     const storedUser = localStorage.getItem('loc_user')
     return storedUser ? (JSON.parse(storedUser) as AuthUser) : null
@@ -84,55 +91,42 @@ function App() {
   }, [currentUser?.id, token])
 
   useEffect(() => {
-    if (!currentUser) return
+    if (activeTab !== 'partidas' || !currentAccountId) {
+      return
+    }
 
-    const params = new URLSearchParams(window.location.search)
-    const code = params.get('code')
-    const state = params.get('state')
-
-    if (!code || !state) return
-
-    const finalizeRiotConnection = async () => {
+    const loadMatchesData = async () => {
       try {
-        const response = await fetch(
-          `${API_URL}/auth/riot/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`,
-          {
-            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-          },
-        )
+        setIsLoadingMatches(true)
+        const headers = token ? { Authorization: `Bearer ${token}` } : undefined
 
-        const payload = (await response.json()) as { message?: string; pending?: boolean; userId?: string }
+        const [matchesResponse, masteryResponse, statsResponse] = await Promise.all([
+          fetch(`${API_URL}/matches/account/${currentAccountId}`, { headers }),
+          fetch(`${API_URL}/mastery/account/${currentAccountId}`, { headers }),
+          fetch(`${API_URL}/stats/account/${currentAccountId}`, { headers }),
+        ])
 
-        if (!response.ok) {
-          throw new Error(payload.message ?? 'No se pudo completar la conexión con Riot.')
+        if (matchesResponse.ok) {
+          const data = (await matchesResponse.json()) as { items: MatchParticipantEntry[] }
+          setMatches(data.items)
         }
 
-        if (payload.pending) {
-          setStatus('Riot OAuth está listo pero falta configurar las credenciales del cliente en el backend.')
-        } else {
-          setStatus(payload.message ?? 'Cuenta de Riot vinculada correctamente.')
+        if (masteryResponse.ok) {
+          setMastery((await masteryResponse.json()) as MasteryEntry[])
         }
 
-        const dashboardResponse = await fetch(`${API_URL}/users/${currentUser.id}/dashboard`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        })
-
-        if (dashboardResponse.ok) {
-          const nextDashboard = (await dashboardResponse.json()) as DashboardPayload
-          setDashboard(nextDashboard)
-          if (nextDashboard.accounts.length > 0) {
-            setCurrentAccountId(nextDashboard.accounts[0].id)
-          }
+        if (statsResponse.ok) {
+          setStatsSummary((await statsResponse.json()) as AccountStatsSummary)
         }
       } catch (error) {
-        setStatus(error instanceof Error ? error.message : 'No se pudo completar la vinculación con Riot.')
+        setStatus(error instanceof Error ? error.message : 'No se pudieron cargar las partidas.')
       } finally {
-        window.history.replaceState({}, '', window.location.pathname)
+        setIsLoadingMatches(false)
       }
     }
 
-    finalizeRiotConnection()
-  }, [currentUser?.id, token])
+    loadMatchesData()
+  }, [activeTab, currentAccountId, token])
 
   const userDisplayName = useMemo(() => currentUser?.name ?? 'League of Coach', [currentUser])
   const userDisplayEmail = useMemo(() => currentUser?.email ?? 'coach@leagueofcoach.com', [currentUser])
@@ -255,25 +249,50 @@ function App() {
     }
   }
 
-  const handleAddRiotAccount = async () => {
-    if (!currentUser || !token) return
+  const handleGoToAccountsTab = () => {
+    setActiveTab('cuentas')
+  }
+
+  const handleSyncMatches = async () => {
+    if (!currentAccountId) return
 
     try {
-      const response = await fetch(`${API_URL}/auth/riot/authorize`, {
+      setIsLoadingMatches(true)
+      const response = await fetch(`${API_URL}/matches/sync/${currentAccountId}`, {
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
+        body: JSON.stringify({ count: 10 }),
       })
 
-      const payload = (await response.json()) as { url?: string; message?: string }
+      const payload = (await response.json()) as { synced?: number; skipped?: number; message?: string }
 
-      if (!response.ok || !payload.url) {
-        throw new Error(payload.message ?? 'No se pudo iniciar la autenticación con Riot.')
+      if (!response.ok) {
+        throw new Error(payload.message ?? 'No se pudieron sincronizar las partidas.')
       }
 
-      window.location.href = payload.url
+      setStatus(`Se sincronizaron ${payload.synced ?? 0} partidas nuevas (${payload.skipped ?? 0} ya existían).`)
+
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined
+      const [matchesResponse, statsResponse] = await Promise.all([
+        fetch(`${API_URL}/matches/account/${currentAccountId}`, { headers }),
+        fetch(`${API_URL}/stats/account/${currentAccountId}`, { headers }),
+      ])
+
+      if (matchesResponse.ok) {
+        const data = (await matchesResponse.json()) as { items: MatchParticipantEntry[] }
+        setMatches(data.items)
+      }
+
+      if (statsResponse.ok) {
+        setStatsSummary((await statsResponse.json()) as AccountStatsSummary)
+      }
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : 'No se pudo redirigir a Riot.')
+      setStatus(error instanceof Error ? error.message : 'No se pudieron sincronizar las partidas.')
+    } finally {
+      setIsLoadingMatches(false)
     }
   }
 
@@ -313,12 +332,17 @@ function App() {
       status={status}
       isLoadingDashboard={isLoadingDashboard}
       accountForm={accountForm}
+      matches={matches}
+      mastery={mastery}
+      statsSummary={statsSummary}
+      isLoadingMatches={isLoadingMatches}
       onTabChange={setActiveTab}
       onLogout={handleLogout}
-      onAddRiotAccount={handleAddRiotAccount}
+      onGoToAccountsTab={handleGoToAccountsTab}
       onSetCurrentAccountId={setCurrentAccountId}
       onAccountFieldChange={handleAccountFieldChange}
       onCreateAccount={handleCreateAccount}
+      onSyncMatches={handleSyncMatches}
     />
   )
 }

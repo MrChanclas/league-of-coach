@@ -35,9 +35,13 @@ async function main() {
       summoner: 'Bastián',
       tag: 'LAS1',
       server: 'LAS',
-      division: 'Oro',
-      tier: 'II',
-      lp: 45,
+      puuid: 'seed-puuid-bastian-main',
+      soloTier: 'Oro',
+      soloDivision: 'II',
+      soloLp: 45,
+      flexTier: 'Plata',
+      flexDivision: 'I',
+      flexLp: 20,
       userId: bastian.id,
     },
   });
@@ -47,9 +51,10 @@ async function main() {
       summoner: 'BastiSmurf',
       tag: 'LAS2',
       server: 'LAS',
-      division: 'Plata',
-      tier: 'I',
-      lp: 70,
+      puuid: 'seed-puuid-bastian-smurf',
+      soloTier: 'Plata',
+      soloDivision: 'I',
+      soloLp: 70,
       userId: bastian.id,
     },
   });
@@ -59,9 +64,10 @@ async function main() {
       summoner: 'FerSupp',
       tag: 'LAS1',
       server: 'LAS',
-      division: 'Platino',
-      tier: 'IV',
-      lp: 12,
+      puuid: 'seed-puuid-fer-supp',
+      soloTier: 'Platino',
+      soloDivision: 'IV',
+      soloLp: 12,
       userId: fer.id,
     },
   });
@@ -108,9 +114,25 @@ async function main() {
 
   await prisma.goal.createMany({
     data: [
-      { type: 'rank', title: 'Llegar a Platino IV', progress: 65, deadline: new Date('2026-09-30'), accountId: mainAccount.id },
-      { type: 'role', title: 'Aprender rol Jungla', progress: 30, accountId: mainAccount.id },
-      { type: 'champion', title: 'Dominar a Ahri en Mid', progress: 55, accountId: mainAccount.id },
+      {
+        type: 'rank',
+        title: 'Llegar a Platino IV',
+        progress: 65,
+        deadline: new Date('2026-09-30'),
+        accountId: mainAccount.id,
+      },
+      {
+        type: 'role',
+        title: 'Aprender rol Jungla',
+        progress: 30,
+        accountId: mainAccount.id,
+      },
+      {
+        type: 'champion',
+        title: 'Dominar a Ahri en Mid',
+        progress: 55,
+        accountId: mainAccount.id,
+      },
     ],
   });
 

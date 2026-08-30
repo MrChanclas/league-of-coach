@@ -18,18 +18,23 @@ model User {
 }
 
 model LolAccount {
-  id        String             @id @default(cuid())
-  summoner  String
-  tag       String
-  server    String
-  division  String
-  tier      String
-  lp        Int                @default(0)
-  userId    String
-  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime           @default(now())
-  learnings ChampionLearning[]
-  goals     Goal[]
+  id                String             @id @default(cuid())
+  summoner          String
+  tag               String
+  server            String
+  puuid             String             @unique
+  soloTier          String             @default("Unranked")
+  soloDivision      String             @default("Unranked")
+  soloLp            Int                @default(0)
+  flexTier          String             @default("Unranked")
+  flexDivision      String             @default("Unranked")
+  flexLp            Int                @default(0)
+  userId            String
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime           @default(now())
+  learnings         ChampionLearning[]
+  goals             Goal[]
+  matchParticipants MatchParticipant[]
 }
 
 model ChampionLearning {
@@ -46,6 +51,8 @@ model ChampionLearning {
   account   LolAccount        @relation(fields: [accountId], references: [id], onDelete: Cascade)
   sessions  LearningSession[]
   createdAt DateTime          @default(now())
+
+  @@unique([accountId, champion, role])
 }
 
 model LearningSession {
@@ -68,4 +75,39 @@ model Goal {
   accountId String
   account   LolAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
   createdAt DateTime  @default(now())
+}
+
+model Match {
+  id           String             @id @default(cuid())
+  matchId      String             @unique
+  server       String
+  gameCreation DateTime
+  gameDuration Int
+  gameMode     String
+  gameVersion  String
+  queueId      Int
+  participants MatchParticipant[]
+  createdAt    DateTime           @default(now())
+}
+
+model MatchParticipant {
+  id           String     @id @default(cuid())
+  matchId      String
+  match        Match      @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  accountId    String
+  account      LolAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  puuid        String
+  champion     String
+  championId   Int
+  teamPosition String
+  win          Boolean
+  kills        Int
+  deaths       Int
+  assists      Int
+  csTotal      Int
+  goldEarned   Int
+  teamId       Int
+  createdAt    DateTime   @default(now())
+
+  @@unique([matchId, accountId])
 }

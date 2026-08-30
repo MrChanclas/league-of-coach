@@ -1,4 +1,4 @@
-export type TabKey = 'cuentas' | 'aprendizaje' | 'objetivos' | 'usuarios'
+export type TabKey = 'cuentas' | 'aprendizaje' | 'objetivos' | 'usuarios' | 'partidas'
 
 export type AuthUser = {
   id: string
@@ -18,9 +18,12 @@ export type AccountCard = {
   summoner: string
   tag: string
   server: string
-  division: string
-  tier: string
-  lp: number
+  soloTier: string
+  soloDivision: string
+  soloLp: number
+  flexTier: string
+  flexDivision: string
+  flexLp: number
 }
 
 export type ChampionStat = {
@@ -62,4 +65,47 @@ export type AccountForm = {
   summoner: string
   tag: string
   server: string
+}
+
+export type MatchParticipantEntry = {
+  id: string
+  matchId: string
+  accountId: string
+  champion: string
+  championId: number
+  teamPosition: string
+  win: boolean
+  kills: number
+  deaths: number
+  assists: number
+  csTotal: number
+  goldEarned: number
+  teamId: number
+  match: {
+    id: string
+    matchId: string
+    gameCreation: string
+    gameDuration: number
+    gameMode: string
+    queueId: number
+  }
+}
+
+export type MasteryEntry = {
+  championId: number
+  championName: string
+  championLevel: number
+  championPoints: number
+  lastPlayTime: string
+}
+
+export type AccountStatsSummary = {
+  gamesPlayed: number
+  wins: number
+  winrate: number
+  avgKills: number
+  avgDeaths: number
+  avgAssists: number
+  avgKda: number
+  avgCsPerMin: number
 }

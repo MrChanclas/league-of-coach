@@ -1,4 +1,4 @@
-type TabKey = 'cuentas' | 'aprendizaje' | 'objetivos' | 'usuarios'
+import type { TabKey } from '../types/dashboard'
 
 type DashboardSidebarProps = {
   userDisplayName: string
@@ -38,6 +38,7 @@ export function DashboardSidebar({
       <nav className="nav">
         {[
           { key: 'cuentas', label: 'Cuentas' },
+          { key: 'partidas', label: 'Partidas' },
           { key: 'aprendizaje', label: 'Aprendizaje' },
           { key: 'objetivos', label: 'Objetivos' },
           { key: 'usuarios', label: 'Usuarios' },

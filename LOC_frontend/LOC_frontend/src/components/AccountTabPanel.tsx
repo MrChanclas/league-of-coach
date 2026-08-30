@@ -51,18 +51,26 @@ export function AccountTabPanel({
                   <small>{account.server} • #{account.tag}</small>
                 </div>
                 <span className="tier-badge">
-                  {account.division} {account.tier}
+                  {activeAccount?.id === account.id ? 'Mid' : 'Top'}
                 </span>
               </div>
 
-              <div className="rank-row">
-                <div>
-                  <label>LP</label>
-                  <strong>{account.lp}</strong>
+              <div className="mini-grid">
+                <div className="mini-stat">
+                  <span>Solo/Dúo</span>
+                  <strong>{account.soloTier} {account.soloDivision}</strong>
                 </div>
-                <div>
-                  <label>Rol foco</label>
-                  <strong>{activeAccount?.id === account.id ? 'Mid' : 'Top'}</strong>
+                <div className="mini-stat">
+                  <span>LP Solo/Dúo</span>
+                  <strong>{account.soloLp}</strong>
+                </div>
+                <div className="mini-stat">
+                  <span>Flexible</span>
+                  <strong>{account.flexTier} {account.flexDivision}</strong>
+                </div>
+                <div className="mini-stat">
+                  <span>LP Flexible</span>
+                  <strong>{account.flexLp}</strong>
                 </div>
               </div>
             </article>

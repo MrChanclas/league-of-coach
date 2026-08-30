@@ -7,9 +7,6 @@ const CreateAccountSchema = z.object({
   summoner: z.string().min(2).max(80),
   tag: z.string().min(2).max(20),
   server: z.string().min(2).max(30),
-  division: z.string().min(1).max(30).optional(),
-  tier: z.string().min(1).max(30).optional(),
-  lp: z.number().int().min(0).max(5000).optional(),
   userId: z.string().min(1),
 });
 
@@ -18,12 +15,18 @@ export class AccountsController {
   constructor(private readonly accountsService: AccountsService) {}
 
   @Post()
-  create(@Body(new ZodValidationPipe(CreateAccountSchema)) body: z.infer<typeof CreateAccountSchema>) {
+  create(
+    @Body(new ZodValidationPipe(CreateAccountSchema))
+    body: z.infer<typeof CreateAccountSchema>,
+  ) {
     return this.accountsService.create(body);
   }
 
   @Post('search')
-  search(@Body(new ZodValidationPipe(CreateAccountSchema)) body: z.infer<typeof CreateAccountSchema>) {
+  search(
+    @Body(new ZodValidationPipe(CreateAccountSchema))
+    body: z.infer<typeof CreateAccountSchema>,
+  ) {
     return this.accountsService.search(body);
   }
 
