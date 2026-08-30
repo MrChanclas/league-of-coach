@@ -9,7 +9,7 @@ const dashboard = {
     totalAccounts: 2,
     totalGoals: 4,
     totalLearnings: 3,
-    activeFocus: 'Yasuo',
+    activeFocus: 'Yasao',
   },
   accounts: [
     {
