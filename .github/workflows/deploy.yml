@@ -86,6 +86,7 @@ jobs:
             --image="${FRONTEND_IMAGE}" \
             --region="${REGION}" \
             --platform=managed \
+            --service-account="${{ vars.RUNTIME_SA_EMAIL }}" \
             --port=8080 \
             --allow-unauthenticated \
             --quiet
