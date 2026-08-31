@@ -1,0 +1,91 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  id-token: write # required for Workload Identity Federation, no JSON key stored anywhere
+
+env:
+  REGION: ${{ vars.GCP_REGION }}
+  PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  AR_HOST: ${{ vars.GCP_REGION }}-docker.pkg.dev
+  BACKEND_IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.AR_REPO }}/backend:${{ github.sha }}
+  FRONTEND_IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.AR_REPO }}/frontend:${{ github.sha }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.DEPLOYER_SA_EMAIL }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${AR_HOST}" --quiet
+
+      - name: Build & push backend image
+        working-directory: LOC_backend/loc_backend
+        run: |
+          docker build -t "${BACKEND_IMAGE}" .
+          docker push "${BACKEND_IMAGE}"
+
+      - name: Run Prisma migrations (Cloud Run Job)
+        run: |
+          gcloud run jobs deploy loc-migrate \
+            --image="${BACKEND_IMAGE}" \
+            --region="${REGION}" \
+            --service-account="${{ vars.RUNTIME_SA_EMAIL }}" \
+            --set-cloudsql-instances="${{ vars.CLOUDSQL_CONNECTION_NAME }}" \
+            --set-secrets="DATABASE_URL=loc-database-url:latest" \
+            --command="npx" \
+            --args="prisma,migrate,deploy" \
+            --max-retries=0 \
+            --quiet
+          gcloud run jobs execute loc-migrate --region="${REGION}" --wait
+
+      - name: Deploy backend to Cloud Run
+        run: |
+          gcloud run deploy loc-backend \
+            --image="${BACKEND_IMAGE}" \
+            --region="${REGION}" \
+            --platform=managed \
+            --service-account="${{ vars.RUNTIME_SA_EMAIL }}" \
+            --add-cloudsql-instances="${{ vars.CLOUDSQL_CONNECTION_NAME }}" \
+            --set-secrets="DATABASE_URL=loc-database-url:latest,JWT_SECRET=loc-jwt-secret:latest,RIOT_API_KEY=loc-riot-api-key:latest" \
+            --set-env-vars="RIOT_DEFAULT_SERVER=LAS" \
+            --port=8080 \
+            --allow-unauthenticated \
+            --quiet
+
+      - name: Read backend URL
+        id: backend_url
+        run: |
+          URL=$(gcloud run services describe loc-backend --region="${REGION}" --format='value(status.url)')
+          echo "url=${URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Build & push frontend image
+        working-directory: LOC_frontend/LOC_frontend
+        run: |
+          docker build \
+            --build-arg VITE_API_URL="${{ steps.backend_url.outputs.url }}" \
+            -t "${FRONTEND_IMAGE}" .
+          docker push "${FRONTEND_IMAGE}"
+
+      - name: Deploy frontend to Cloud Run
+        run: |
+          gcloud run deploy loc-frontend \
+            --image="${FRONTEND_IMAGE}" \
+            --region="${REGION}" \
+            --platform=managed \
+            --port=8080 \
+            --allow-unauthenticated \
+            --quiet
