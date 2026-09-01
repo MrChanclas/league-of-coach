@@ -6,21 +6,39 @@ import {
   Patch,
   Param,
   Delete,
+  Req,
 } from '@nestjs/common';
 import type { CreateUserDto } from './dto/create-user.dto';
 import { CreateUserSchema } from './dto/create-user.dto';
+import type { ResolveMeDto } from './dto/resolve-me.dto';
+import { ResolveMeSchema } from './dto/resolve-me.dto';
 import type { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateUserSchema } from './dto/update-user.dto';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { UsersService } from './users.service';
+import type { AuthenticatedRequest } from '../auth/clerk-auth.guard';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  create(@Body(new ZodValidationPipe(CreateUserSchema)) createUserDto: CreateUserDto) {
+  create(
+    @Body(new ZodValidationPipe(CreateUserSchema)) createUserDto: CreateUserDto,
+  ) {
     return this.usersService.create(createUserDto);
+  }
+
+  @Post('me')
+  resolveMe(
+    @Req() request: AuthenticatedRequest,
+    @Body(new ZodValidationPipe(ResolveMeSchema)) body: ResolveMeDto,
+  ) {
+    return this.usersService.findOrCreateByClerkId(
+      request.clerkUserId,
+      body.name,
+      body.email,
+    );
   }
 
   @Get()

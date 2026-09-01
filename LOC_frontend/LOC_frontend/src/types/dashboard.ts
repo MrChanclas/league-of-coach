@@ -1,15 +1,10 @@
-export type TabKey = 'cuentas' | 'aprendizaje' | 'objetivos' | 'usuarios' | 'partidas'
+export type TabKey = 'cuentas' | 'aprendizaje' | 'objetivos' | 'cuenta' | 'partidas'
 
 export type AuthUser = {
   id: string
   name: string
   email: string
   role: string
-}
-
-export type AuthPayload = {
-  user: AuthUser
-  token: string
 }
 
 export type AccountCard = {

@@ -1,11 +1,11 @@
 import { AccountTabPanel } from './AccountTabPanel'
+import { CuentaTabPanel } from './CuentaTabPanel'
 import { DashboardHeader } from './DashboardHeader'
 import { DashboardSidebar } from './DashboardSidebar'
 import { DashboardStatsGrid } from './DashboardStatsGrid'
 import { GoalsTabPanel } from './GoalsTabPanel'
 import { LearningTabPanel } from './LearningTabPanel'
 import { MatchesTabPanel } from './MatchesTabPanel'
-import { UsersTabPanel } from './UsersTabPanel'
 
 import type { FormEvent } from 'react'
 import type {
@@ -21,6 +21,7 @@ import type {
 } from '../types/dashboard'
 
 type DashboardScreenProps = {
+  isSignedIn: boolean
   userDisplayName: string
   userDisplayEmail: string
   activeTab: TabKey
@@ -47,6 +48,7 @@ type DashboardScreenProps = {
 }
 
 export function DashboardScreen({
+  isSignedIn,
   userDisplayName,
   userDisplayEmail,
   activeTab,
@@ -77,18 +79,23 @@ export function DashboardScreen({
         userDisplayName={userDisplayName}
         userDisplayEmail={userDisplayEmail}
         activeTab={activeTab}
+        isSignedIn={isSignedIn}
         onTabChange={onTabChange}
       />
 
       <main className="forge-main">
-        <DashboardHeader onLogout={onLogout} onGoToAccountsTab={onGoToAccountsTab} />
+        {isSignedIn && (
+          <>
+            <DashboardHeader onLogout={onLogout} onGoToAccountsTab={onGoToAccountsTab} />
 
-        {status && <p className="dashboard-status">{status}</p>}
-        {isLoadingDashboard && <p className="dashboard-status">Cargando dashboard…</p>}
+            {status && <p className="dashboard-status">{status}</p>}
+            {isLoadingDashboard && <p className="dashboard-status">Cargando dashboard…</p>}
 
-        <DashboardStatsGrid summary={dashboardSummary} />
+            <DashboardStatsGrid summary={dashboardSummary} />
+          </>
+        )}
 
-        {activeTab === 'cuentas' && (
+        {isSignedIn && activeTab === 'cuentas' && (
           <AccountTabPanel
             userAccounts={userAccounts}
             activeAccount={activeAccount}
@@ -100,7 +107,7 @@ export function DashboardScreen({
           />
         )}
 
-        {activeTab === 'partidas' && (
+        {isSignedIn && activeTab === 'partidas' && (
           <MatchesTabPanel
             activeAccount={activeAccount}
             matches={matches}
@@ -111,11 +118,9 @@ export function DashboardScreen({
           />
         )}
 
-        {activeTab === 'aprendizaje' && <LearningTabPanel championData={championData} />}
-        {activeTab === 'objetivos' && <GoalsTabPanel goalsByAccount={goalsByAccount} />}
-        {activeTab === 'usuarios' && (
-          <UsersTabPanel userDisplayName={userDisplayName} userAccountsCount={userAccounts.length} />
-        )}
+        {isSignedIn && activeTab === 'aprendizaje' && <LearningTabPanel championData={championData} />}
+        {isSignedIn && activeTab === 'objetivos' && <GoalsTabPanel goalsByAccount={goalsByAccount} />}
+        {activeTab === 'cuenta' && <CuentaTabPanel />}
       </main>
     </div>
   )
