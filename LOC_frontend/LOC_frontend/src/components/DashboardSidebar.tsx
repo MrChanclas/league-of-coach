@@ -5,13 +5,22 @@ type DashboardSidebarProps = {
   userDisplayEmail: string
   activeTab: TabKey
   onTabChange: (tab: TabKey) => void
+  onLogout: () => void
 }
+
+const navItems: { key: TabKey; label: string }[] = [
+  { key: 'cuentas', label: 'Cuentas' },
+  { key: 'partidas', label: 'Partidas' },
+  { key: 'aprendizaje', label: 'Aprendizaje' },
+  { key: 'objetivos', label: 'Objetivos' },
+]
 
 export function DashboardSidebar({
   userDisplayName,
   userDisplayEmail,
   activeTab,
   onTabChange,
+  onLogout,
 }: DashboardSidebarProps) {
   return (
     <aside className="forge-sidebar">
@@ -23,31 +32,13 @@ export function DashboardSidebar({
         </div>
       </div>
 
-      <div className="sidebar-section">
-        <p className="mini-label">Usuario activo</p>
-        <div className="user-list">
-          <button type="button" className="user-pill active">
-            <span className="avatar" style={{ background: '#0ac8b922', borderColor: '#0ac8b988', color: '#0ac8b9' }}>
-              {userDisplayName.slice(0, 2).toUpperCase()}
-            </span>
-            {userDisplayName}
-          </button>
-        </div>
-      </div>
-
       <nav className="nav">
-        {[
-          { key: 'cuentas', label: 'Cuentas' },
-          { key: 'partidas', label: 'Partidas' },
-          { key: 'aprendizaje', label: 'Aprendizaje' },
-          { key: 'objetivos', label: 'Objetivos' },
-          { key: 'usuarios', label: 'Usuarios' },
-        ].map((item) => (
+        {navItems.map((item) => (
           <button
             key={item.key}
             type="button"
             className={activeTab === item.key ? 'nav-item active' : 'nav-item'}
-            onClick={() => onTabChange(item.key as TabKey)}
+            onClick={() => onTabChange(item.key)}
           >
             {item.label}
           </button>
@@ -55,11 +46,16 @@ export function DashboardSidebar({
       </nav>
 
       <div className="profile-card">
-        <span className="status-dot" />
-        <div>
-          <strong>{userDisplayName}</strong>
-          <small>{userDisplayEmail}</small>
+        <div className="profile-card-info">
+          <span className="status-dot" />
+          <div>
+            <strong>{userDisplayName}</strong>
+            <small>{userDisplayEmail}</small>
+          </div>
         </div>
+        <button type="button" className="link-btn profile-card-logout" onClick={onLogout}>
+          Cerrar sesión
+        </button>
       </div>
     </aside>
   )

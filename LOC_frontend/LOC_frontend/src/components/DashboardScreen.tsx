@@ -1,11 +1,12 @@
+import { useState } from 'react'
+import { AccountSearchModal } from './AccountSearchModal'
 import { AccountTabPanel } from './AccountTabPanel'
+import { CuentaTabPanel } from './CuentaTabPanel'
 import { DashboardHeader } from './DashboardHeader'
 import { DashboardSidebar } from './DashboardSidebar'
-import { DashboardStatsGrid } from './DashboardStatsGrid'
 import { GoalsTabPanel } from './GoalsTabPanel'
 import { LearningTabPanel } from './LearningTabPanel'
 import { MatchesTabPanel } from './MatchesTabPanel'
-import { UsersTabPanel } from './UsersTabPanel'
 
 import type { FormEvent } from 'react'
 import type {
@@ -13,7 +14,6 @@ import type {
   AccountForm,
   AccountStatsSummary,
   ChampionStat,
-  DashboardSummary,
   GoalItem,
   MasteryEntry,
   MatchParticipantEntry,
@@ -21,13 +21,13 @@ import type {
 } from '../types/dashboard'
 
 type DashboardScreenProps = {
+  isSignedIn: boolean
   userDisplayName: string
   userDisplayEmail: string
   activeTab: TabKey
   userAccounts: AccountCard[]
   currentAccountId: string
   activeAccount?: AccountCard
-  dashboardSummary: DashboardSummary
   goalsByAccount: GoalItem[]
   championData: ChampionStat[]
   status: string
@@ -43,17 +43,18 @@ type DashboardScreenProps = {
   onSetCurrentAccountId: (id: string) => void
   onAccountFieldChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   onCreateAccount: (event: FormEvent<HTMLFormElement>) => void
+  onDeleteAccount: (accountId: string) => void
   onSyncMatches: () => void
 }
 
 export function DashboardScreen({
+  isSignedIn,
   userDisplayName,
   userDisplayEmail,
   activeTab,
   userAccounts,
   currentAccountId,
   activeAccount,
-  dashboardSummary,
   goalsByAccount,
   championData,
   status,
@@ -69,38 +70,49 @@ export function DashboardScreen({
   onSetCurrentAccountId,
   onAccountFieldChange,
   onCreateAccount,
+  onDeleteAccount,
   onSyncMatches,
 }: DashboardScreenProps) {
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false)
+
+  const handleOpenAccountModal = () => {
+    onGoToAccountsTab()
+    setIsAccountModalOpen(true)
+  }
+
   return (
-    <div className="forge-shell">
-      <DashboardSidebar
-        userDisplayName={userDisplayName}
-        userDisplayEmail={userDisplayEmail}
-        activeTab={activeTab}
-        onTabChange={onTabChange}
-      />
+    <div className={isSignedIn ? 'forge-shell' : 'forge-shell forge-shell--auth-only'}>
+      {isSignedIn && (
+        <DashboardSidebar
+          userDisplayName={userDisplayName}
+          userDisplayEmail={userDisplayEmail}
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+          onLogout={onLogout}
+        />
+      )}
 
       <main className="forge-main">
-        <DashboardHeader onLogout={onLogout} onGoToAccountsTab={onGoToAccountsTab} />
+        {isSignedIn && (
+          <>
+            <DashboardHeader onOpenAccountModal={handleOpenAccountModal} />
 
-        {status && <p className="dashboard-status">{status}</p>}
-        {isLoadingDashboard && <p className="dashboard-status">Cargando dashboard…</p>}
+            {status && <p className="dashboard-status">{status}</p>}
+            {isLoadingDashboard && <p className="dashboard-status">Cargando dashboard…</p>}
+          </>
+        )}
 
-        <DashboardStatsGrid summary={dashboardSummary} />
-
-        {activeTab === 'cuentas' && (
+        {isSignedIn && activeTab === 'cuentas' && (
           <AccountTabPanel
             userAccounts={userAccounts}
             activeAccount={activeAccount}
             currentAccountId={currentAccountId}
-            accountForm={accountForm}
             onSetCurrentAccountId={onSetCurrentAccountId}
-            onAccountFieldChange={onAccountFieldChange}
-            onCreateAccount={onCreateAccount}
+            onDeleteAccount={onDeleteAccount}
           />
         )}
 
-        {activeTab === 'partidas' && (
+        {isSignedIn && activeTab === 'partidas' && (
           <MatchesTabPanel
             activeAccount={activeAccount}
             matches={matches}
@@ -111,12 +123,21 @@ export function DashboardScreen({
           />
         )}
 
-        {activeTab === 'aprendizaje' && <LearningTabPanel championData={championData} />}
-        {activeTab === 'objetivos' && <GoalsTabPanel goalsByAccount={goalsByAccount} />}
-        {activeTab === 'usuarios' && (
-          <UsersTabPanel userDisplayName={userDisplayName} userAccountsCount={userAccounts.length} />
-        )}
+        {isSignedIn && activeTab === 'aprendizaje' && <LearningTabPanel championData={championData} />}
+        {isSignedIn && activeTab === 'objetivos' && <GoalsTabPanel goalsByAccount={goalsByAccount} />}
+        {!isSignedIn && <CuentaTabPanel />}
       </main>
+
+      {isSignedIn && (
+        <AccountSearchModal
+          isOpen={isAccountModalOpen}
+          accountForm={accountForm}
+          status={status}
+          onClose={() => setIsAccountModalOpen(false)}
+          onAccountFieldChange={onAccountFieldChange}
+          onCreateAccount={onCreateAccount}
+        />
+      )}
     </div>
   )
 }

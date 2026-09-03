@@ -37,6 +37,7 @@ export class AccountsService {
       tag: resolved.tag,
       server: resolved.server,
       puuid: resolved.puuid,
+      profileIconId: resolved.profileIconId,
       soloTier: resolved.soloTier,
       soloDivision: resolved.soloDivision,
       soloLp: resolved.soloLp,
@@ -94,6 +95,10 @@ export class AccountsService {
     });
   }
 
+  async remove(id: string) {
+    return this.prisma.lolAccount.delete({ where: { id } });
+  }
+
   private async populateFromRiot(input: z.infer<typeof AccountSchema>) {
     const riotAccount = await this.riotApi.getAccountByRiotId(
       input.server,
@@ -104,6 +109,10 @@ export class AccountsService {
     const entries = await this.riotApi
       .getLeagueEntriesByPuuid(input.server, riotAccount.puuid)
       .catch((): RiotLeagueEntryDto[] => []);
+
+    const summoner = await this.riotApi
+      .getSummonerByPuuid(input.server, riotAccount.puuid)
+      .catch(() => null);
 
     const soloEntry = entries.find(
       (entry) => entry.queueType === 'RANKED_SOLO_5x5',
@@ -117,6 +126,7 @@ export class AccountsService {
       summoner: riotAccount.gameName ?? input.summoner,
       tag: riotAccount.tagLine ?? input.tag,
       puuid: riotAccount.puuid,
+      profileIconId: summoner?.profileIconId ?? 0,
       soloTier: soloEntry?.tier ?? 'Unranked',
       soloDivision: soloEntry?.rank ?? 'Unranked',
       soloLp: soloEntry?.leaguePoints ?? 0,

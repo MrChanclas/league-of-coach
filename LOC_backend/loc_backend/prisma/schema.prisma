@@ -7,14 +7,13 @@ datasource db {
 }
 
 model User {
-  id           String       @id @default(cuid())
-  clerkId      String?      @unique
-  name         String
-  email        String       @unique
-  passwordHash String
-  role         String       @default("user")
-  createdAt    DateTime     @default(now())
-  accounts     LolAccount[]
+  id        String       @id @default(cuid())
+  clerkId   String       @unique
+  name      String
+  email     String       @unique
+  role      String       @default("user")
+  createdAt DateTime     @default(now())
+  accounts  LolAccount[]
 }
 
 model LolAccount {
@@ -23,6 +22,7 @@ model LolAccount {
   tag               String
   server            String
   puuid             String             @unique
+  profileIconId     Int                @default(0)
   soloTier          String             @default("Unranked")
   soloDivision      String             @default("Unranked")
   soloLp            Int                @default(0)

@@ -1,4 +1,4 @@
-export type TabKey = 'cuentas' | 'aprendizaje' | 'objetivos' | 'usuarios' | 'partidas'
+export type TabKey = 'cuentas' | 'aprendizaje' | 'objetivos' | 'partidas'
 
 export type AuthUser = {
   id: string
@@ -7,17 +7,13 @@ export type AuthUser = {
   role: string
 }
 
-export type AuthPayload = {
-  user: AuthUser
-  token: string
-}
-
 export type AccountCard = {
   id: string
   userId: string
   summoner: string
   tag: string
   server: string
+  profileIconId: number
   soloTier: string
   soloDivision: string
   soloLp: number

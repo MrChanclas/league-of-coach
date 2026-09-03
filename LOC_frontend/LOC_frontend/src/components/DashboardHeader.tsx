@@ -1,9 +1,8 @@
 type DashboardHeaderProps = {
-  onLogout: () => void
-  onGoToAccountsTab: () => void
+  onOpenAccountModal: () => void
 }
 
-export function DashboardHeader({ onLogout, onGoToAccountsTab }: DashboardHeaderProps) {
+export function DashboardHeader({ onOpenAccountModal }: DashboardHeaderProps) {
   return (
     <header className="topbar">
       <div>
@@ -12,8 +11,7 @@ export function DashboardHeader({ onLogout, onGoToAccountsTab }: DashboardHeader
       </div>
 
       <div className="topbar-actions">
-        <button type="button" className="secondary-btn" onClick={onLogout}>Cerrar sesión</button>
-        <button type="button" className="primary-btn" onClick={onGoToAccountsTab}>+ Nueva cuenta Riot</button>
+        <button type="button" className="primary-btn" onClick={onOpenAccountModal}>+ Nueva cuenta Riot</button>
       </div>
     </header>
   )

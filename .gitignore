@@ -30,5 +30,9 @@ Thumbs.db
 **/prisma/dev.db
 **/prisma/dev.db-journal
 
+# Claude Code local settings
+.claude/settings.json
+.claude/settings.local.json
+
 # Misc
 *.tsbuildinfo

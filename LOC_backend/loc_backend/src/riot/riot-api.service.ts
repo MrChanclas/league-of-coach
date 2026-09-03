@@ -6,6 +6,12 @@ export type RiotAccountDto = {
   tagLine: string;
 };
 
+export type RiotSummonerDto = {
+  puuid: string;
+  profileIconId: number;
+  summonerLevel: number;
+};
+
 export type RiotLeagueEntryDto = {
   queueType: string;
   tier: string;
@@ -214,6 +220,16 @@ export class RiotApiService {
     const host = this.getRegionalHost(server);
     return this.request<RiotAccountDto>(
       `${host}/riot/account/v1/accounts/by-puuid/${encodeURIComponent(puuid)}`,
+    );
+  }
+
+  async getSummonerByPuuid(
+    server: string,
+    puuid: string,
+  ): Promise<RiotSummonerDto> {
+    const host = this.getPlatformHost(server);
+    return this.request<RiotSummonerDto>(
+      `${host}/lol/summoner/v4/summoners/by-puuid/${encodeURIComponent(puuid)}`,
     );
   }
 

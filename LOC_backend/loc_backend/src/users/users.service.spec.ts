@@ -62,7 +62,50 @@ describe('UsersService', () => {
         name: 'Cris',
         email: 'cris@leagueofcoach.com',
         clerkId: 'clerk-1',
-        passwordHash: 'internal-user',
+        role: 'user',
+      },
+    });
+  });
+
+  it('should return the existing user when resolving by clerkId', async () => {
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: 'user-1',
+      name: 'Cris',
+      email: 'cris@leagueofcoach.com',
+      clerkId: 'clerk-1',
+    });
+
+    const result = await service.findOrCreateByClerkId(
+      'clerk-1',
+      'Cris',
+      'cris@leagueofcoach.com',
+    );
+
+    expect(result).toMatchObject({ id: 'user-1', clerkId: 'clerk-1' });
+    expect(prismaMock.user.create).not.toHaveBeenCalled();
+  });
+
+  it('should create a user when resolving an unknown clerkId', async () => {
+    prismaMock.user.findUnique.mockResolvedValue(null);
+    prismaMock.user.create.mockResolvedValue({
+      id: 'user-2',
+      name: 'Nueva',
+      email: 'nueva@leagueofcoach.com',
+      clerkId: 'clerk-2',
+    });
+
+    const result = await service.findOrCreateByClerkId(
+      'clerk-2',
+      'Nueva',
+      'nueva@leagueofcoach.com',
+    );
+
+    expect(result).toMatchObject({ id: 'user-2', clerkId: 'clerk-2' });
+    expect(prismaMock.user.create).toHaveBeenCalledWith({
+      data: {
+        clerkId: 'clerk-2',
+        name: 'Nueva',
+        email: 'nueva@leagueofcoach.com',
         role: 'user',
       },
     });

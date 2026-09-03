@@ -20,7 +20,10 @@ export class LearningController {
   constructor(private readonly learningService: LearningService) {}
 
   @Post()
-  create(@Body(new ZodValidationPipe(CreateLearningSchema)) body: z.infer<typeof CreateLearningSchema>) {
+  create(
+    @Body(new ZodValidationPipe(CreateLearningSchema))
+    body: z.infer<typeof CreateLearningSchema>,
+  ) {
     return this.learningService.create(body);
   }
 

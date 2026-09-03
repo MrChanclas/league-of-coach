@@ -1,19 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
-import { AuthScreen } from './components/AuthScreen'
+import { AuthenticateWithRedirectCallback, useAuth, useClerk, useUser } from '@clerk/clerk-react'
 import { DashboardScreen } from './components/DashboardScreen'
+import { API_URL } from './lib/api'
 import type {
   AccountForm,
   AccountStatsSummary,
-  AuthPayload,
   AuthUser,
   DashboardPayload,
   MasteryEntry,
   MatchParticipantEntry,
   TabKey,
 } from './types/dashboard'
-
-const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:4100').replace(/\/$/, '')
 
 const blankAccountForm: AccountForm = {
   summoner: '',
@@ -22,10 +20,10 @@ const blankAccountForm: AccountForm = {
 }
 
 function App() {
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
-  const [form, setForm] = useState({ name: '', email: '', password: '' })
-  const [status, setStatus] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { isSignedIn, getToken } = useAuth()
+  const { user } = useUser()
+  const { signOut } = useClerk()
+
   const [activeTab, setActiveTab] = useState<TabKey>('cuentas')
   const [currentAccountId, setCurrentAccountId] = useState('')
   const [accountForm, setAccountForm] = useState<AccountForm>(blankAccountForm)
@@ -35,30 +33,56 @@ function App() {
   const [mastery, setMastery] = useState<MasteryEntry[]>([])
   const [statsSummary, setStatsSummary] = useState<AccountStatsSummary | null>(null)
   const [isLoadingMatches, setIsLoadingMatches] = useState(false)
-  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
-    const storedUser = localStorage.getItem('loc_user')
-    return storedUser ? (JSON.parse(storedUser) as AuthUser) : null
-  })
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('loc_token'))
+  const [status, setStatus] = useState('')
+  const [internalUser, setInternalUser] = useState<AuthUser | null>(null)
 
   useEffect(() => {
-    if (token) {
-      localStorage.setItem('loc_token', token)
-    } else {
-      localStorage.removeItem('loc_token')
+    if (!isSignedIn || !user) {
+      setInternalUser(null)
+      return
     }
-  }, [token])
 
-  useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem('loc_user', JSON.stringify(currentUser))
-    } else {
-      localStorage.removeItem('loc_user')
+    let cancelled = false
+
+    const resolveUser = async () => {
+      try {
+        const token = await getToken()
+        const response = await fetch(`${API_URL}/users/me`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            name: user.fullName ?? user.primaryEmailAddress?.emailAddress ?? 'Coach',
+            email: user.primaryEmailAddress?.emailAddress ?? '',
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error('No se pudo resolver el usuario.')
+        }
+
+        const payload = (await response.json()) as AuthUser
+        if (!cancelled) {
+          setInternalUser(payload)
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setStatus(error instanceof Error ? error.message : 'No se pudo resolver el usuario.')
+        }
+      }
     }
-  }, [currentUser])
+
+    resolveUser()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isSignedIn, user, getToken])
 
   useEffect(() => {
-    if (!currentUser) {
+    if (!internalUser) {
       setDashboard(null)
       setCurrentAccountId('')
       return
@@ -67,7 +91,8 @@ function App() {
     const loadDashboard = async () => {
       try {
         setIsLoadingDashboard(true)
-        const response = await fetch(`${API_URL}/users/${currentUser.id}/dashboard`, {
+        const token = await getToken()
+        const response = await fetch(`${API_URL}/users/${internalUser.id}/dashboard`, {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         })
 
@@ -88,7 +113,7 @@ function App() {
     }
 
     loadDashboard()
-  }, [currentUser?.id, token])
+  }, [internalUser, getToken])
 
   useEffect(() => {
     if (activeTab !== 'partidas' || !currentAccountId) {
@@ -98,6 +123,7 @@ function App() {
     const loadMatchesData = async () => {
       try {
         setIsLoadingMatches(true)
+        const token = await getToken()
         const headers = token ? { Authorization: `Bearer ${token}` } : undefined
 
         const [matchesResponse, masteryResponse, statsResponse] = await Promise.all([
@@ -126,10 +152,16 @@ function App() {
     }
 
     loadMatchesData()
-  }, [activeTab, currentAccountId, token])
+  }, [activeTab, currentAccountId, getToken])
 
-  const userDisplayName = useMemo(() => currentUser?.name ?? 'League of Coach', [currentUser])
-  const userDisplayEmail = useMemo(() => currentUser?.email ?? 'coach@leagueofcoach.com', [currentUser])
+  const userDisplayName = useMemo(
+    () => user?.fullName ?? user?.primaryEmailAddress?.emailAddress ?? 'League of Coach',
+    [user],
+  )
+  const userDisplayEmail = useMemo(
+    () => user?.primaryEmailAddress?.emailAddress ?? 'coach@leagueofcoach.com',
+    [user],
+  )
   const userAccounts = useMemo(() => dashboard?.accounts ?? [], [dashboard])
 
   const activeAccount = useMemo(
@@ -144,22 +176,6 @@ function App() {
 
   const championData = useMemo(() => dashboard?.learnings ?? [], [dashboard])
 
-  const dashboardSummary = useMemo(
-    () =>
-      dashboard?.summary ?? {
-        totalAccounts: 0,
-        totalGoals: 0,
-        totalLearnings: 0,
-        activeFocus: 'Sin foco',
-      },
-    [dashboard],
-  )
-
-  const handleFieldChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target
-    setForm((previous) => ({ ...previous, [name]: value }))
-  }
-
   const handleAccountFieldChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target
     setAccountForm((previous: AccountForm) => ({
@@ -168,44 +184,12 @@ function App() {
     }))
   }
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setStatus('')
-    setIsSubmitting(true)
-
-    try {
-      const response = await fetch(`${API_URL}/auth/${authMode}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          password: form.password,
-        }),
-      })
-
-      const payload = (await response.json()) as AuthPayload & { message?: string }
-
-      if (!response.ok) {
-        throw new Error(payload.message ?? 'No se pudo completar la autenticación.')
-      }
-
-      setCurrentUser(payload.user)
-      setToken(payload.token)
-      setStatus(authMode === 'register' ? 'Cuenta creada correctamente.' : 'Sesión iniciada correctamente.')
-      setForm({ name: '', email: '', password: '' })
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : 'Hubo un error al conectar con la API.')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
   const handleCreateAccount = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!currentUser) return
+    if (!internalUser) return
 
     try {
+      const token = await getToken()
       const response = await fetch(`${API_URL}/accounts/search`, {
         method: 'POST',
         headers: {
@@ -216,7 +200,7 @@ function App() {
           summoner: accountForm.summoner,
           tag: accountForm.tag,
           server: accountForm.server,
-          userId: currentUser.id,
+          userId: internalUser.id,
         }),
       })
 
@@ -231,7 +215,7 @@ function App() {
       }
 
       setAccountForm(blankAccountForm)
-      const updatedDashboard = await fetch(`${API_URL}/users/${currentUser.id}/dashboard`, {
+      const updatedDashboard = await fetch(`${API_URL}/users/${internalUser.id}/dashboard`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       })
 
@@ -249,6 +233,38 @@ function App() {
     }
   }
 
+  const handleDeleteAccount = async (accountId: string) => {
+    if (!internalUser) return
+
+    try {
+      const token = await getToken()
+      const response = await fetch(`${API_URL}/accounts/${accountId}`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      })
+
+      if (!response.ok) {
+        throw new Error('No se pudo eliminar la cuenta.')
+      }
+
+      const updatedDashboard = await fetch(`${API_URL}/users/${internalUser.id}/dashboard`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      })
+
+      if (updatedDashboard.ok) {
+        const data = (await updatedDashboard.json()) as DashboardPayload
+        setDashboard(data)
+        setCurrentAccountId((previous) =>
+          previous === accountId ? (data.accounts[0]?.id ?? '') : previous,
+        )
+      }
+
+      setStatus('Cuenta eliminada correctamente.')
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'No se pudo eliminar la cuenta.')
+    }
+  }
+
   const handleGoToAccountsTab = () => {
     setActiveTab('cuentas')
   }
@@ -258,6 +274,7 @@ function App() {
 
     try {
       setIsLoadingMatches(true)
+      const token = await getToken()
       const response = await fetch(`${API_URL}/matches/sync/${currentAccountId}`, {
         method: 'POST',
         headers: {
@@ -297,36 +314,23 @@ function App() {
   }
 
   const handleLogout = () => {
-    setCurrentUser(null)
-    setToken(null)
-    setDashboard(null)
     setStatus('Sesión cerrada.')
+    void signOut()
   }
 
-  if (!token || !currentUser) {
-    return (
-      <AuthScreen
-        authMode={authMode}
-        form={form}
-        status={status}
-        isSubmitting={isSubmitting}
-        apiUrl={API_URL}
-        onModeChange={setAuthMode}
-        onFieldChange={handleFieldChange}
-        onSubmit={handleSubmit}
-      />
-    )
+  if (window.location.pathname === '/sso-callback') {
+    return <AuthenticateWithRedirectCallback signInForceRedirectUrl="/" signUpForceRedirectUrl="/" />
   }
 
   return (
     <DashboardScreen
+      isSignedIn={Boolean(isSignedIn)}
       userDisplayName={userDisplayName}
       userDisplayEmail={userDisplayEmail}
       activeTab={activeTab}
       userAccounts={userAccounts}
       currentAccountId={currentAccountId}
       activeAccount={activeAccount}
-      dashboardSummary={dashboardSummary}
       goalsByAccount={goalsByAccount}
       championData={championData}
       status={status}
@@ -342,6 +346,7 @@ function App() {
       onSetCurrentAccountId={setCurrentAccountId}
       onAccountFieldChange={handleAccountFieldChange}
       onCreateAccount={handleCreateAccount}
+      onDeleteAccount={handleDeleteAccount}
       onSyncMatches={handleSyncMatches}
     />
   )

@@ -16,7 +16,10 @@ export class GoalsController {
   constructor(private readonly goalsService: GoalsService) {}
 
   @Post()
-  create(@Body(new ZodValidationPipe(CreateGoalSchema)) body: z.infer<typeof CreateGoalSchema>) {
+  create(
+    @Body(new ZodValidationPipe(CreateGoalSchema))
+    body: z.infer<typeof CreateGoalSchema>,
+  ) {
     return this.goalsService.create(body);
   }
 

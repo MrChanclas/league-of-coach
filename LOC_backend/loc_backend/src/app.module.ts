@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AccountsModule } from './accounts/accounts.module';
-import { AuthModule } from './auth/auth.module';
+import { ClerkAuthGuard } from './auth/clerk-auth.guard';
 import { GoalsModule } from './goals/goals.module';
 import { LearningModule } from './learning/learning.module';
 import { MasteryModule } from './mastery/mastery.module';
@@ -17,7 +18,6 @@ import { UsersModule } from './users/users.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
-    AuthModule,
     UsersModule,
     RiotModule,
     AccountsModule,
@@ -28,6 +28,6 @@ import { UsersModule } from './users/users.module';
     StatsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, { provide: APP_GUARD, useClass: ClerkAuthGuard }],
 })
 export class AppModule {}
