@@ -10,6 +10,7 @@ describe('UsersService', () => {
       create: jest.fn(),
       findMany: jest.fn(),
       findUnique: jest.fn(),
+      update: jest.fn(),
     },
     lolAccount: {
       findMany: jest.fn(),
@@ -109,6 +110,36 @@ describe('UsersService', () => {
         role: 'user',
       },
     });
+  });
+
+  it('should relink an existing user to a new clerkId instead of duplicating on email', async () => {
+    prismaMock.user.findUnique
+      .mockResolvedValueOnce(null) // no match by clerkId
+      .mockResolvedValueOnce({
+        id: 'user-1',
+        name: 'Cris',
+        email: 'cchala@utem.cl',
+        clerkId: 'clerk-old',
+      }); // match by email
+    prismaMock.user.update.mockResolvedValue({
+      id: 'user-1',
+      name: 'Cris',
+      email: 'cchala@utem.cl',
+      clerkId: 'clerk-new',
+    });
+
+    const result = await service.findOrCreateByClerkId(
+      'clerk-new',
+      'Cris',
+      'cchala@utem.cl',
+    );
+
+    expect(result).toMatchObject({ id: 'user-1', clerkId: 'clerk-new' });
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: 'user-1' },
+      data: { clerkId: 'clerk-new', name: 'Cris' },
+    });
+    expect(prismaMock.user.create).not.toHaveBeenCalled();
   });
 
   it('should build a dashboard summary for a user with goals, accounts and learnings', async () => {

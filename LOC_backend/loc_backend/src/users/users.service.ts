@@ -23,9 +23,20 @@ export class UsersService {
   }
 
   async findOrCreateByClerkId(clerkId: string, name: string, email: string) {
-    const existing = await this.prisma.user.findUnique({ where: { clerkId } });
-    if (existing) {
-      return existing;
+    const existingByClerkId = await this.prisma.user.findUnique({ where: { clerkId } });
+    if (existingByClerkId) {
+      return existingByClerkId;
+    }
+
+    // Clerk can issue a new user id for the same person (account recreated,
+    // login method switched, etc). Reconcile by email instead of trying to
+    // insert a second row and hitting the unique constraint on email.
+    const existingByEmail = await this.prisma.user.findUnique({ where: { email } });
+    if (existingByEmail) {
+      return this.prisma.user.update({
+        where: { id: existingByEmail.id },
+        data: { clerkId, name },
+      });
     }
 
     return this.prisma.user.create({
