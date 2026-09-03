@@ -11,7 +11,7 @@
 #   2. APIs required by the stack
 #   3. Artifact Registry repo for Docker images
 #   4. Cloud SQL for PostgreSQL (private IP + Cloud SQL Auth Proxy socket)
-#   5. Secret Manager entries (DATABASE_URL, JWT_SECRET, RIOT_API_KEY)
+#   5. Secret Manager entries (DATABASE_URL, CLERK_SECRET_KEY, RIOT_API_KEY)
 #   6. Runtime service account (what Cloud Run *becomes* at runtime)
 #   7. Deployer service account (what GitHub Actions *acts as* to deploy)
 #   8. Workload Identity Federation (GitHub Actions <-> GCP, no JSON keys)
@@ -31,7 +31,6 @@ SQL_INSTANCE="loc-db"
 DB_NAME="leagueofcoach"
 DB_USER="loc_app"
 DB_PASSWORD="$(openssl rand -base64 24)"   # generated for you, printed at the end
-JWT_SECRET="$(openssl rand -base64 48)"
 GITHUB_REPO="MrChanclas/league-of-coach"   # owner/repo, must match your GitHub remote
 
 RUNTIME_SA="loc-runtime"
@@ -93,8 +92,10 @@ DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@localhost/${DB_NAME}?host=/
 printf '%s' "$DATABASE_URL" | gcloud secrets create loc-database-url --data-file=- || \
   printf '%s' "$DATABASE_URL" | gcloud secrets versions add loc-database-url --data-file=-
 
-printf '%s' "$JWT_SECRET" | gcloud secrets create loc-jwt-secret --data-file=- || \
-  printf '%s' "$JWT_SECRET" | gcloud secrets versions add loc-jwt-secret --data-file=-
+echo "Enter your Clerk secret key (sk_live_... from the Clerk dashboard, input hidden not guaranteed in this shell):"
+read -r CLERK_SECRET_KEY
+printf '%s' "$CLERK_SECRET_KEY" | gcloud secrets create loc-clerk-secret-key --data-file=- || \
+  printf '%s' "$CLERK_SECRET_KEY" | gcloud secrets versions add loc-clerk-secret-key --data-file=-
 
 echo "Enter your Riot API key (input hidden not guaranteed in this shell):"
 read -r RIOT_API_KEY
@@ -168,6 +169,7 @@ GCP_REGION=${REGION}
 AR_REPO=${AR_REPO}
 CLOUDSQL_CONNECTION_NAME=${CONNECTION_NAME}
 RUNTIME_SA_EMAIL=${RUNTIME_SA_EMAIL}
+VITE_CLERK_PUBLISHABLE_KEY=<pk_live_... from the Clerk dashboard>  # public by design, not a secret
 
 --- GitHub repo secrets (Settings > Secrets and variables > Actions > Secrets) ---
 WIF_PROVIDER=projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${WIF_POOL}/providers/${WIF_PROVIDER}
