@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { z } from 'zod';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { AccountsService } from './accounts.service';
@@ -38,5 +38,10 @@ export class AccountsController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.accountsService.findOne(id);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.accountsService.remove(id);
   }
 }

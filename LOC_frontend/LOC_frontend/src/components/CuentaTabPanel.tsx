@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { useClerk, useSignIn, useSignUp, useUser } from '@clerk/clerk-react'
+import { useSignIn, useSignUp, useUser } from '@clerk/clerk-react'
 
 type AuthMode = 'login' | 'register'
+type AuthView = 'form' | 'forgot-request' | 'forgot-reset'
 
 function getClerkErrorMessage(error: unknown, fallback: string) {
   if (error && typeof error === 'object' && 'errors' in error) {
@@ -13,21 +14,30 @@ function getClerkErrorMessage(error: unknown, fallback: string) {
 }
 
 export function CuentaTabPanel() {
-  const { isLoaded: isUserLoaded, isSignedIn, user } = useUser()
+  const { isLoaded: isUserLoaded } = useUser()
   const { signIn, setActive: setActiveSignIn, isLoaded: isSignInLoaded } = useSignIn()
   const { signUp, setActive: setActiveSignUp, isLoaded: isSignUpLoaded } = useSignUp()
-  const { signOut } = useClerk()
 
   const [authMode, setAuthMode] = useState<AuthMode>('login')
+  const [authView, setAuthView] = useState<AuthView>('form')
   const [form, setForm] = useState({ name: '', email: '', password: '' })
   const [code, setCode] = useState('')
   const [pendingVerification, setPendingVerification] = useState(false)
   const [status, setStatus] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetCode, setResetCode] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+
   const handleModeChange = (mode: AuthMode) => {
     setAuthMode(mode)
     setPendingVerification(false)
+    setStatus('')
+  }
+
+  const handleGoBackToForm = () => {
+    setAuthView('form')
     setStatus('')
   }
 
@@ -104,9 +114,66 @@ export function CuentaTabPanel() {
     }
   }
 
-  const handleLogout = () => {
+  const handleForgotRequestSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!isSignInLoaded) return
+
     setStatus('')
-    void signOut()
+    setIsSubmitting(true)
+
+    try {
+      await signIn.create({ strategy: 'reset_password_email_code', identifier: resetEmail })
+      setAuthView('forgot-reset')
+      setStatus('Te enviamos un código para restablecer tu contraseña.')
+    } catch (error) {
+      setStatus(getClerkErrorMessage(error, 'No se pudo enviar el código de recuperación.'))
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleForgotResetSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!isSignInLoaded) return
+
+    setStatus('')
+    setIsSubmitting(true)
+
+    try {
+      const result = await signIn.attemptFirstFactor({
+        strategy: 'reset_password_email_code',
+        code: resetCode,
+        password: newPassword,
+      })
+
+      if (result.status === 'complete') {
+        await setActiveSignIn({ session: result.createdSessionId })
+        setStatus('Contraseña actualizada. Sesión iniciada.')
+        setAuthView('form')
+      } else {
+        setStatus('El código no es válido, intenta nuevamente.')
+      }
+    } catch (error) {
+      setStatus(getClerkErrorMessage(error, 'No se pudo restablecer la contraseña.'))
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleGoogleAuth = async () => {
+    if (!isSignInLoaded) return
+
+    setStatus('')
+
+    try {
+      await signIn.authenticateWithRedirect({
+        strategy: 'oauth_google',
+        redirectUrl: `${window.location.origin}/sso-callback`,
+        redirectUrlComplete: window.location.origin,
+      })
+    } catch (error) {
+      setStatus(getClerkErrorMessage(error, 'No se pudo conectar con Google.'))
+    }
   }
 
   if (!isUserLoaded) {
@@ -119,34 +186,86 @@ export function CuentaTabPanel() {
     )
   }
 
-  if (isSignedIn && user) {
-    const displayName = user.fullName ?? user.primaryEmailAddress?.emailAddress ?? 'Coach'
-    const displayEmail = user.primaryEmailAddress?.emailAddress ?? ''
-
+  if (authView === 'forgot-request') {
     return (
       <div className="cuenta-panel">
         <div className="auth-card">
           <div className="auth-brand">HEXFORGE</div>
           <div className="auth-header">
             <span className="eyebrow">League of Coach</span>
-            <h1>Tu cuenta</h1>
+            <h1>Recupera tu contraseña</h1>
           </div>
 
-          <div className="cuenta-profile">
-            <span
-              className="avatar large"
-              style={{ background: '#0ac8b922', borderColor: '#0ac8b988', color: '#0ac8b9' }}
-            >
-              {displayName.slice(0, 2).toUpperCase()}
-            </span>
-            <div>
-              <strong>{displayName}</strong>
-              <small>{displayEmail}</small>
-            </div>
+          <form className="auth-form" onSubmit={handleForgotRequestSubmit}>
+            <label>
+              Email
+              <input
+                name="resetEmail"
+                type="email"
+                value={resetEmail}
+                onChange={(event) => setResetEmail(event.target.value)}
+                placeholder="tucorreo@ejemplo.com"
+                required
+              />
+            </label>
+
+            <button type="submit" className="primary-btn auth-submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Enviando...' : 'Enviar código'}
+            </button>
+          </form>
+
+          <button type="button" className="link-btn" onClick={handleGoBackToForm}>
+            Volver a inicio de sesión
+          </button>
+
+          {status && <p className="auth-status">{status}</p>}
+        </div>
+      </div>
+    )
+  }
+
+  if (authView === 'forgot-reset') {
+    return (
+      <div className="cuenta-panel">
+        <div className="auth-card">
+          <div className="auth-brand">HEXFORGE</div>
+          <div className="auth-header">
+            <span className="eyebrow">League of Coach</span>
+            <h1>Restablece tu contraseña</h1>
           </div>
 
-          <button type="button" className="secondary-btn auth-submit" onClick={handleLogout}>
-            Cerrar sesión
+          <form className="auth-form" onSubmit={handleForgotResetSubmit}>
+            <label>
+              Código de verificación
+              <input
+                name="resetCode"
+                value={resetCode}
+                onChange={(event) => setResetCode(event.target.value)}
+                placeholder="123456"
+                required
+              />
+            </label>
+
+            <label>
+              Nueva contraseña
+              <input
+                name="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                placeholder="••••••••"
+                minLength={8}
+                required
+              />
+            </label>
+
+            <button type="submit" className="primary-btn auth-submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Restableciendo...' : 'Restablecer contraseña'}
+            </button>
+          </form>
+
+          <button type="button" className="link-btn" onClick={handleGoBackToForm}>
+            Volver a inicio de sesión
           </button>
 
           {status && <p className="auth-status">{status}</p>}
@@ -255,10 +374,24 @@ export function CuentaTabPanel() {
 
           <div id="clerk-captcha" />
 
+          {authMode === 'login' && (
+            <button type="button" className="link-btn" onClick={() => setAuthView('forgot-request')}>
+              ¿Olvidaste tu contraseña?
+            </button>
+          )}
+
           <button type="submit" className="primary-btn auth-submit" disabled={isSubmitting}>
             {isSubmitting ? 'Procesando...' : authMode === 'login' ? 'Entrar' : 'Crear cuenta'}
           </button>
         </form>
+
+        <div className="auth-divider">
+          <span>o</span>
+        </div>
+
+        <button type="button" className="oauth-btn" onClick={handleGoogleAuth}>
+          Continuar con Google
+        </button>
 
         {status && <p className="auth-status">{status}</p>}
       </div>

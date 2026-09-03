@@ -1,8 +1,11 @@
+import { useState } from 'react'
+import { AccountSearchModal } from './AccountSearchModal'
 import { AccountTabPanel } from './AccountTabPanel'
 import { CuentaTabPanel } from './CuentaTabPanel'
 import { DashboardHeader } from './DashboardHeader'
 import { DashboardSidebar } from './DashboardSidebar'
-import { DashboardStatsGrid } from './DashboardStatsGrid'
+// Desactivado junto con el resumen de stats. Reactivar al reactivar <DashboardStatsGrid />.
+// import { DashboardStatsGrid } from './DashboardStatsGrid'
 import { GoalsTabPanel } from './GoalsTabPanel'
 import { LearningTabPanel } from './LearningTabPanel'
 import { MatchesTabPanel } from './MatchesTabPanel'
@@ -44,6 +47,7 @@ type DashboardScreenProps = {
   onSetCurrentAccountId: (id: string) => void
   onAccountFieldChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   onCreateAccount: (event: FormEvent<HTMLFormElement>) => void
+  onDeleteAccount: (accountId: string) => void
   onSyncMatches: () => void
 }
 
@@ -55,7 +59,7 @@ export function DashboardScreen({
   userAccounts,
   currentAccountId,
   activeAccount,
-  dashboardSummary,
+  // dashboardSummary no se usa mientras <DashboardStatsGrid /> está desactivado; se mantiene en el tipo de props.
   goalsByAccount,
   championData,
   status,
@@ -71,27 +75,38 @@ export function DashboardScreen({
   onSetCurrentAccountId,
   onAccountFieldChange,
   onCreateAccount,
+  onDeleteAccount,
   onSyncMatches,
 }: DashboardScreenProps) {
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false)
+
+  const handleOpenAccountModal = () => {
+    onGoToAccountsTab()
+    setIsAccountModalOpen(true)
+  }
+
   return (
-    <div className="forge-shell">
-      <DashboardSidebar
-        userDisplayName={userDisplayName}
-        userDisplayEmail={userDisplayEmail}
-        activeTab={activeTab}
-        isSignedIn={isSignedIn}
-        onTabChange={onTabChange}
-      />
+    <div className={isSignedIn ? 'forge-shell' : 'forge-shell forge-shell--auth-only'}>
+      {isSignedIn && (
+        <DashboardSidebar
+          userDisplayName={userDisplayName}
+          userDisplayEmail={userDisplayEmail}
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+          onLogout={onLogout}
+        />
+      )}
 
       <main className="forge-main">
         {isSignedIn && (
           <>
-            <DashboardHeader onLogout={onLogout} onGoToAccountsTab={onGoToAccountsTab} />
+            <DashboardHeader onOpenAccountModal={handleOpenAccountModal} />
 
             {status && <p className="dashboard-status">{status}</p>}
             {isLoadingDashboard && <p className="dashboard-status">Cargando dashboard…</p>}
 
-            <DashboardStatsGrid summary={dashboardSummary} />
+            {/* Resumen (Foco, Sesiones, Meta, Cuentas, Objetivos, Aprendizaje, Foco actual) desactivado a pedido. */}
+            {/* <DashboardStatsGrid summary={dashboardSummary} /> */}
           </>
         )}
 
@@ -100,10 +115,8 @@ export function DashboardScreen({
             userAccounts={userAccounts}
             activeAccount={activeAccount}
             currentAccountId={currentAccountId}
-            accountForm={accountForm}
             onSetCurrentAccountId={onSetCurrentAccountId}
-            onAccountFieldChange={onAccountFieldChange}
-            onCreateAccount={onCreateAccount}
+            onDeleteAccount={onDeleteAccount}
           />
         )}
 
@@ -120,8 +133,19 @@ export function DashboardScreen({
 
         {isSignedIn && activeTab === 'aprendizaje' && <LearningTabPanel championData={championData} />}
         {isSignedIn && activeTab === 'objetivos' && <GoalsTabPanel goalsByAccount={goalsByAccount} />}
-        {activeTab === 'cuenta' && <CuentaTabPanel />}
+        {!isSignedIn && <CuentaTabPanel />}
       </main>
+
+      {isSignedIn && (
+        <AccountSearchModal
+          isOpen={isAccountModalOpen}
+          accountForm={accountForm}
+          status={status}
+          onClose={() => setIsAccountModalOpen(false)}
+          onAccountFieldChange={onAccountFieldChange}
+          onCreateAccount={onCreateAccount}
+        />
+      )}
     </div>
   )
 }

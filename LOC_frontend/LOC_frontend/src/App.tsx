@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
-import { useAuth, useClerk, useUser } from '@clerk/clerk-react'
+import { AuthenticateWithRedirectCallback, useAuth, useClerk, useUser } from '@clerk/clerk-react'
 import { DashboardScreen } from './components/DashboardScreen'
+import { API_URL } from './lib/api'
 import type {
   AccountForm,
   AccountStatsSummary,
@@ -11,8 +12,6 @@ import type {
   MatchParticipantEntry,
   TabKey,
 } from './types/dashboard'
-
-const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:4100').replace(/\/$/, '')
 
 const blankAccountForm: AccountForm = {
   summoner: '',
@@ -25,7 +24,7 @@ function App() {
   const { user } = useUser()
   const { signOut } = useClerk()
 
-  const [activeTab, setActiveTab] = useState<TabKey>('cuenta')
+  const [activeTab, setActiveTab] = useState<TabKey>('cuentas')
   const [currentAccountId, setCurrentAccountId] = useState('')
   const [accountForm, setAccountForm] = useState<AccountForm>(blankAccountForm)
   const [dashboard, setDashboard] = useState<DashboardPayload | null>(null)
@@ -177,8 +176,6 @@ function App() {
 
   const championData = useMemo(() => dashboard?.learnings ?? [], [dashboard])
 
-  const effectiveTab = isSignedIn ? activeTab : 'cuenta'
-
   const dashboardSummary = useMemo(
     () =>
       dashboard?.summary ?? {
@@ -247,6 +244,38 @@ function App() {
     }
   }
 
+  const handleDeleteAccount = async (accountId: string) => {
+    if (!internalUser) return
+
+    try {
+      const token = await getToken()
+      const response = await fetch(`${API_URL}/accounts/${accountId}`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      })
+
+      if (!response.ok) {
+        throw new Error('No se pudo eliminar la cuenta.')
+      }
+
+      const updatedDashboard = await fetch(`${API_URL}/users/${internalUser.id}/dashboard`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      })
+
+      if (updatedDashboard.ok) {
+        const data = (await updatedDashboard.json()) as DashboardPayload
+        setDashboard(data)
+        setCurrentAccountId((previous) =>
+          previous === accountId ? (data.accounts[0]?.id ?? '') : previous,
+        )
+      }
+
+      setStatus('Cuenta eliminada correctamente.')
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'No se pudo eliminar la cuenta.')
+    }
+  }
+
   const handleGoToAccountsTab = () => {
     setActiveTab('cuentas')
   }
@@ -300,12 +329,16 @@ function App() {
     void signOut()
   }
 
+  if (window.location.pathname === '/sso-callback') {
+    return <AuthenticateWithRedirectCallback signInForceRedirectUrl="/" signUpForceRedirectUrl="/" />
+  }
+
   return (
     <DashboardScreen
       isSignedIn={Boolean(isSignedIn)}
       userDisplayName={userDisplayName}
       userDisplayEmail={userDisplayEmail}
-      activeTab={effectiveTab}
+      activeTab={activeTab}
       userAccounts={userAccounts}
       currentAccountId={currentAccountId}
       activeAccount={activeAccount}
@@ -325,6 +358,7 @@ function App() {
       onSetCurrentAccountId={setCurrentAccountId}
       onAccountFieldChange={handleAccountFieldChange}
       onCreateAccount={handleCreateAccount}
+      onDeleteAccount={handleDeleteAccount}
       onSyncMatches={handleSyncMatches}
     />
   )

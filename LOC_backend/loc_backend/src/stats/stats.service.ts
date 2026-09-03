@@ -24,6 +24,15 @@ export class StatsService {
     return this.summarize(participants);
   }
 
+  async getAccountSummaryByQueue(accountId: string, queueId: number) {
+    const participants = await this.prisma.matchParticipant.findMany({
+      where: { accountId, match: { queueId } },
+      include: { match: true },
+    });
+
+    return this.summarize(participants);
+  }
+
   async getByChampion(accountId: string) {
     const participants = await this.prisma.matchParticipant.findMany({
       where: { accountId },

@@ -4,28 +4,24 @@ type DashboardSidebarProps = {
   userDisplayName: string
   userDisplayEmail: string
   activeTab: TabKey
-  isSignedIn: boolean
   onTabChange: (tab: TabKey) => void
+  onLogout: () => void
 }
 
-const protectedNavItems: { key: TabKey; label: string }[] = [
+const navItems: { key: TabKey; label: string }[] = [
   { key: 'cuentas', label: 'Cuentas' },
   { key: 'partidas', label: 'Partidas' },
   { key: 'aprendizaje', label: 'Aprendizaje' },
   { key: 'objetivos', label: 'Objetivos' },
 ]
 
-const cuentaNavItem: { key: TabKey; label: string } = { key: 'cuenta', label: 'Cuenta' }
-
 export function DashboardSidebar({
   userDisplayName,
   userDisplayEmail,
   activeTab,
-  isSignedIn,
   onTabChange,
+  onLogout,
 }: DashboardSidebarProps) {
-  const navItems = isSignedIn ? [...protectedNavItems, cuentaNavItem] : [cuentaNavItem]
-
   return (
     <aside className="forge-sidebar">
       <div className="brand-block">
@@ -49,15 +45,18 @@ export function DashboardSidebar({
         ))}
       </nav>
 
-      {isSignedIn && (
-        <div className="profile-card">
+      <div className="profile-card">
+        <div className="profile-card-info">
           <span className="status-dot" />
           <div>
             <strong>{userDisplayName}</strong>
             <small>{userDisplayEmail}</small>
           </div>
         </div>
-      )}
+        <button type="button" className="link-btn profile-card-logout" onClick={onLogout}>
+          Cerrar sesión
+        </button>
+      </div>
     </aside>
   )
 }

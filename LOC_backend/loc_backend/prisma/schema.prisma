@@ -22,6 +22,7 @@ model LolAccount {
   tag               String
   server            String
   puuid             String             @unique
+  profileIconId     Int                @default(0)
   soloTier          String             @default("Unranked")
   soloDivision      String             @default("Unranked")
   soloLp            Int                @default(0)

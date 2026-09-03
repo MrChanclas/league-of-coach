@@ -24,6 +24,17 @@ export class StatsController {
     return this.statsService.getAccountSummary(accountId);
   }
 
+  @Get('account/:accountId/by-queue/:queueId')
+  getAccountSummaryByQueue(
+    @Param('accountId') accountId: string,
+    @Param('queueId') queueId: string,
+  ) {
+    return this.statsService.getAccountSummaryByQueue(
+      accountId,
+      Number(queueId),
+    );
+  }
+
   @Get('account/:accountId/by-champion')
   getByChampion(@Param('accountId') accountId: string) {
     return this.statsService.getByChampion(accountId);
