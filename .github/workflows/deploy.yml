@@ -60,7 +60,7 @@ jobs:
             --platform=managed \
             --service-account="${{ vars.RUNTIME_SA_EMAIL }}" \
             --add-cloudsql-instances="${{ vars.CLOUDSQL_CONNECTION_NAME }}" \
-            --set-secrets="DATABASE_URL=loc-database-url:latest,JWT_SECRET=loc-jwt-secret:latest,RIOT_API_KEY=loc-riot-api-key:latest" \
+            --set-secrets="DATABASE_URL=loc-database-url:latest,CLERK_SECRET_KEY=loc-clerk-secret-key:latest,RIOT_API_KEY=loc-riot-api-key:latest" \
             --set-env-vars="RIOT_DEFAULT_SERVER=LAS" \
             --port=8080 \
             --allow-unauthenticated \
@@ -77,6 +77,7 @@ jobs:
         run: |
           docker build \
             --build-arg VITE_API_URL="${{ steps.backend_url.outputs.url }}" \
+            --build-arg VITE_CLERK_PUBLISHABLE_KEY="${{ vars.VITE_CLERK_PUBLISHABLE_KEY }}" \
             -t "${FRONTEND_IMAGE}" .
           docker push "${FRONTEND_IMAGE}"
 
