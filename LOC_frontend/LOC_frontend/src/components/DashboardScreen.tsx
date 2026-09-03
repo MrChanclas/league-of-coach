@@ -4,8 +4,6 @@ import { AccountTabPanel } from './AccountTabPanel'
 import { CuentaTabPanel } from './CuentaTabPanel'
 import { DashboardHeader } from './DashboardHeader'
 import { DashboardSidebar } from './DashboardSidebar'
-// Desactivado junto con el resumen de stats. Reactivar al reactivar <DashboardStatsGrid />.
-// import { DashboardStatsGrid } from './DashboardStatsGrid'
 import { GoalsTabPanel } from './GoalsTabPanel'
 import { LearningTabPanel } from './LearningTabPanel'
 import { MatchesTabPanel } from './MatchesTabPanel'
@@ -16,7 +14,6 @@ import type {
   AccountForm,
   AccountStatsSummary,
   ChampionStat,
-  DashboardSummary,
   GoalItem,
   MasteryEntry,
   MatchParticipantEntry,
@@ -31,7 +28,6 @@ type DashboardScreenProps = {
   userAccounts: AccountCard[]
   currentAccountId: string
   activeAccount?: AccountCard
-  dashboardSummary: DashboardSummary
   goalsByAccount: GoalItem[]
   championData: ChampionStat[]
   status: string
@@ -59,7 +55,6 @@ export function DashboardScreen({
   userAccounts,
   currentAccountId,
   activeAccount,
-  // dashboardSummary no se usa mientras <DashboardStatsGrid /> está desactivado; se mantiene en el tipo de props.
   goalsByAccount,
   championData,
   status,
@@ -104,9 +99,6 @@ export function DashboardScreen({
 
             {status && <p className="dashboard-status">{status}</p>}
             {isLoadingDashboard && <p className="dashboard-status">Cargando dashboard…</p>}
-
-            {/* Resumen (Foco, Sesiones, Meta, Cuentas, Objetivos, Aprendizaje, Foco actual) desactivado a pedido. */}
-            {/* <DashboardStatsGrid summary={dashboardSummary} /> */}
           </>
         )}
 

@@ -176,17 +176,6 @@ function App() {
 
   const championData = useMemo(() => dashboard?.learnings ?? [], [dashboard])
 
-  const dashboardSummary = useMemo(
-    () =>
-      dashboard?.summary ?? {
-        totalAccounts: 0,
-        totalGoals: 0,
-        totalLearnings: 0,
-        activeFocus: 'Sin foco',
-      },
-    [dashboard],
-  )
-
   const handleAccountFieldChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target
     setAccountForm((previous: AccountForm) => ({
@@ -342,7 +331,6 @@ function App() {
       userAccounts={userAccounts}
       currentAccountId={currentAccountId}
       activeAccount={activeAccount}
-      dashboardSummary={dashboardSummary}
       goalsByAccount={goalsByAccount}
       championData={championData}
       status={status}
