@@ -33,9 +33,16 @@ export class StatsService {
     return this.summarize(participants);
   }
 
-  async getByChampion(accountId: string) {
+  async getByChampion(accountId: string, sinceDays?: number) {
+    const since = sinceDays
+      ? new Date(Date.now() - sinceDays * 24 * 60 * 60 * 1000)
+      : undefined;
+
     const participants = await this.prisma.matchParticipant.findMany({
-      where: { accountId },
+      where: {
+        accountId,
+        ...(since && { match: { gameCreation: { gte: since } } }),
+      },
       include: { match: true },
     });
 
@@ -49,6 +56,89 @@ export class StatsService {
     return Array.from(byChampion.entries())
       .map(([champion, entries]) => ({ champion, ...this.summarize(entries) }))
       .sort((a, b) => b.gamesPlayed - a.gamesPlayed);
+  }
+
+  async getWeeklyActivity(accountId: string, days: number) {
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const participants = await this.prisma.matchParticipant.findMany({
+      where: { accountId, match: { gameCreation: { gte: since } } },
+      include: { match: true },
+    });
+
+    const byDay = new Map<
+      string,
+      { wins: number; losses: number; minutesPlayed: number }
+    >();
+
+    for (const participant of participants) {
+      const dayKey = participant.match.gameCreation.toISOString().slice(0, 10);
+      const bucket = byDay.get(dayKey) ?? {
+        wins: 0,
+        losses: 0,
+        minutesPlayed: 0,
+      };
+      if (participant.win) {
+        bucket.wins += 1;
+      } else {
+        bucket.losses += 1;
+      }
+      bucket.minutesPlayed += participant.match.gameDuration / 60;
+      byDay.set(dayKey, bucket);
+    }
+
+    return Array.from(byDay.entries())
+      .map(([date, bucket]) => ({
+        date,
+        wins: bucket.wins,
+        losses: bucket.losses,
+        minutesPlayed: Math.round(bucket.minutesPlayed),
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  async getStreak(accountId: string) {
+    const participants = await this.prisma.matchParticipant.findMany({
+      where: { accountId },
+      select: { win: true },
+      orderBy: { match: { gameCreation: 'desc' } },
+      take: 50,
+    });
+
+    if (participants.length === 0) {
+      return { type: 'none' as const, count: 0 };
+    }
+
+    const type = participants[0].win ? ('win' as const) : ('loss' as const);
+    let count = 0;
+    for (const participant of participants) {
+      if (participant.win === (type === 'win')) {
+        count += 1;
+      } else {
+        break;
+      }
+    }
+
+    return { type, count };
+  }
+
+  async getLaneDistribution(accountId: string) {
+    const participants = await this.prisma.matchParticipant.findMany({
+      where: { accountId },
+      select: { teamPosition: true },
+    });
+
+    const total = participants.length;
+    if (total === 0) return [];
+
+    const counts = new Map<string, number>();
+    for (const participant of participants) {
+      const key = participant.teamPosition || 'UNKNOWN';
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+
+    return Array.from(counts.entries())
+      .map(([lane, games]) => ({ lane, games, share: games / total }))
+      .sort((a, b) => b.games - a.games);
   }
 
   async compareMatches(accountId: string, matchIdA: string, matchIdB: string) {

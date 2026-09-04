@@ -1,6 +1,8 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Req } from '@nestjs/common';
 import { z } from 'zod';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
+import { AuthzService } from '../auth/authz.service';
+import type { AuthenticatedRequest } from '../auth/clerk-auth.guard';
 import { MatchesService } from './matches.service';
 
 const SyncMatchesSchema = z.object({
@@ -14,23 +16,30 @@ const ListMatchesQuerySchema = z.object({
 
 @Controller('matches')
 export class MatchesController {
-  constructor(private readonly matchesService: MatchesService) {}
+  constructor(
+    private readonly matchesService: MatchesService,
+    private readonly authz: AuthzService,
+  ) {}
 
   @Post('sync/:accountId')
-  sync(
+  async sync(
+    @Req() request: AuthenticatedRequest,
     @Param('accountId') accountId: string,
     @Body(new ZodValidationPipe(SyncMatchesSchema))
     body: z.infer<typeof SyncMatchesSchema>,
   ) {
+    await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
     return this.matchesService.syncAccount(accountId, body.count ?? 10);
   }
 
   @Get('account/:accountId')
-  listByAccount(
+  async listByAccount(
+    @Req() request: AuthenticatedRequest,
     @Param('accountId') accountId: string,
     @Query(new ZodValidationPipe(ListMatchesQuerySchema))
     query: z.infer<typeof ListMatchesQuerySchema>,
   ) {
+    await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
     return this.matchesService.listByAccount(
       accountId,
       query.page,
@@ -39,7 +48,8 @@ export class MatchesController {
   }
 
   @Get(':matchId')
-  findOne(@Param('matchId') matchId: string) {
+  async findOne(@Req() request: AuthenticatedRequest, @Param('matchId') matchId: string) {
+    await this.authz.assertMatchParticipant(matchId, request.clerkUserId);
     return this.matchesService.findOne(matchId);
   }
 }

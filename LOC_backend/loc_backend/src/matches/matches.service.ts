@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { RankSnapshotsService } from '../rank-snapshots/rank-snapshots.service';
 import { RiotApiService, RiotMatchDto } from '../riot/riot-api.service';
 
 const MAX_NEW_MATCHES_PER_SYNC = 10;
@@ -13,6 +14,7 @@ export class MatchesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly riotApi: RiotApiService,
+    private readonly rankSnapshots: RankSnapshotsService,
   ) {}
 
   async syncAccount(accountId: string, count = 10) {
@@ -60,11 +62,50 @@ export class MatchesService {
       synced += 1;
     }
 
+    await this.refreshRankSnapshot(account.id, account.server, account.puuid);
+
     return {
       synced,
       skipped: matchIds.length - newIds.length,
       totalFetched: matchIds.length,
     };
+  }
+
+  private async refreshRankSnapshot(
+    accountId: string,
+    server: string,
+    puuid: string,
+  ) {
+    const entries = await this.riotApi
+      .getLeagueEntriesByPuuid(server, puuid)
+      .catch(() => []);
+
+    if (entries.length === 0) return;
+
+    const soloEntry = entries.find(
+      (entry) => entry.queueType === 'RANKED_SOLO_5x5',
+    );
+    const flexEntry = entries.find(
+      (entry) => entry.queueType === 'RANKED_FLEX_SR',
+    );
+
+    await this.prisma.lolAccount.update({
+      where: { id: accountId },
+      data: {
+        ...(soloEntry && {
+          soloTier: soloEntry.tier,
+          soloDivision: soloEntry.rank,
+          soloLp: soloEntry.leaguePoints,
+        }),
+        ...(flexEntry && {
+          flexTier: flexEntry.tier,
+          flexDivision: flexEntry.rank,
+          flexLp: flexEntry.leaguePoints,
+        }),
+      },
+    });
+
+    await this.rankSnapshots.recordFromLeagueEntries(accountId, entries);
   }
 
   private async storeMatch(
@@ -73,11 +114,12 @@ export class MatchesService {
     puuid: string,
     matchDto: RiotMatchDto,
   ) {
-    const participant = matchDto.info.participants.find(
+    const participants = matchDto.info.participants;
+    const trackedParticipant = participants.find(
       (entry) => entry.puuid === puuid,
     );
 
-    if (!participant) {
+    if (!trackedParticipant) {
       return;
     }
 
@@ -93,14 +135,20 @@ export class MatchesService {
       },
     });
 
-    const csTotal =
-      participant.totalMinionsKilled + participant.neutralMinionsKilled;
+    const knownAccounts = await this.prisma.lolAccount.findMany({
+      where: { puuid: { in: participants.map((entry) => entry.puuid) } },
+      select: { id: true, puuid: true },
+    });
+    const accountIdByPuuid = new Map(
+      knownAccounts.map((account) => [account.puuid, account.id]),
+    );
+    accountIdByPuuid.set(puuid, accountId);
 
-    await this.prisma.matchParticipant.create({
-      data: {
+    await this.prisma.matchParticipant.createMany({
+      data: participants.map((participant) => ({
         matchId: match.id,
-        accountId,
-        puuid,
+        accountId: accountIdByPuuid.get(participant.puuid) ?? null,
+        puuid: participant.puuid,
         champion: participant.championName,
         championId: participant.championId,
         teamPosition: participant.teamPosition,
@@ -108,15 +156,27 @@ export class MatchesService {
         kills: participant.kills,
         deaths: participant.deaths,
         assists: participant.assists,
-        csTotal,
+        csTotal:
+          participant.totalMinionsKilled + participant.neutralMinionsKilled,
         goldEarned: participant.goldEarned,
+        visionScore: participant.visionScore,
+        damageDealt: participant.totalDamageDealtToChampions,
+        itemIds: [
+          participant.item0,
+          participant.item1,
+          participant.item2,
+          participant.item3,
+          participant.item4,
+          participant.item5,
+          participant.item6,
+        ],
         teamId: participant.teamId,
-      },
+      })),
     });
 
     await this.upsertChampionLearning(
       accountId,
-      participant,
+      trackedParticipant,
       matchDto.info.gameDuration,
     );
   }
@@ -199,7 +259,36 @@ export class MatchesService {
       this.prisma.matchParticipant.count({ where: { accountId } }),
     ]);
 
-    return { items, total, page, pageSize };
+    const matchIds = items.map((item) => item.matchId);
+    const siblings = matchIds.length
+      ? await this.prisma.matchParticipant.findMany({
+          where: { matchId: { in: matchIds } },
+          select: { matchId: true, damageDealt: true },
+        })
+      : [];
+
+    const damagesByMatch = new Map<string, number[]>();
+    for (const sibling of siblings) {
+      const list = damagesByMatch.get(sibling.matchId) ?? [];
+      list.push(sibling.damageDealt);
+      damagesByMatch.set(sibling.matchId, list);
+    }
+
+    const enrichedItems = items.map((item) => ({
+      ...item,
+      damagePercentile: this.computeDamagePercentile(
+        item.damageDealt,
+        damagesByMatch.get(item.matchId) ?? [item.damageDealt],
+      ),
+    }));
+
+    return { items: enrichedItems, total, page, pageSize };
+  }
+
+  private computeDamagePercentile(value: number, all: number[]) {
+    if (all.length <= 1) return 100;
+    const lessOrEqual = all.filter((entry) => entry <= value).length;
+    return Math.round(((lessOrEqual - 1) / (all.length - 1)) * 100);
   }
 
   async findOne(matchId: string) {

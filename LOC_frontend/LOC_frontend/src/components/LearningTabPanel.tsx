@@ -1,60 +1,66 @@
-import type { ChampionStat } from '../types/dashboard'
+import type { AccountCard, LessonCard } from '../types/dashboard'
 
 type LearningTabPanelProps = {
-  championData: ChampionStat[]
+  activeAccount?: AccountCard
+  lessons: LessonCard[]
+  gamesAnalyzed: number
 }
 
-export function LearningTabPanel({ championData }: LearningTabPanelProps) {
+const MEDIA_LABELS: Record<LessonCard['mediaType'], string> = {
+  CLIP: 'clip de repetición',
+  HEATMAP: 'mapa de calor',
+  GOLD_GRAPH: 'gráfico de oro',
+  MATCHUP_TABLE: 'tabla de matchups',
+  SESSION_REPORT: 'gráfico de sesión',
+}
+
+export function LearningTabPanel({ activeAccount, lessons, gamesAnalyzed }: LearningTabPanelProps) {
+  if (!activeAccount) {
+    return (
+      <div className="view-content">
+        <div className="page-head">
+          <div>
+            <h1>Aprendizaje</h1>
+            <p>Agregá una cuenta de Riot en la pestaña &quot;Cuentas&quot; para recibir lecciones basadas en tus partidas.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <section className="panel-block">
-      <div className="panel-header">
-        <h3>Aprendizaje manual</h3>
-        <span>Comparación</span>
+    <div className="view-content">
+      <div className="page-head">
+        <div>
+          <div className="page-head-eyebrow">
+            BASADO EN LAS ÚLTIMAS {gamesAnalyzed} PARTIDAS DE {activeAccount.summoner.toUpperCase()}
+          </div>
+          <h1>Aprendizaje</h1>
+        </div>
       </div>
 
-      <div className="stack-list">
-        {championData.length === 0 ? (
-          <p>Aún no hay datos de aprendizaje para esta cuenta.</p>
-        ) : (
-          championData.map((entry) => {
-            const winrate = Math.round((entry.wins / Math.max(entry.games, 1)) * 100)
-            return (
-              <article key={`${entry.champion}-${entry.role}`} className="info-card learning-card">
-                <div className="learning-head">
-                  <div className="champion-mark">{entry.champion.slice(0, 2).toUpperCase()}</div>
-                  <div>
-                    <h4>{entry.champion}</h4>
-                    <span className="chip chip-gold">{entry.role}</span>
-                  </div>
-                </div>
-
-                <div className="mini-grid">
-                  <div className="mini-stat">
-                    <span>Partidas</span>
-                    <strong>{entry.games}</strong>
-                  </div>
-                  <div className="mini-stat">
-                    <span>Winrate</span>
-                    <strong>{winrate}%</strong>
-                  </div>
-                  <div className="mini-stat">
-                    <span>KDA</span>
-                    <strong>{entry.kdaK}/{entry.kdaD}/{entry.kdaA}</strong>
-                  </div>
-                  <div className="mini-stat">
-                    <span>CS/min</span>
-                    <strong>{entry.csMin}</strong>
-                  </div>
-                </div>
-
-                <div className="progress-bar">
-                  <div style={{ width: `${winrate}%` }} />
-                </div>
-              </article>
-            )
-          })
-        )}
-      </div>
-    </section>
+      {lessons.length === 0 ? (
+        <p className="empty-state">
+          Todavía no hay suficientes partidas sincronizadas para generar lecciones. Sincronizá más partidas desde el
+          encabezado para desbloquear tu primer análisis.
+        </p>
+      ) : (
+        <div className="lessons-grid">
+          {lessons.map((lesson) => (
+            <article key={`${lesson.tag}-${lesson.title}`} className="lesson-card">
+              <div className="lesson-media">
+                <span>{MEDIA_LABELS[lesson.mediaType]}</span>
+              </div>
+              <div className="lesson-body">
+                <div className="lesson-tag">{lesson.tag}</div>
+                <div className="lesson-title">{lesson.title}</div>
+                <p className="lesson-text">{lesson.body}</p>
+                <div className="lesson-meta">{lesson.meta}</div>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }

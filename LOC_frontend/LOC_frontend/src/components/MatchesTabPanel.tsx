@@ -1,125 +1,144 @@
-import type { AccountCard, AccountStatsSummary, MasteryEntry, MatchParticipantEntry } from '../types/dashboard'
+import { useMemo, useState } from 'react'
+import { MatchRow } from './MatchRow'
+import type { AccountCard, AccountStatsSummary, MatchParticipantEntry, RankSnapshotEntry, StreakInfo } from '../types/dashboard'
 
 type MatchesTabPanelProps = {
   activeAccount?: AccountCard
   matches: MatchParticipantEntry[]
-  mastery: MasteryEntry[]
   statsSummary: AccountStatsSummary | null
-  isLoading: boolean
-  onSyncMatches: () => void
+  streak: StreakInfo | null
+  rankHistory: RankSnapshotEntry[]
+  ddragonVersion: string | null
+}
+
+type QueueFilter = 'all' | 420 | 440 | 'normal'
+
+const FILTERS: { key: QueueFilter; label: string }[] = [
+  { key: 'all', label: 'Todas las colas' },
+  { key: 420, label: 'Clasif. solo/dúo' },
+  { key: 440, label: 'Flexible' },
+  { key: 'normal', label: 'Normal' },
+]
+
+function matchesFilter(entry: MatchParticipantEntry, filter: QueueFilter) {
+  if (filter === 'all') return true
+  if (filter === 'normal') return entry.match.queueId === 400 || entry.match.queueId === 430
+  return entry.match.queueId === filter
 }
 
 export function MatchesTabPanel({
   activeAccount,
   matches,
-  mastery,
   statsSummary,
-  isLoading,
-  onSyncMatches,
+  streak,
+  rankHistory,
+  ddragonVersion,
 }: MatchesTabPanelProps) {
+  const [filter, setFilter] = useState<QueueFilter>('all')
+
+  const filteredMatches = useMemo(() => matches.filter((entry) => matchesFilter(entry, filter)), [matches, filter])
+
   if (!activeAccount) {
     return (
-      <section className="panel-block">
-        <div className="panel-header">
-          <h3>Partidas</h3>
+      <div className="view-content">
+        <div className="page-head">
+          <div>
+            <h1>Historial de partidas</h1>
+            <p>Agregá una cuenta de Riot en la pestaña &quot;Cuentas&quot; para ver tu historial de partidas.</p>
+          </div>
         </div>
-        <p>Agrega una cuenta de Riot en la pestaña "Cuentas" para ver tu historial de partidas.</p>
-      </section>
+      </div>
     )
   }
 
+  const sortedHistory = [...rankHistory].sort(
+    (a, b) => new Date(a.capturedAt).getTime() - new Date(b.capturedAt).getTime(),
+  )
+  const netLp =
+    sortedHistory.length >= 2 ? sortedHistory[sortedHistory.length - 1].lp - sortedHistory[0].lp : null
+
+  const winratePct = statsSummary ? Math.round(statsSummary.winrate * 100) : 0
+  const kdaValue = statsSummary ? statsSummary.avgKda : 0
+  const streakLabel = streak && streak.type !== 'none' ? `${streak.count}${streak.type === 'win' ? 'V' : 'D'}` : '—'
+
+  const aggStats = [
+    {
+      label: `WINRATE · ${statsSummary?.gamesPlayed ?? 0} PARTIDAS`,
+      big: `${winratePct}%`,
+      detail: statsSummary ? `${statsSummary.wins}V · ${statsSummary.gamesPlayed - statsSummary.wins}D` : 'sin datos',
+      color: 'var(--hf-win-blue)',
+      pct: winratePct,
+    },
+    {
+      label: 'KDA PROMEDIO',
+      big: kdaValue.toFixed(2),
+      detail: statsSummary
+        ? `${statsSummary.avgKills.toFixed(1)} / ${statsSummary.avgDeaths.toFixed(1)} / ${statsSummary.avgAssists.toFixed(1)} por partida`
+        : 'sin datos',
+      color: 'var(--hf-win-green)',
+      pct: Math.min(100, Math.round(kdaValue * 20)),
+    },
+    {
+      label: 'LP NETO DEL SPLIT',
+      big: netLp !== null ? `${netLp >= 0 ? '+' : ''}${netLp}` : '—',
+      detail: `Racha actual: ${streakLabel}`,
+      color: 'var(--hf-gold)',
+      pct: netLp !== null ? Math.min(100, Math.abs(netLp)) : 0,
+    },
+  ]
+
   return (
-    <section className="panel-block">
-      <div className="panel-header">
-        <h3>Historial de partidas</h3>
-        <button type="button" className="primary-btn" onClick={onSyncMatches} disabled={isLoading}>
-          {isLoading ? 'Sincronizando…' : 'Sincronizar partidas'}
-        </button>
-      </div>
-
-      {statsSummary && statsSummary.gamesPlayed > 0 && (
-        <div className="mini-grid">
-          <div className="mini-stat">
-            <span>Partidas</span>
-            <strong>{statsSummary.gamesPlayed}</strong>
+    <div className="view-content">
+      <div className="page-head">
+        <div>
+          <div className="page-head-eyebrow">
+            {activeAccount.summoner} #{activeAccount.tag}
           </div>
-          <div className="mini-stat">
-            <span>Winrate</span>
-            <strong>{Math.round(statsSummary.winrate * 100)}%</strong>
-          </div>
-          <div className="mini-stat">
-            <span>KDA prom.</span>
-            <strong>{statsSummary.avgKda.toFixed(2)}</strong>
-          </div>
-          <div className="mini-stat">
-            <span>CS/min prom.</span>
-            <strong>{statsSummary.avgCsPerMin.toFixed(1)}</strong>
-          </div>
+          <h1>Historial de partidas</h1>
         </div>
-      )}
+      </div>
 
-      <div className="stack-list">
-        {matches.length === 0 ? (
-          <p>Aún no hay partidas sincronizadas para esta cuenta.</p>
+      <div className="filter-pills">
+        {FILTERS.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            className={filter === item.key ? 'filter-pill active' : 'filter-pill'}
+            onClick={() => setFilter(item.key)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="agg-stats-grid">
+        {aggStats.map((stat) => (
+          <div key={stat.label} className="agg-stat-card">
+            <div
+              className="agg-ring"
+              style={{ background: `conic-gradient(${stat.color} 0 ${stat.pct}%, rgba(255,255,255,.07) ${stat.pct}% 100%)` }}
+            >
+              <div className="agg-ring-inner" style={{ color: stat.color }}>
+                {stat.big}
+              </div>
+            </div>
+            <div>
+              <div className="agg-stat-label">{stat.label}</div>
+              <div className="agg-stat-detail">{stat.detail}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <section className="matches-panel">
+        {filteredMatches.length === 0 ? (
+          <p className="matches-empty">No hay partidas sincronizadas que coincidan con este filtro.</p>
         ) : (
-          matches.map((entry) => (
-            <article key={entry.id} className="info-card">
-              <div className="info-card-head">
-                <div>
-                  <h4>{entry.champion}</h4>
-                  <small>{entry.teamPosition || 'Sin rol'} • {new Date(entry.match.gameCreation).toLocaleString()}</small>
-                </div>
-                <span className={entry.win ? 'chip chip-gold' : 'chip'}>{entry.win ? 'Victoria' : 'Derrota'}</span>
-              </div>
-
-              <div className="mini-grid">
-                <div className="mini-stat">
-                  <span>KDA</span>
-                  <strong>{entry.kills}/{entry.deaths}/{entry.assists}</strong>
-                </div>
-                <div className="mini-stat">
-                  <span>CS</span>
-                  <strong>{entry.csTotal}</strong>
-                </div>
-                <div className="mini-stat">
-                  <span>Oro</span>
-                  <strong>{entry.goldEarned}</strong>
-                </div>
-                <div className="mini-stat">
-                  <span>Duración</span>
-                  <strong>{Math.round(entry.match.gameDuration / 60)} min</strong>
-                </div>
-              </div>
-            </article>
+          filteredMatches.map((entry) => (
+            <MatchRow key={entry.id} entry={entry} ddragonVersion={ddragonVersion} showAgo />
           ))
         )}
-      </div>
-
-      <div className="panel-header">
-        <h3>Maestría de campeones</h3>
-      </div>
-
-      <div className="stack-list">
-        {mastery.length === 0 ? (
-          <p>No hay datos de maestría disponibles.</p>
-        ) : (
-          mastery.map((entry) => (
-            <article key={entry.championId} className="info-card learning-card">
-              <div className="learning-head">
-                <div className="champion-mark">{entry.championName.slice(0, 2).toUpperCase()}</div>
-                <div>
-                  <h4>{entry.championName}</h4>
-                  <span className="chip chip-gold">Nivel {entry.championLevel}</span>
-                </div>
-              </div>
-              <div className="mini-stat">
-                <span>Puntos</span>
-                <strong>{entry.championPoints.toLocaleString()}</strong>
-              </div>
-            </article>
-          ))
-        )}
-      </div>
-    </section>
+      </section>
+    </div>
   )
 }

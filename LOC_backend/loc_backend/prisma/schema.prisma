@@ -23,6 +23,7 @@ model LolAccount {
   server            String
   puuid             String             @unique
   profileIconId     Int                @default(0)
+  summonerLevel     Int                @default(0)
   soloTier          String             @default("Unranked")
   soloDivision      String             @default("Unranked")
   soloLp            Int                @default(0)
@@ -35,6 +36,18 @@ model LolAccount {
   learnings         ChampionLearning[]
   goals             Goal[]
   matchParticipants MatchParticipant[]
+  rankSnapshots     RankSnapshot[]
+}
+
+model RankSnapshot {
+  id         String     @id @default(cuid())
+  queueType  String
+  tier       String
+  division   String
+  lp         Int
+  accountId  String
+  account    LolAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  capturedAt DateTime   @default(now())
 }
 
 model ChampionLearning {
@@ -91,11 +104,11 @@ model Match {
 }
 
 model MatchParticipant {
-  id           String     @id @default(cuid())
+  id           String      @id @default(cuid())
   matchId      String
-  match        Match      @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  accountId    String
-  account      LolAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  match        Match       @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  accountId    String?
+  account      LolAccount? @relation(fields: [accountId], references: [id], onDelete: Cascade)
   puuid        String
   champion     String
   championId   Int
@@ -106,8 +119,11 @@ model MatchParticipant {
   assists      Int
   csTotal      Int
   goldEarned   Int
+  visionScore  Int         @default(0)
+  damageDealt  Int         @default(0)
+  itemIds      Int[]       @default([])
   teamId       Int
-  createdAt    DateTime   @default(now())
+  createdAt    DateTime    @default(now())
 
-  @@unique([matchId, accountId])
+  @@unique([matchId, puuid])
 }

@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "macro-low-csmin",
+      "tag": "MACRO",
+      "metric": "avgCsPerMin",
+      "roleScope": ["TOP", "MIDDLE", "BOTTOM"],
+      "condition": { "operator": "lt", "value": 6.5 },
+      "title": "Tu CS/min está frenando tu progreso",
+      "body": "Promediás {{avgCsPerMin}} CS/min en tus últimas partidas, por debajo del {{benchmark}} recomendado para seguir escalando. Cada minuto de farmeo perdido es oro que tu rival sí está tomando.",
+      "mediaType": "GOLD_GRAPH",
+      "metaTemplate": "GRÁFICO DE ORO",
+      "priority": 80
+    },
+    {
+      "id": "macro-kills-without-gold",
+      "tag": "MACRO",
+      "metric": "killParticipationVsCsRatio",
+      "roleScope": ["TOP", "MIDDLE", "BOTTOM", "JUNGLE"],
+      "condition": { "operator": "gt", "value": 1.4 },
+      "title": "Kills sin oro: tu macro necesita foco",
+      "body": "Estás priorizando peleas por encima del farmeo ({{avgKills}} kills prom. vs {{avgCsPerMin}} CS/min). Ganar la pelea y perder el minuto de mapa te deja sin ítems para cerrar la partida.",
+      "mediaType": "GOLD_GRAPH",
+      "metaTemplate": "GRÁFICO DE ORO",
+      "priority": 60
+    },
+    {
+      "id": "vision-low-non-support",
+      "tag": "VISIÓN",
+      "metric": "avgVisionScorePerMin",
+      "roleScope": ["TOP", "MIDDLE", "BOTTOM", "JUNGLE"],
+      "condition": { "operator": "lt", "value": 0.8 },
+      "title": "Tu mapa está a oscuras",
+      "body": "Tu vision score promedio es de {{avgVisionScore}} ({{avgVisionScorePerMin}}/min). Comprar un par de wards de más por vuelta a base te da tiempo para reaccionar antes de las jugadas del rival.",
+      "mediaType": "HEATMAP",
+      "metaTemplate": "MAPA DE CALOR",
+      "priority": 70
+    },
+    {
+      "id": "vision-low-support",
+      "tag": "VISIÓN",
+      "metric": "avgVisionScorePerMin",
+      "roleScope": ["UTILITY"],
+      "condition": { "operator": "lt", "value": 1.8 },
+      "title": "Como soporte, tu visión es tu arma principal",
+      "body": "Tu vision score de {{avgVisionScore}} ({{avgVisionScorePerMin}}/min) está por debajo de lo esperado para tu rol. Priorizar control wards en objetivos puede cambiar el resultado de tus peleas de mid-late game.",
+      "mediaType": "HEATMAP",
+      "metaTemplate": "MAPA DE CALOR",
+      "priority": 75
+    },
+    {
+      "id": "duelos-low-kda",
+      "tag": "DUELOS",
+      "metric": "avgKda",
+      "condition": { "operator": "lt", "value": 2.0 },
+      "title": "Estás perdiendo demasiados 1v1",
+      "body": "Tu KDA promedio de {{avgKda}} en las últimas partidas indica que las peleas individuales te están costando caro. Repasar tus últimas muertes ayuda a identificar el patrón.",
+      "mediaType": "CLIP",
+      "metaTemplate": "CLIP DE REPETICIÓN",
+      "priority": 65
+    },
+    {
+      "id": "draft-champion-underperforming",
+      "tag": "DRAFT",
+      "metric": "championWinrateWithMinGames",
+      "condition": { "operator": "lt", "value": 0.45, "minGames": 5 },
+      "title": "Este campeón no te está funcionando",
+      "body": "Con {{champion}} tenés {{championWinrate}}% de winrate en {{championGames}} partidas. Puede ser un tema de matchups: revisar la tabla antes de lockear te ahorra partidas cuesta arriba.",
+      "mediaType": "MATCHUP_TABLE",
+      "metaTemplate": "TABLA DE MATCHUPS",
+      "priority": 55
+    },
+    {
+      "id": "mentalidad-losing-streak",
+      "tag": "MENTALIDAD",
+      "metric": "currentStreak",
+      "condition": { "operator": "eq", "streakType": "loss", "minCount": 3 },
+      "title": "Cortá la racha antes de que te corte a vos",
+      "body": "Llevás {{streakCount}} derrotas seguidas. El tilt es acumulativo: un descanso corto entre partidas suele rendir más que la revancha inmediata.",
+      "mediaType": "SESSION_REPORT",
+      "metaTemplate": "GRÁFICO DE SESIÓN",
+      "priority": 90
+    },
+    {
+      "id": "prioridad-alta-improving-trend",
+      "tag": "PRIORIDAD ALTA",
+      "metric": "kdaTrendVsRolling",
+      "condition": { "operator": "gt", "value": 0.2 },
+      "title": "Vas en la dirección correcta",
+      "body": "Tu KDA de las últimas partidas ({{recentKda}}) mejora tu promedio anterior ({{rollingKda}}). Mantené la misma rutina de pre-partida que veniste usando esta semana.",
+      "mediaType": "SESSION_REPORT",
+      "metaTemplate": "GRÁFICO DE SESIÓN",
+      "priority": 50
+    }
+  ]
+}

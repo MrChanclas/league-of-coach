@@ -1,42 +1,61 @@
-import type { GoalItem } from '../types/dashboard'
+import type { GoalItem, GoalStatus, GoalType } from '../types/dashboard'
 
 type GoalsTabPanelProps = {
   goalsByAccount: GoalItem[]
 }
 
+const KIND_LABELS: Record<GoalType, string> = {
+  rank: 'RANGO',
+  consistency: 'CONSISTENCIA',
+  mechanic: 'MECÁNICA',
+  habit: 'HÁBITO',
+}
+
+const STATUS_LABELS: Record<GoalStatus, string> = {
+  completed: 'COMPLETADO',
+  in_progress: 'EN CURSO',
+  behind: 'ATRASADO',
+}
+
 export function GoalsTabPanel({ goalsByAccount }: GoalsTabPanelProps) {
   return (
-    <section className="panel-block">
-      <div className="panel-header">
-        <h3>Objetivos personales</h3>
-        <span>Meta mensual</span>
+    <div className="view-content">
+      <div className="page-head">
+        <div>
+          <div className="page-head-eyebrow">TUS METAS</div>
+          <h1>Objetivos</h1>
+        </div>
       </div>
 
-      <div className="stack-list">
-        {goalsByAccount.length === 0 ? (
-          <p>No hay objetivos para la cuenta seleccionada todavía.</p>
-        ) : (
-          goalsByAccount.map((goal) => (
-            <article key={goal.id} className="info-card goal-card">
-              <div className="goal-topline">
-                <span className={goal.type === 'rank' ? 'chip chip-gold' : goal.type === 'role' ? 'chip chip-teal' : 'chip chip-red'}>
-                  {goal.type === 'rank' ? 'Rango' : goal.type === 'role' ? 'Rol' : 'Campeón'}
+      {goalsByAccount.length === 0 ? (
+        <p className="empty-state">No hay objetivos para la cuenta seleccionada todavía.</p>
+      ) : (
+        <div className="goals-grid">
+          {goalsByAccount.map((goal) => (
+            <article key={goal.id} className="goal-card">
+              <div className="goal-card-head">
+                <span className="goal-card-kind">{KIND_LABELS[goal.type]}</span>
+                <span className={`goal-status-badge goal-status-badge--${goal.status}`}>
+                  {STATUS_LABELS[goal.status]}
                 </span>
-                <h4>{goal.title}</h4>
               </div>
-
-              <div className="goal-meta">
-                <strong>{goal.progress}%</strong>
-                <span>{goal.deadline || 'Sin fecha'}</span>
-              </div>
-
-              <div className="progress-bar">
-                <div style={{ width: `${goal.progress}%` }} />
+              <div className="goal-card-title">{goal.title}</div>
+              {goal.deadline && (
+                <p className="goal-card-note">Fecha límite: {new Date(goal.deadline).toLocaleDateString()}</p>
+              )}
+              <div className="goal-card-progress">
+                <div className="goal-card-track">
+                  <div
+                    className={`goal-card-fill goal-card-fill--${goal.status}`}
+                    style={{ width: `${goal.progress}%` }}
+                  />
+                </div>
+                <span className="goal-card-pct">{goal.progress}%</span>
               </div>
             </article>
-          ))
-        )}
-      </div>
-    </section>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }

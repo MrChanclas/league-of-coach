@@ -2,15 +2,23 @@ import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { AuthenticateWithRedirectCallback, useAuth, useClerk, useUser } from '@clerk/clerk-react'
 import { DashboardScreen } from './components/DashboardScreen'
-import { API_URL } from './lib/api'
+import { API_URL, fetchJson } from './lib/api'
+import { getDdragonVersion } from './lib/riotAssets'
 import type {
   AccountForm,
   AccountStatsSummary,
+  ActivityDay,
   AuthUser,
+  ChampionSplitStat,
   DashboardPayload,
+  LaneEntry,
+  LessonCard,
   MasteryEntry,
   MatchParticipantEntry,
+  RankSnapshotEntry,
+  StreakInfo,
   TabKey,
+  TimeRange,
 } from './types/dashboard'
 
 const blankAccountForm: AccountForm = {
@@ -29,12 +37,26 @@ function App() {
   const [accountForm, setAccountForm] = useState<AccountForm>(blankAccountForm)
   const [dashboard, setDashboard] = useState<DashboardPayload | null>(null)
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false)
+  const [status, setStatus] = useState('')
+  const [internalUser, setInternalUser] = useState<AuthUser | null>(null)
+  const [ddragonVersion, setDdragonVersion] = useState<string | null>(null)
+
+  const [timeRange, setTimeRange] = useState<TimeRange>('7d')
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null)
+
   const [matches, setMatches] = useState<MatchParticipantEntry[]>([])
   const [mastery, setMastery] = useState<MasteryEntry[]>([])
   const [statsSummary, setStatsSummary] = useState<AccountStatsSummary | null>(null)
-  const [isLoadingMatches, setIsLoadingMatches] = useState(false)
-  const [status, setStatus] = useState('')
-  const [internalUser, setInternalUser] = useState<AuthUser | null>(null)
+  const [streak, setStreak] = useState<StreakInfo | null>(null)
+  const [lanes, setLanes] = useState<LaneEntry[]>([])
+  const [weeklyActivity, setWeeklyActivity] = useState<ActivityDay[]>([])
+  const [championsSplit, setChampionsSplit] = useState<ChampionSplitStat[]>([])
+  const [lessons, setLessons] = useState<LessonCard[]>([])
+
+  useEffect(() => {
+    void getDdragonVersion().then(setDdragonVersion)
+  }, [])
 
   useEffect(() => {
     if (!isSignedIn || !user) {
@@ -103,7 +125,7 @@ function App() {
         const payload = (await response.json()) as DashboardPayload
         setDashboard(payload)
         if (payload.accounts.length > 0) {
-          setCurrentAccountId(payload.accounts[0].id)
+          setCurrentAccountId((previous) => previous || payload.accounts[0].id)
         }
       } catch (error) {
         setStatus(error instanceof Error ? error.message : 'No se pudo cargar el dashboard.')
@@ -115,53 +137,6 @@ function App() {
     loadDashboard()
   }, [internalUser, getToken])
 
-  useEffect(() => {
-    if (activeTab !== 'partidas' || !currentAccountId) {
-      return
-    }
-
-    const loadMatchesData = async () => {
-      try {
-        setIsLoadingMatches(true)
-        const token = await getToken()
-        const headers = token ? { Authorization: `Bearer ${token}` } : undefined
-
-        const [matchesResponse, masteryResponse, statsResponse] = await Promise.all([
-          fetch(`${API_URL}/matches/account/${currentAccountId}`, { headers }),
-          fetch(`${API_URL}/mastery/account/${currentAccountId}`, { headers }),
-          fetch(`${API_URL}/stats/account/${currentAccountId}`, { headers }),
-        ])
-
-        if (matchesResponse.ok) {
-          const data = (await matchesResponse.json()) as { items: MatchParticipantEntry[] }
-          setMatches(data.items)
-        }
-
-        if (masteryResponse.ok) {
-          setMastery((await masteryResponse.json()) as MasteryEntry[])
-        }
-
-        if (statsResponse.ok) {
-          setStatsSummary((await statsResponse.json()) as AccountStatsSummary)
-        }
-      } catch (error) {
-        setStatus(error instanceof Error ? error.message : 'No se pudieron cargar las partidas.')
-      } finally {
-        setIsLoadingMatches(false)
-      }
-    }
-
-    loadMatchesData()
-  }, [activeTab, currentAccountId, getToken])
-
-  const userDisplayName = useMemo(
-    () => user?.fullName ?? user?.primaryEmailAddress?.emailAddress ?? 'League of Coach',
-    [user],
-  )
-  const userDisplayEmail = useMemo(
-    () => user?.primaryEmailAddress?.emailAddress ?? 'coach@leagueofcoach.com',
-    [user],
-  )
   const userAccounts = useMemo(() => dashboard?.accounts ?? [], [dashboard])
 
   const activeAccount = useMemo(
@@ -169,12 +144,82 @@ function App() {
     [currentAccountId, userAccounts],
   )
 
+  const loadAccountData = async () => {
+    if (!currentAccountId) {
+      setMatches([])
+      setMastery([])
+      setStatsSummary(null)
+      setStreak(null)
+      setLanes([])
+      setWeeklyActivity([])
+      setChampionsSplit([])
+      setLessons([])
+      return
+    }
+
+    const token = await getToken()
+    const splitDays = timeRange === '7d' ? 7 : 30
+    const account = userAccounts.find((entry) => entry.id === currentAccountId)
+    const primaryQueue = account && account.soloTier !== 'Unranked' ? 'solo' : 'flex'
+
+    const [
+      matchesResult,
+      masteryResult,
+      statsResult,
+      streakResult,
+      lanesResult,
+      activityResult,
+      championsResult,
+      rankHistoryResult,
+      lessonsResult,
+    ] = await Promise.all([
+      fetchJson<{ items: MatchParticipantEntry[] }>(`/matches/account/${currentAccountId}?pageSize=20`, token),
+      fetchJson<MasteryEntry[]>(`/mastery/account/${currentAccountId}`, token),
+      fetchJson<AccountStatsSummary>(`/stats/account/${currentAccountId}`, token),
+      fetchJson<StreakInfo>(`/stats/account/${currentAccountId}/streak`, token),
+      fetchJson<LaneEntry[]>(`/stats/account/${currentAccountId}/lanes`, token),
+      fetchJson<ActivityDay[]>(`/stats/account/${currentAccountId}/activity?days=7`, token),
+      fetchJson<ChampionSplitStat[]>(`/stats/account/${currentAccountId}/champions?days=${splitDays}`, token),
+      fetchJson<RankSnapshotEntry[]>(`/accounts/${currentAccountId}/rank-history?queue=${primaryQueue}&days=90`, token),
+      fetchJson<LessonCard[]>(`/learning/account/${currentAccountId}/lessons`, token),
+    ])
+
+    setMatches(matchesResult?.items ?? [])
+    setMastery(masteryResult ?? [])
+    setStatsSummary(statsResult)
+    setStreak(streakResult)
+    setLanes(lanesResult ?? [])
+    setWeeklyActivity(activityResult ?? [])
+    setChampionsSplit(championsResult ?? [])
+    setLessons(lessonsResult ?? [])
+
+    return rankHistoryResult ?? []
+  }
+
+  const [rankHistory, setRankHistory] = useState<RankSnapshotEntry[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const run = async () => {
+      const history = await loadAccountData()
+      if (!cancelled) {
+        setRankHistory(history ?? [])
+      }
+    }
+
+    void run()
+
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentAccountId, timeRange, getToken])
+
   const goalsByAccount = useMemo(
     () => (dashboard?.goals ?? []).filter((goal) => goal.accountId === (activeAccount?.id ?? '')),
     [activeAccount, dashboard],
   )
-
-  const championData = useMemo(() => dashboard?.learnings ?? [], [dashboard])
 
   const handleAccountFieldChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target
@@ -223,7 +268,7 @@ function App() {
         const data = (await updatedDashboard.json()) as DashboardPayload
         setDashboard(data)
         if (data.accounts.length > 0) {
-          setCurrentAccountId(data.accounts[0].id)
+          setCurrentAccountId((previous) => previous || data.accounts[0].id)
         }
       }
 
@@ -265,15 +310,11 @@ function App() {
     }
   }
 
-  const handleGoToAccountsTab = () => {
-    setActiveTab('cuentas')
-  }
-
   const handleSyncMatches = async () => {
     if (!currentAccountId) return
 
     try {
-      setIsLoadingMatches(true)
+      setIsSyncing(true)
       const token = await getToken()
       const response = await fetch(`${API_URL}/matches/sync/${currentAccountId}`, {
         method: 'POST',
@@ -291,25 +332,14 @@ function App() {
       }
 
       setStatus(`Se sincronizaron ${payload.synced ?? 0} partidas nuevas (${payload.skipped ?? 0} ya existían).`)
+      setLastSyncedAt(new Date())
 
-      const headers = token ? { Authorization: `Bearer ${token}` } : undefined
-      const [matchesResponse, statsResponse] = await Promise.all([
-        fetch(`${API_URL}/matches/account/${currentAccountId}`, { headers }),
-        fetch(`${API_URL}/stats/account/${currentAccountId}`, { headers }),
-      ])
-
-      if (matchesResponse.ok) {
-        const data = (await matchesResponse.json()) as { items: MatchParticipantEntry[] }
-        setMatches(data.items)
-      }
-
-      if (statsResponse.ok) {
-        setStatsSummary((await statsResponse.json()) as AccountStatsSummary)
-      }
+      const history = await loadAccountData()
+      setRankHistory(history ?? [])
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'No se pudieron sincronizar las partidas.')
     } finally {
-      setIsLoadingMatches(false)
+      setIsSyncing(false)
     }
   }
 
@@ -317,6 +347,22 @@ function App() {
     setStatus('Sesión cerrada.')
     void signOut()
   }
+
+  const userDisplayName = useMemo(
+    () => user?.fullName ?? user?.primaryEmailAddress?.emailAddress ?? 'League of Coach',
+    [user],
+  )
+  const userDisplayEmail = useMemo(
+    () => user?.primaryEmailAddress?.emailAddress ?? 'coach@leagueofcoach.com',
+    [user],
+  )
+
+  const lastSyncedLabel = useMemo(() => {
+    if (!lastSyncedAt) return 'Sin sincronizar en esta sesión'
+    const minutes = Math.max(0, Math.round((Date.now() - lastSyncedAt.getTime()) / 60_000))
+    if (minutes < 1) return 'Sincronizado hace instantes'
+    return `Sincronizado hace ${minutes} min`
+  }, [lastSyncedAt])
 
   if (window.location.pathname === '/sso-callback') {
     return <AuthenticateWithRedirectCallback signInForceRedirectUrl="/" signUpForceRedirectUrl="/" />
@@ -332,17 +378,25 @@ function App() {
       currentAccountId={currentAccountId}
       activeAccount={activeAccount}
       goalsByAccount={goalsByAccount}
-      championData={championData}
       status={status}
       isLoadingDashboard={isLoadingDashboard}
       accountForm={accountForm}
       matches={matches}
       mastery={mastery}
       statsSummary={statsSummary}
-      isLoadingMatches={isLoadingMatches}
+      streak={streak}
+      lanes={lanes}
+      weeklyActivity={weeklyActivity}
+      championsSplit={championsSplit}
+      rankHistory={rankHistory}
+      lessons={lessons}
+      ddragonVersion={ddragonVersion}
+      timeRange={timeRange}
+      isSyncing={isSyncing}
+      lastSyncedLabel={lastSyncedLabel}
+      onTimeRangeChange={setTimeRange}
       onTabChange={setActiveTab}
       onLogout={handleLogout}
-      onGoToAccountsTab={handleGoToAccountsTab}
       onSetCurrentAccountId={setCurrentAccountId}
       onAccountFieldChange={handleAccountFieldChange}
       onCreateAccount={handleCreateAccount}

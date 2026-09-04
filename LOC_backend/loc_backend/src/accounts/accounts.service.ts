@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { z } from 'zod';
 import { PrismaService } from '../prisma/prisma.service';
+import { RankSnapshotsService } from '../rank-snapshots/rank-snapshots.service';
 import { RiotApiService, RiotLeagueEntryDto } from '../riot/riot-api.service';
 
 const AccountSchema = z.object({
@@ -15,6 +16,7 @@ export class AccountsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly riotApi: RiotApiService,
+    private readonly rankSnapshots: RankSnapshotsService,
   ) {}
 
   async create(input: z.infer<typeof AccountSchema>) {
@@ -38,6 +40,7 @@ export class AccountsService {
       server: resolved.server,
       puuid: resolved.puuid,
       profileIconId: resolved.profileIconId,
+      summonerLevel: resolved.summonerLevel,
       soloTier: resolved.soloTier,
       soloDivision: resolved.soloDivision,
       soloLp: resolved.soloLp,
@@ -53,6 +56,11 @@ export class AccountsService {
         data,
       });
 
+      await this.rankSnapshots.recordFromLeagueEntries(
+        account.id,
+        resolved.leagueEntries,
+      );
+
       return {
         found: true,
         created: false,
@@ -62,6 +70,11 @@ export class AccountsService {
     }
 
     const account = await this.prisma.lolAccount.create({ data });
+
+    await this.rankSnapshots.recordFromLeagueEntries(
+      account.id,
+      resolved.leagueEntries,
+    );
 
     return {
       found: true,
@@ -127,12 +140,14 @@ export class AccountsService {
       tag: riotAccount.tagLine ?? input.tag,
       puuid: riotAccount.puuid,
       profileIconId: summoner?.profileIconId ?? 0,
+      summonerLevel: summoner?.summonerLevel ?? 0,
       soloTier: soloEntry?.tier ?? 'Unranked',
       soloDivision: soloEntry?.rank ?? 'Unranked',
       soloLp: soloEntry?.leaguePoints ?? 0,
       flexTier: flexEntry?.tier ?? 'Unranked',
       flexDivision: flexEntry?.rank ?? 'Unranked',
       flexLp: flexEntry?.leaguePoints ?? 0,
+      leagueEntries: entries,
     };
   }
 }

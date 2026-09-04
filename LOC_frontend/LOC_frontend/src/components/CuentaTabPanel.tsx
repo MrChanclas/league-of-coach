@@ -5,12 +5,89 @@ import { useSignIn, useSignUp, useUser } from '@clerk/clerk-react'
 type AuthMode = 'login' | 'register'
 type AuthView = 'form' | 'forgot-request' | 'forgot-reset'
 
+const CLAIMS = [
+  'Tres correcciones concretas por semana, no cien estadísticas sueltas.',
+  'Objetivos con progreso medible hasta el final del split.',
+  'Múltiples cuentas en un solo panel: smurf, flex y principal.',
+]
+
+const PROOF = [
+  { big: '3', label: 'CUENTAS POR PERFIL' },
+  { big: '20', label: 'PARTIDAS POR ANÁLISIS' },
+  { big: '0$', label: 'DURANTE LA BETA' },
+]
+
 function getClerkErrorMessage(error: unknown, fallback: string) {
   if (error && typeof error === 'object' && 'errors' in error) {
     const clerkError = error as { errors?: { message?: string; longMessage?: string }[] }
     return clerkError.errors?.[0]?.longMessage ?? clerkError.errors?.[0]?.message ?? fallback
   }
   return error instanceof Error ? error.message : fallback
+}
+
+function getPasswordStrength(password: string) {
+  if (!password) return { filled: 0, label: 'DÉBIL', color: '#cd6a63' }
+
+  let score = 0
+  if (password.length >= 8) score += 1
+  if (password.length >= 12) score += 1
+  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 1
+  if (/[0-9]/.test(password) && /[^A-Za-z0-9]/.test(password)) score += 1
+
+  const levels = [
+    { filled: 1, label: 'DÉBIL', color: '#cd6a63' },
+    { filled: 2, label: 'DÉBIL', color: '#cd6a63' },
+    { filled: 3, label: 'MEDIA', color: '#e2c483' },
+    { filled: 4, label: 'SÓLIDA', color: '#5fceac' },
+  ]
+
+  return levels[Math.min(score, levels.length - 1)]
+}
+
+function Checkbox({
+  checked,
+  onToggle,
+  label,
+  variant,
+}: {
+  checked: boolean
+  onToggle: () => void
+  label: string
+  variant?: 'terms'
+}) {
+  return (
+    <button
+      type="button"
+      className={variant === 'terms' ? 'auth-checkbox-row auth-checkbox-row--terms' : 'auth-checkbox-row'}
+      onClick={onToggle}
+    >
+      <span className={checked ? 'auth-checkbox-box checked' : 'auth-checkbox-box'}>
+        {checked && <span>✓</span>}
+      </span>
+      <span className={variant === 'terms' ? 'auth-checkbox-label auth-checkbox-label--terms' : 'auth-checkbox-label'}>
+        {label}
+      </span>
+    </button>
+  )
+}
+
+function OrDivider() {
+  return (
+    <div className="auth-oredivider">
+      <span className="auth-oredivider-line" />
+      <span>O CON TU CORREO</span>
+      <span className="auth-oredivider-line" />
+    </div>
+  )
+}
+
+function ClerkBadge() {
+  return (
+    <span className="auth-clerk-badge">
+      <span />
+      <span>SEGURO CON CLERK</span>
+    </span>
+  )
 }
 
 export function CuentaTabPanel() {
@@ -25,6 +102,8 @@ export function CuentaTabPanel() {
   const [pendingVerification, setPendingVerification] = useState(false)
   const [status, setStatus] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [remember, setRemember] = useState(true)
+  const [terms, setTerms] = useState(true)
 
   const [resetEmail, setResetEmail] = useState('')
   const [resetCode, setResetCode] = useState('')
@@ -68,6 +147,10 @@ export function CuentaTabPanel() {
         }
       } else {
         if (!isSignUpLoaded) return
+        if (!terms) {
+          setStatus('Tenés que aceptar los términos para continuar.')
+          return
+        }
 
         const result = await signUp.create({
           emailAddress: form.email,
@@ -176,68 +259,64 @@ export function CuentaTabPanel() {
     }
   }
 
-  if (!isUserLoaded) {
-    return (
-      <div className="cuenta-panel">
-        <div className="auth-card">
+  const showTabs = isUserLoaded && authView === 'form' && !pendingVerification
+
+  const renderStepContent = () => {
+    if (!isUserLoaded) {
+      return (
+        <div className="auth-step">
           <p className="dashboard-status">Cargando…</p>
         </div>
-      </div>
-    )
-  }
+      )
+    }
 
-  if (authView === 'forgot-request') {
-    return (
-      <div className="cuenta-panel">
-        <div className="auth-card">
-          <div className="auth-brand">HEXFORGE</div>
-          <div className="auth-header">
-            <span className="eyebrow">League of Coach</span>
-            <h1>Recupera tu contraseña</h1>
-          </div>
+    if (authView === 'forgot-request') {
+      return (
+        <div className="auth-step">
+          <div className="auth-step-eyebrow">RECUPERAR ACCESO</div>
+          <h2>Recuperá tu contraseña</h2>
+          <p className="auth-step-sub">Te mandamos un código a tu correo para elegir una nueva.</p>
 
-          <form className="auth-form" onSubmit={handleForgotRequestSubmit}>
-            <label>
-              Email
+          <form className="auth-fields" style={{ marginTop: 26 }} onSubmit={handleForgotRequestSubmit}>
+            <label className="auth-field">
+              <span className="auth-field-label">CORREO</span>
               <input
+                className="auth-input"
                 name="resetEmail"
                 type="email"
                 value={resetEmail}
                 onChange={(event) => setResetEmail(event.target.value)}
-                placeholder="tucorreo@ejemplo.com"
+                placeholder="jugador@correo.com"
                 required
               />
             </label>
 
-            <button type="submit" className="primary-btn auth-submit" disabled={isSubmitting}>
+            <button type="submit" className="auth-submit" disabled={isSubmitting}>
               {isSubmitting ? 'Enviando...' : 'Enviar código'}
             </button>
           </form>
 
-          <button type="button" className="link-btn" onClick={handleGoBackToForm}>
+          <button type="button" className="auth-back-link" onClick={handleGoBackToForm}>
             Volver a inicio de sesión
           </button>
 
           {status && <p className="auth-status">{status}</p>}
         </div>
-      </div>
-    )
-  }
+      )
+    }
 
-  if (authView === 'forgot-reset') {
-    return (
-      <div className="cuenta-panel">
-        <div className="auth-card">
-          <div className="auth-brand">HEXFORGE</div>
-          <div className="auth-header">
-            <span className="eyebrow">League of Coach</span>
-            <h1>Restablece tu contraseña</h1>
-          </div>
+    if (authView === 'forgot-reset') {
+      return (
+        <div className="auth-step">
+          <div className="auth-step-eyebrow">RECUPERAR ACCESO</div>
+          <h2>Restablecé tu contraseña</h2>
+          <p className="auth-step-sub">Ingresá el código que te mandamos y tu nueva contraseña.</p>
 
-          <form className="auth-form" onSubmit={handleForgotResetSubmit}>
-            <label>
-              Código de verificación
+          <form className="auth-fields" style={{ marginTop: 26 }} onSubmit={handleForgotResetSubmit}>
+            <label className="auth-field">
+              <span className="auth-field-label">CÓDIGO DE VERIFICACIÓN</span>
               <input
+                className="auth-input"
                 name="resetCode"
                 value={resetCode}
                 onChange={(event) => setResetCode(event.target.value)}
@@ -246,48 +325,47 @@ export function CuentaTabPanel() {
               />
             </label>
 
-            <label>
-              Nueva contraseña
+            <label className="auth-field">
+              <span className="auth-field-label">NUEVA CONTRASEÑA</span>
               <input
+                className="auth-input auth-input--password"
                 name="newPassword"
                 type="password"
                 value={newPassword}
                 onChange={(event) => setNewPassword(event.target.value)}
-                placeholder="••••••••"
+                placeholder="••••••••••••"
                 minLength={8}
                 required
               />
             </label>
 
-            <button type="submit" className="primary-btn auth-submit" disabled={isSubmitting}>
+            <button type="submit" className="auth-submit" disabled={isSubmitting}>
               {isSubmitting ? 'Restableciendo...' : 'Restablecer contraseña'}
             </button>
           </form>
 
-          <button type="button" className="link-btn" onClick={handleGoBackToForm}>
+          <button type="button" className="auth-back-link" onClick={handleGoBackToForm}>
             Volver a inicio de sesión
           </button>
 
           {status && <p className="auth-status">{status}</p>}
         </div>
-      </div>
-    )
-  }
+      )
+    }
 
-  if (pendingVerification) {
-    return (
-      <div className="cuenta-panel">
-        <div className="auth-card">
-          <div className="auth-brand">HEXFORGE</div>
-          <div className="auth-header">
-            <span className="eyebrow">League of Coach</span>
-            <h1>Verifica tu correo</h1>
-          </div>
+    if (pendingVerification) {
+      return (
+        <div className="auth-step">
+          <div className="auth-step-eyebrow">VERIFICÁ TU CORREO</div>
+          <h2>Ingresá el código</h2>
+          <p className="auth-step-sub">Te mandamos un código de 6 dígitos a tu correo.</p>
 
-          <form className="auth-form" onSubmit={handleVerify}>
-            <label>
-              Código de verificación
+          <form className="auth-fields" style={{ marginTop: 26 }} onSubmit={handleVerify}>
+            <label className="auth-field">
+              <span className="auth-field-label">CÓDIGO DE VERIFICACIÓN</span>
               <input
+                className="auth-input"
+                style={{ letterSpacing: '.3em', textAlign: 'center' }}
                 name="code"
                 value={code}
                 onChange={(event) => setCode(event.target.value)}
@@ -296,105 +374,275 @@ export function CuentaTabPanel() {
               />
             </label>
 
-            <button type="submit" className="primary-btn auth-submit" disabled={isSubmitting}>
+            <button type="submit" className="auth-submit" disabled={isSubmitting}>
               {isSubmitting ? 'Verificando...' : 'Verificar código'}
             </button>
           </form>
 
           {status && <p className="auth-status">{status}</p>}
         </div>
+      )
+    }
+
+    if (authMode === 'login') {
+      return (
+        <div className="auth-step">
+          <div className="auth-step-eyebrow">BIENVENIDO DE VUELTA</div>
+          <h2>Entrá a tu panel</h2>
+          <p className="auth-step-sub">Tus cuentas y el análisis del split te esperan donde los dejaste.</p>
+
+          <div className="auth-socials">
+            <button type="button" className="auth-social-btn" onClick={handleGoogleAuth}>
+              <span className="auth-social-mark" />
+              <span className="auth-social-label">Continuar con Google</span>
+            </button>
+          </div>
+
+          <OrDivider />
+
+          <form className="auth-fields" onSubmit={handleSubmit}>
+            <label className="auth-field">
+              <span className="auth-field-label">CORREO</span>
+              <input
+                className="auth-input"
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleFieldChange}
+                placeholder="jugador@correo.com"
+                required
+              />
+            </label>
+
+            <label className="auth-field">
+              <div className="auth-field-label-row">
+                <span className="auth-field-label">CONTRASEÑA</span>
+                <button
+                  type="button"
+                  className="auth-field-link"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, font: 'inherit' }}
+                  onClick={() => setAuthView('forgot-request')}
+                >
+                  ¿La olvidaste?
+                </button>
+              </div>
+              <input
+                className="auth-input auth-input--password"
+                name="password"
+                type="password"
+                value={form.password}
+                onChange={handleFieldChange}
+                placeholder="••••••••••••"
+                required
+              />
+            </label>
+
+            <Checkbox
+              checked={remember}
+              onToggle={() => setRemember((previous) => !previous)}
+              label="Mantener la sesión abierta en este equipo"
+            />
+
+            <button type="submit" className="auth-submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Procesando...' : 'Entrar'}
+            </button>
+          </form>
+
+          <div className="auth-footnote">
+            <span className="auth-footnote-text">
+              ¿Primera vez acá?{' '}
+              <button type="button" className="auth-footnote-link" onClick={() => handleModeChange('register')}>
+                Creá tu cuenta gratis
+              </button>
+            </span>
+            <ClerkBadge />
+          </div>
+
+          {status && <p className="auth-status">{status}</p>}
+        </div>
+      )
+    }
+
+    const strength = getPasswordStrength(form.password)
+
+    return (
+      <div className="auth-step">
+        <div className="auth-step-eyebrow">EMPECEMOS</div>
+        <h2>Creá tu cuenta</h2>
+        <p className="auth-step-sub">Sin tarjeta. Vinculás tu cuenta de Riot ya logueado, cuando quieras.</p>
+
+        <div className="auth-socials">
+          <button type="button" className="auth-social-btn" onClick={handleGoogleAuth}>
+            <span className="auth-social-mark" />
+            <span className="auth-social-label">Registrarme con Google</span>
+          </button>
+        </div>
+
+        <OrDivider />
+
+        <form className="auth-fields" onSubmit={handleSubmit}>
+          <label className="auth-field">
+            <span className="auth-field-label">CÓMO TE LLAMAMOS</span>
+            <input
+              className="auth-input"
+              name="name"
+              value={form.name}
+              onChange={handleFieldChange}
+              placeholder="Tu nombre o apodo"
+              required
+            />
+          </label>
+
+          <label className="auth-field">
+            <span className="auth-field-label">CORREO</span>
+            <input
+              className="auth-input"
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={handleFieldChange}
+              placeholder="jugador@correo.com"
+              required
+            />
+          </label>
+
+          <div className="auth-field">
+            <span className="auth-field-label">CONTRASEÑA</span>
+            <input
+              className="auth-input auth-input--password"
+              name="password"
+              type="password"
+              value={form.password}
+              onChange={handleFieldChange}
+              placeholder="Mínimo 10 caracteres"
+              minLength={10}
+              required
+            />
+            <div className="auth-strength">
+              <div className="auth-strength-bars">
+                {[0, 1, 2, 3].map((index) => (
+                  <div
+                    key={index}
+                    className="auth-strength-bar"
+                    style={index < strength.filled ? { background: strength.color } : undefined}
+                  />
+                ))}
+              </div>
+              <span className="auth-strength-label" style={{ color: strength.color }}>
+                {strength.label}
+              </span>
+            </div>
+          </div>
+
+          <Checkbox
+            checked={terms}
+            onToggle={() => setTerms((previous) => !previous)}
+            variant="terms"
+            label="Acepto los términos y el uso de mis datos de partida para generar el análisis. League of Coaching no es un producto oficial de Riot Games."
+          />
+
+          <button type="submit" className="auth-submit" disabled={isSubmitting || !terms}>
+            {isSubmitting ? 'Procesando...' : 'Crear cuenta'}
+          </button>
+        </form>
+
+        <div className="auth-footnote">
+          <span className="auth-footnote-text">
+            ¿Ya tenés cuenta?{' '}
+            <button type="button" className="auth-footnote-link" onClick={() => handleModeChange('login')}>
+              Entrá acá
+            </button>
+          </span>
+          <ClerkBadge />
+        </div>
+
+        {status && <p className="auth-status">{status}</p>}
       </div>
     )
   }
 
   return (
-    <div className="cuenta-panel">
-      <div className="auth-card">
-        <div className="auth-brand">HEXFORGE</div>
-        <div className="auth-header">
-          <span className="eyebrow">League of Coach</span>
-          <h1>{authMode === 'login' ? 'Inicia sesión' : 'Crea tu cuenta'}</h1>
+    <div className="auth-shell">
+      <section className="auth-brand-panel">
+        <div className="auth-brand-diamond-lg" />
+        <div className="auth-brand-diamond-float" />
+
+        <div className="auth-brand-logo">
+          <img className="auth-brand-mark" src="/loc-mark.svg" alt="" />
+          <div>
+            <div className="auth-brand-eyebrow">LEAGUE OF COACHING</div>
+            <div className="auth-brand-wordmark">LoC</div>
+          </div>
         </div>
 
-        <div className="auth-toggle">
-          <button
-            type="button"
-            className={authMode === 'login' ? 'auth-tab active' : 'auth-tab'}
-            onClick={() => handleModeChange('login')}
-          >
-            Login
-          </button>
-          <button
-            type="button"
-            className={authMode === 'register' ? 'auth-tab active' : 'auth-tab'}
-            onClick={() => handleModeChange('register')}
-          >
-            Registro
-          </button>
+        <div className="auth-brand-pitch">
+          <div className="auth-brand-pitch-eyebrow">TEMPORADA 15 · SPLIT 3</div>
+          <h1>Deja de adivinar por qué pierdes.</h1>
+          <p>
+            Vinculás tus cuentas una vez. League of Coaching analiza cada partida y te devuelve tres cosas
+            concretas para arreglar esta semana.
+          </p>
+          <div className="auth-brand-claims">
+            {CLAIMS.map((claim) => (
+              <div key={claim} className="auth-brand-claim">
+                <span className="auth-brand-claim-dot" />
+                <span>{claim}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          {authMode === 'register' && (
-            <label>
-              Nombre
-              <input
-                name="name"
-                value={form.name}
-                onChange={handleFieldChange}
-                placeholder="Tu nombre"
-                required
-              />
-            </label>
+        <div className="auth-brand-proof">
+          {PROOF.map((item) => (
+            <div key={item.label}>
+              <div className="auth-brand-proof-value">{item.big}</div>
+              <div className="auth-brand-proof-label">{item.label}</div>
+            </div>
+          ))}
+          <div className="auth-brand-status">
+            <span className="auth-brand-status-dot" />
+            <span>BETA · SINCRONIZACIÓN AUTOMÁTICA</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="auth-form-panel">
+        <div className="auth-form-header">
+          {showTabs ? (
+            <div className="auth-tabs">
+              <button
+                type="button"
+                className={authMode === 'login' ? 'auth-tab-btn active' : 'auth-tab-btn'}
+                onClick={() => handleModeChange('login')}
+              >
+                Iniciar sesión
+              </button>
+              <button
+                type="button"
+                className={authMode === 'register' ? 'auth-tab-btn active' : 'auth-tab-btn'}
+                onClick={() => handleModeChange('register')}
+              >
+                Crear cuenta
+              </button>
+            </div>
+          ) : (
+            <div />
           )}
-
-          <label>
-            Email
-            <input
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleFieldChange}
-              placeholder="tucorreo@ejemplo.com"
-              required
-            />
-          </label>
-
-          <label>
-            Contraseña
-            <input
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={handleFieldChange}
-              placeholder="••••••••"
-              minLength={8}
-              required
-            />
-          </label>
-
-          <div id="clerk-captcha" />
-
-          {authMode === 'login' && (
-            <button type="button" className="link-btn" onClick={() => setAuthView('forgot-request')}>
-              ¿Olvidaste tu contraseña?
-            </button>
-          )}
-
-          <button type="submit" className="primary-btn auth-submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Procesando...' : authMode === 'login' ? 'Entrar' : 'Crear cuenta'}
-          </button>
-        </form>
-
-        <div className="auth-divider">
-          <span>o</span>
+          <div className="auth-locale">LAS · ESPAÑOL</div>
         </div>
 
-        <button type="button" className="oauth-btn" onClick={handleGoogleAuth}>
-          Continuar con Google
-        </button>
+        {renderStepContent()}
 
-        {status && <p className="auth-status">{status}</p>}
-      </div>
+        <div className="auth-form-spacer" />
+
+        <div className="auth-legal-footer">
+          <span>LEAGUE OF COACHING · NO AFILIADO A RIOT GAMES</span>
+          <span className="auth-legal-links">
+            <a href="#">Privacidad</a>
+            <a href="#">Términos</a>
+          </span>
+        </div>
+      </section>
     </div>
   )
 }
