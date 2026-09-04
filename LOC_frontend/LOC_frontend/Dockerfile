@@ -8,12 +8,14 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 # Vite bakes env vars into the static bundle at build time, so the backend
-# URL and Clerk publishable key must be known when the image is built
-# (passed as --build-arg in CI).
+# URL, Clerk publishable key and Sentry DSN must be known when the image is
+# built (passed as --build-arg in CI).
 ARG VITE_API_URL
 ARG VITE_CLERK_PUBLISHABLE_KEY
+ARG VITE_SENTRY_DSN
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
+ENV VITE_SENTRY_DSN=$VITE_SENTRY_DSN
 RUN pnpm run build
 
 FROM nginx:1.27-alpine AS runner

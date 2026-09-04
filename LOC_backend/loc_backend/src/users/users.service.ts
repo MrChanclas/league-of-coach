@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
+import { DiscordService } from '../discord/discord.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly discord: DiscordService,
+  ) {}
 
   async createUser(createUserDto: CreateUserDto) {
     return this.prisma.user.create({
@@ -25,12 +29,19 @@ export class UsersService {
   async findOrCreateByClerkId(clerkId: string, name: string, email: string) {
     const existing = await this.prisma.user.findUnique({ where: { clerkId } });
     if (existing) {
+      this.discord.notifySession(
+        `🔐 Inicio de sesión: **${existing.name}** (${existing.email})`,
+      );
       return existing;
     }
 
-    return this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: { clerkId, name, email, role: 'user' },
     });
+    this.discord.notifySession(
+      `🆕 Nuevo registro: **${user.name}** (${user.email})`,
+    );
+    return user;
   }
 
   async findAll() {

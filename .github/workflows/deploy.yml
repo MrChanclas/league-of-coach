@@ -70,8 +70,8 @@ jobs:
             --platform=managed \
             --service-account="${{ vars.RUNTIME_SA_EMAIL }}" \
             --add-cloudsql-instances="${{ vars.CLOUDSQL_CONNECTION_NAME }}" \
-            --set-secrets="DATABASE_URL=loc-database-url:latest,CLERK_SECRET_KEY=loc-clerk-secret-key:latest,RIOT_API_KEY=loc-riot-api-key:latest,INTERNAL_POLL_SECRET=loc-internal-poll-secret:latest" \
-            --set-env-vars="RIOT_DEFAULT_SERVER=LAS,FRONTEND_URL=${{ steps.existing_frontend_url.outputs.url }}" \
+            --set-secrets="DATABASE_URL=loc-database-url:latest,CLERK_SECRET_KEY=loc-clerk-secret-key:latest,RIOT_API_KEY=loc-riot-api-key:latest,INTERNAL_POLL_SECRET=loc-internal-poll-secret:latest,DISCORD_SESSION_WEBHOOK_URL=loc-discord-session-webhook:latest,DISCORD_ISSUES_WEBHOOK_URL=loc-discord-issues-webhook:latest,DISCORD_DEPLOYS_WEBHOOK_URL=loc-discord-deploys-webhook:latest" \
+            --set-env-vars="RIOT_DEFAULT_SERVER=LAS,FRONTEND_URL=${{ steps.existing_frontend_url.outputs.url }},SENTRY_DSN=${{ vars.BACKEND_SENTRY_DSN }}" \
             --port=8080 \
             --allow-unauthenticated \
             --quiet
@@ -88,6 +88,7 @@ jobs:
           docker build \
             --build-arg VITE_API_URL="${{ steps.backend_url.outputs.url }}" \
             --build-arg VITE_CLERK_PUBLISHABLE_KEY="${{ vars.VITE_CLERK_PUBLISHABLE_KEY }}" \
+            --build-arg VITE_SENTRY_DSN="${{ vars.VITE_SENTRY_DSN }}" \
             -t "${FRONTEND_IMAGE}" .
           docker push "${FRONTEND_IMAGE}"
 

@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { DiscordService } from '../discord/discord.service';
 
 export type RiotAccountDto = {
   puuid: string;
@@ -126,10 +127,16 @@ const MAX_REQUESTS_PER_TWO_MINUTES = 95;
 export class RiotApiService {
   private requestTimestamps: number[] = [];
 
+  constructor(private readonly discord: DiscordService) {}
+
   private getApiKey(): string {
     const apiKey = process.env.RIOT_API_KEY?.trim();
 
     if (!apiKey || this.isPlaceholderValue(apiKey)) {
+      this.discord.notifyIssueThrottled(
+        'riot-missing-api-key',
+        '⚠️ RIOT_API_KEY no está configurada o es un placeholder — ninguna llamada a Riot va a funcionar.',
+      );
       throw new BadRequestException(
         'Falta una RIOT_API_KEY válida en el entorno. Copia tu API key real de Riot Developer y reemplaza el valor placeholder.',
       );
@@ -200,6 +207,18 @@ export class RiotApiService {
 
     if (!response.ok) {
       const payload = await response.text();
+
+      // 404 is routine (a summoner search that doesn't match anything) and
+      // not worth a Discord ping; everything else signals a real problem
+      // with the Riot integration itself (bad/expired key, rate limit, Riot
+      // outage).
+      if (response.status !== 404) {
+        this.discord.notifyIssueThrottled(
+          `riot-${response.status}`,
+          `⚠️ Riot API respondió **${response.status}** en \`${url}\`: ${payload}`,
+        );
+      }
+
       throw new BadRequestException({
         message: 'No se pudo completar la solicitud a Riot.',
         status: response.status,

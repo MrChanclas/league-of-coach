@@ -1,6 +1,9 @@
+import './instrument';
+
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { DiscordService } from './discord/discord.service';
 
 const DEFAULT_DEV_FRONTEND_URL = 'http://localhost:5173';
 
@@ -18,6 +21,20 @@ async function bootstrap() {
     origin: frontendUrl ?? DEFAULT_DEV_FRONTEND_URL,
     credentials: true,
   });
-  await app.listen(process.env.PORT ?? 3000);
+
+  const port = process.env.PORT ?? 3000;
+  await app.listen(port);
+
+  const discord = app.get(DiscordService);
+  discord.notifyDeploy(
+    `✅ Backend **healthy** — arrancó en \`${process.env.NODE_ENV ?? 'development'}\` (puerto ${port}).`,
+  );
+
+  app.enableShutdownHooks();
+  process.on('SIGTERM', () => {
+    discord.notifyDeploy(
+      '🛑 Backend recibió SIGTERM — deteniéndose (deploy o escalado en curso).',
+    );
+  });
 }
 bootstrap();
