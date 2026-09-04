@@ -15,6 +15,12 @@ type ParticipantWithMatch = {
 export class StatsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Public, platform-wide counter shown on the login screen (no auth). */
+  async getPlatformStats() {
+    const totalAccountsAnalyzed = await this.prisma.lolAccount.count();
+    return { totalAccountsAnalyzed };
+  }
+
   async getAccountSummary(accountId: string) {
     const participants = await this.prisma.matchParticipant.findMany({
       where: { accountId },
