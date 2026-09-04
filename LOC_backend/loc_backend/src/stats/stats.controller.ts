@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { AuthzService } from '../auth/authz.service';
 import type { AuthenticatedRequest } from '../auth/clerk-auth.guard';
+import { Public } from '../auth/public.decorator';
 import { StatsService } from './stats.service';
 
 const CompareQuerySchema = z.object({
@@ -31,6 +32,12 @@ export class StatsController {
     private readonly statsService: StatsService,
     private readonly authz: AuthzService,
   ) {}
+
+  @Public()
+  @Get('platform')
+  getPlatformStats() {
+    return this.statsService.getPlatformStats();
+  }
 
   @Get('account/:accountId')
   async getAccountSummary(@Req() request: AuthenticatedRequest, @Param('accountId') accountId: string) {

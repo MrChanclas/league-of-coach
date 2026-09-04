@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useSignIn, useSignUp, useUser } from '@clerk/clerk-react'
+import { API_URL } from '../lib/api'
 
 type AuthMode = 'login' | 'register'
 type AuthView = 'form' | 'forgot-request' | 'forgot-reset'
@@ -13,8 +14,7 @@ const CLAIMS = [
   'Múltiples cuentas en un solo panel: smurf, flex y principal.',
 ]
 
-const PROOF = [
-  { big: '3', label: 'CUENTAS POR PERFIL' },
+const STATIC_PROOF = [
   { big: '20', label: 'PARTIDAS POR ANÁLISIS' },
   { big: '0$', label: 'DURANTE LA BETA' },
 ]
@@ -133,6 +133,31 @@ export function CuentaTabPanel() {
   const [resetEmail, setResetEmail] = useState('')
   const [resetCode, setResetCode] = useState('')
   const [newPassword, setNewPassword] = useState('')
+
+  const [totalAccountsAnalyzed, setTotalAccountsAnalyzed] = useState<number | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetch(`${API_URL}/stats/platform`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { totalAccountsAnalyzed?: number } | null) => {
+        if (!cancelled && data) setTotalAccountsAnalyzed(data.totalAccountsAnalyzed ?? null)
+      })
+      .catch(() => {})
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const proof = [
+    {
+      big: totalAccountsAnalyzed !== null ? String(totalAccountsAnalyzed) : '—',
+      label: 'CUENTAS DE RIOT ANALIZADAS',
+    },
+    ...STATIC_PROOF,
+  ]
 
   const handleModeChange = (mode: AuthMode) => {
     setAuthMode(mode)
@@ -608,7 +633,7 @@ export function CuentaTabPanel() {
         </div>
 
         <div className="auth-brand-proof">
-          {PROOF.map((item) => (
+          {proof.map((item) => (
             <div key={item.label}>
               <div className="auth-brand-proof-value">{item.big}</div>
               <div className="auth-brand-proof-label">{item.label}</div>
