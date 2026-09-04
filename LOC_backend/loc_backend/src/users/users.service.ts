@@ -27,12 +27,27 @@ export class UsersService {
   }
 
   async findOrCreateByClerkId(clerkId: string, name: string, email: string) {
-    const existing = await this.prisma.user.findUnique({ where: { clerkId } });
-    if (existing) {
+    const existingByClerkId = await this.prisma.user.findUnique({ where: { clerkId } });
+    if (existingByClerkId) {
       this.discord.notifySession(
-        `🔐 Inicio de sesión: **${existing.name}** (${existing.email})`,
+        `🔐 Inicio de sesión: **${existingByClerkId.name}** (${existingByClerkId.email})`,
       );
-      return existing;
+      return existingByClerkId;
+    }
+
+    // Clerk can issue a new user id for the same person (account recreated,
+    // login method switched, etc). Reconcile by email instead of trying to
+    // insert a second row and hitting the unique constraint on email.
+    const existingByEmail = await this.prisma.user.findUnique({ where: { email } });
+    if (existingByEmail) {
+      const updated = await this.prisma.user.update({
+        where: { id: existingByEmail.id },
+        data: { clerkId, name },
+      });
+      this.discord.notifySession(
+        `🔐 Inicio de sesión: **${updated.name}** (${updated.email})`,
+      );
+      return updated;
     }
 
     const user = await this.prisma.user.create({
