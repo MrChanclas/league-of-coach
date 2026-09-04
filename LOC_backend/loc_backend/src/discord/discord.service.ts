@@ -1,11 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-type DiscordChannel = 'session' | 'issues' | 'deploys';
+type DiscordChannel = 'session' | 'issues' | 'deploys' | 'feedback';
 
 const WEBHOOK_ENV_VAR: Record<DiscordChannel, string> = {
   session: 'DISCORD_SESSION_WEBHOOK_URL',
   issues: 'DISCORD_ISSUES_WEBHOOK_URL',
   deploys: 'DISCORD_DEPLOYS_WEBHOOK_URL',
+  feedback: 'DISCORD_FEEDBACK_WEBHOOK_URL',
 };
 
 @Injectable()
@@ -23,6 +24,10 @@ export class DiscordService {
 
   notifyDeploy(content: string) {
     void this.send('deploys', content);
+  }
+
+  notifyFeedback(content: string) {
+    void this.send('feedback', content);
   }
 
   /** Same as notifyIssue, but skips sending if the same `key` fired within `cooldownMs` — keeps a flapping dependency (e.g. an expired Riot key) from flooding the channel. */

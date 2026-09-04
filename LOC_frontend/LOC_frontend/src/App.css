@@ -1646,7 +1646,8 @@
   font-size: 0.9rem;
 }
 
-.auth-form input {
+.auth-form input,
+.auth-form textarea {
   width: 100%;
   background: rgba(9, 12, 18, 0.8);
   border: 1px solid var(--hf-border-strong);
@@ -1654,9 +1655,12 @@
   padding: 12px 14px;
   color: #f6f1e7;
   box-sizing: border-box;
+  font: inherit;
+  resize: vertical;
 }
 
-.auth-form input:focus {
+.auth-form input:focus,
+.auth-form textarea:focus {
   outline: 2px solid rgba(216, 181, 106, 0.5);
   outline-offset: 1px;
 }
@@ -2224,6 +2228,41 @@
 .auth-legal-links {
   display: flex;
   gap: 16px;
+}
+
+.feedback-fab {
+  align-self: center;
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 999px;
+  border: none;
+  padding: 14px 22px;
+  font: 600 14px/1 var(--font-body);
+  letter-spacing: 0.01em;
+  color: #141109;
+  background: linear-gradient(180deg, var(--hf-gold-grad-start), var(--hf-gold-grad-end));
+  box-shadow: 0 10px 30px rgba(216, 181, 106, 0.35), 0 2px 8px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.feedback-fab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px rgba(216, 181, 106, 0.45), 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.feedback-fab-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+@media (max-width: 720px) {
+  .feedback-fab {
+    padding: 12px 18px;
+    font-size: 13px;
+  }
 }
 
 .auth-back-link {
