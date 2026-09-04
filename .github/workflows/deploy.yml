@@ -32,16 +32,6 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker "${AR_HOST}" --quiet
 
-      # Cloud Run service URLs are stable once a service exists, so we can
-      # read the frontend's URL before deploying the backend and wire it in
-      # for CORS. Empty on a brand-new project's very first deploy (the
-      # frontend service doesn't exist yet) — main.ts falls back safely then.
-      - name: Read existing frontend URL (for backend CORS)
-        id: existing_frontend_url
-        run: |
-          URL=$(gcloud run services describe loc-frontend --region="${REGION}" --format='value(status.url)' 2>/dev/null || true)
-          echo "url=${URL}" >> "$GITHUB_OUTPUT"
-
       - name: Build & push backend image
         working-directory: LOC_backend/loc_backend
         run: |
@@ -71,7 +61,7 @@ jobs:
             --service-account="${{ vars.RUNTIME_SA_EMAIL }}" \
             --add-cloudsql-instances="${{ vars.CLOUDSQL_CONNECTION_NAME }}" \
             --set-secrets="DATABASE_URL=loc-database-url:latest,CLERK_SECRET_KEY=loc-clerk-secret-key:latest,RIOT_API_KEY=loc-riot-api-key:latest,INTERNAL_POLL_SECRET=loc-internal-poll-secret:latest,DISCORD_SESSION_WEBHOOK_URL=loc-discord-session-webhook:latest,DISCORD_ISSUES_WEBHOOK_URL=loc-discord-issues-webhook:latest,DISCORD_DEPLOYS_WEBHOOK_URL=loc-discord-deploys-webhook:latest" \
-            --set-env-vars="RIOT_DEFAULT_SERVER=LAS,FRONTEND_URL=${{ steps.existing_frontend_url.outputs.url }},SENTRY_DSN=${{ vars.BACKEND_SENTRY_DSN }}" \
+            --set-env-vars="^|^RIOT_DEFAULT_SERVER=LAS|FRONTEND_URL=https://leagueofcoach.pro,https://www.leagueofcoach.pro|SENTRY_DSN=${{ vars.BACKEND_SENTRY_DSN }}" \
             --port=8080 \
             --allow-unauthenticated \
             --quiet
@@ -86,7 +76,7 @@ jobs:
         working-directory: LOC_frontend/LOC_frontend
         run: |
           docker build \
-            --build-arg VITE_API_URL="${{ steps.backend_url.outputs.url }}" \
+            --build-arg VITE_API_URL="https://api.leagueofcoach.pro" \
             --build-arg VITE_CLERK_PUBLISHABLE_KEY="${{ vars.VITE_CLERK_PUBLISHABLE_KEY }}" \
             --build-arg VITE_SENTRY_DSN="${{ vars.VITE_SENTRY_DSN }}" \
             -t "${FRONTEND_IMAGE}" .
