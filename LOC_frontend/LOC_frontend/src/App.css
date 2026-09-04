@@ -72,7 +72,19 @@
   display: flex;
   flex-direction: column;
   padding: 22px 16px 16px;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.sidebar-scroll {
+  display: flex;
+  flex-direction: column;
   gap: 4px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .sidebar-brand {
@@ -235,10 +247,6 @@
   border-color: rgba(216, 181, 106, 0.5);
 }
 
-.sidebar-spacer {
-  flex: 1;
-}
-
 .profile-card {
   display: flex;
   align-items: center;
@@ -247,6 +255,7 @@
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--hf-border-soft);
+  flex-shrink: 0;
 }
 
 .profile-card-info {
@@ -357,18 +366,13 @@
 /* Rank emblems (real Riot CDN assets) */
 
 .rank-emblem {
-  object-fit: contain;
+  object-fit:cover;
   flex-shrink: 0;
 }
 
-.rank-emblem--hero {
-  width: 72px;
-  height: 72px;
-}
-
 .rank-emblem--chip {
-  width: 26px;
-  height: 26px;
+  width: 34px;
+  height: 34px;
 }
 
 .rank-emblem--unranked {
@@ -661,15 +665,15 @@
 }
 
 .hero-tier-diamond {
-  width: 104px;
-  height: 104px;
+  width: 80px;
+  height: 80px;
   transform: rotate(45deg);
-  border-radius: 14px;
+  border-radius: 11px;
   border: 1px solid rgba(216, 181, 106, 0.35);
   background: linear-gradient(160deg, rgba(216, 181, 106, 0.2), rgba(20, 24, 31, 0.9));
   display: grid;
   place-items: center;
-  box-shadow: 0 0 40px rgba(216, 181, 106, 0.13) inset;
+  box-shadow: 0 0 28px rgba(216, 181, 106, 0.13) inset;
 }
 
 .hero-tier-crest {
@@ -679,8 +683,8 @@
 }
 
 .hero-tier-crest .rank-emblem {
-  width: 72px;
-  height: 72px;
+  width: 92px;
+  height: 92px;
 }
 
 .hero-tier-crest-fallback {
@@ -797,45 +801,6 @@
   font: 400 10.5px/1 var(--font-mono);
   color: var(--hf-muted-3);
   margin-top: 5px;
-}
-
-.hero-chart-box {
-  border-radius: 11px;
-  background: rgba(0, 0, 0, 0.28);
-  border: 1px solid var(--hf-border-soft);
-  padding: 14px 16px;
-}
-
-.hero-chart-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.hero-chart-label {
-  font: 600 9.5px/1 var(--font-mono);
-  letter-spacing: 0.18em;
-  color: var(--hf-muted-3);
-}
-
-.hero-chart-netlp {
-  font: 600 12px/1 var(--font-mono);
-}
-
-.hero-chart-svg {
-  display: block;
-  width: 100%;
-  height: 96px;
-}
-
-.hero-chart-empty {
-  height: 96px;
-  display: grid;
-  place-items: center;
-  font: 400 11.5px/1.5 var(--font-body);
-  color: var(--hf-muted-3);
-  text-align: center;
 }
 
 .hero-stats-grid {
@@ -1117,6 +1082,7 @@
 .match-row-damage-col {
   flex: 1;
   min-width: 80px;
+  max-width: 220px;
 }
 
 .match-row-damage-head {
@@ -1741,9 +1707,9 @@
 
 /* Auth shell (LoC Auth design) */
 
-@keyframes locdrift {
-  0%, 100% { transform: translateY(0) rotate(45deg); }
-  50% { transform: translateY(-9px) rotate(45deg); }
+@keyframes loc-drift {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
 }
 
 .auth-shell {
@@ -1774,31 +1740,15 @@
   pointer-events: none;
 }
 
-.auth-brand-diamond-lg,
-.auth-brand-diamond-float {
+.auth-brand-challenger-emblem {
   position: absolute;
+  top: 214px;
+  right: -24px;
+  width: 480px;
+  opacity: 0.5;
+  filter: saturate(0.62) brightness(0.85);
+  animation: loc-drift 9s ease-in-out infinite;
   pointer-events: none;
-}
-
-.auth-brand-diamond-lg {
-  top: 150px;
-  right: -70px;
-  width: 340px;
-  height: 340px;
-  transform: rotate(45deg);
-  border-radius: 44px;
-  border: 1px solid rgba(216, 181, 106, 0.1);
-}
-
-.auth-brand-diamond-float {
-  top: 250px;
-  right: 10px;
-  width: 180px;
-  height: 180px;
-  border-radius: 26px;
-  border: 1px solid rgba(216, 181, 106, 0.16);
-  background: linear-gradient(160deg, rgba(216, 181, 106, 0.07), transparent);
-  animation: locdrift 9s ease-in-out infinite;
 }
 
 .auth-brand-logo {
@@ -2010,12 +1960,9 @@
 }
 
 .auth-social-mark {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   flex: none;
-  transform: rotate(45deg);
-  border-radius: 3px;
-  background: linear-gradient(145deg, #e8e4da, #9aa0ac);
 }
 
 .auth-social-label {
@@ -2349,6 +2296,12 @@
   .forge-sidebar {
     border-right: none;
     border-bottom: 1px solid var(--hf-border-soft);
+    position: static;
+    height: auto;
+  }
+
+  .sidebar-scroll {
+    overflow-y: visible;
   }
 
   .accounts-grid,

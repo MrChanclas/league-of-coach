@@ -50,57 +50,57 @@ export function DashboardSidebar({
 }: DashboardSidebarProps) {
   return (
     <aside className="forge-sidebar">
-      <div className="sidebar-brand">
-        <img className="sidebar-brand-mark" src="/loc-mark.svg" alt="" />
-        <div>
-          <div className="sidebar-brand-eyebrow">LEAGUE OF COACHING</div>
-          <div className="sidebar-brand-name">LoC</div>
+      <div className="sidebar-scroll">
+        <div className="sidebar-brand">
+          <img className="sidebar-brand-mark" src="/loc-mark.svg" alt="" />
+          <div>
+            <div className="sidebar-brand-eyebrow">LEAGUE OF COACHING</div>
+            <div className="sidebar-brand-name">LoC</div>
+          </div>
+        </div>
+
+        <div className="sidebar-section-label">NAVEGACIÓN</div>
+        <nav className="sidebar-nav">
+          {navItems.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              className={activeTab === item.key ? 'nav-item active' : 'nav-item'}
+              onClick={() => onTabChange(item.key)}
+            >
+              <span className="nav-item-dot" />
+              <span className="nav-item-label">{item.label}</span>
+              <span className="nav-item-meta">{navMeta[item.key]}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="sidebar-section-label">CUENTAS VINCULADAS</div>
+        <div className="sidebar-accounts">
+          {userAccounts.map((account) => {
+            const queue = getPrimaryQueueLabel(account)
+            return (
+              <button
+                key={account.id}
+                type="button"
+                className={account.id === currentAccountId ? 'sidebar-account active' : 'sidebar-account'}
+                onClick={() => onSetCurrentAccountId(account.id)}
+              >
+                <div className="avatar-tile avatar-tile--md">{account.summoner.slice(0, 2).toUpperCase()}</div>
+                <div className="sidebar-account-text">
+                  <div className="sidebar-account-name">{account.summoner}</div>
+                  <div className="sidebar-account-tier">{queue.label}</div>
+                </div>
+                <span className="sidebar-account-dot" style={{ background: queue.color ?? undefined }} />
+              </button>
+            )
+          })}
+
+          <button type="button" className="sidebar-link-account" onClick={onOpenAccountModal}>
+            + Vincular cuenta Riot
+          </button>
         </div>
       </div>
-
-      <div className="sidebar-section-label">NAVEGACIÓN</div>
-      <nav className="sidebar-nav">
-        {navItems.map((item) => (
-          <button
-            key={item.key}
-            type="button"
-            className={activeTab === item.key ? 'nav-item active' : 'nav-item'}
-            onClick={() => onTabChange(item.key)}
-          >
-            <span className="nav-item-dot" />
-            <span className="nav-item-label">{item.label}</span>
-            <span className="nav-item-meta">{navMeta[item.key]}</span>
-          </button>
-        ))}
-      </nav>
-
-      <div className="sidebar-section-label">CUENTAS VINCULADAS</div>
-      <div className="sidebar-accounts">
-        {userAccounts.map((account) => {
-          const queue = getPrimaryQueueLabel(account)
-          return (
-            <button
-              key={account.id}
-              type="button"
-              className={account.id === currentAccountId ? 'sidebar-account active' : 'sidebar-account'}
-              onClick={() => onSetCurrentAccountId(account.id)}
-            >
-              <div className="avatar-tile avatar-tile--md">{account.summoner.slice(0, 2).toUpperCase()}</div>
-              <div className="sidebar-account-text">
-                <div className="sidebar-account-name">{account.summoner}</div>
-                <div className="sidebar-account-tier">{queue.label}</div>
-              </div>
-              <span className="sidebar-account-dot" style={{ background: queue.color ?? undefined }} />
-            </button>
-          )
-        })}
-
-        <button type="button" className="sidebar-link-account" onClick={onOpenAccountModal}>
-          + Vincular cuenta Riot
-        </button>
-      </div>
-
-      <div className="sidebar-spacer" />
 
       <div className="profile-card">
         <div className="profile-card-info">

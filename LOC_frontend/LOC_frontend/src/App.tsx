@@ -59,6 +59,12 @@ function App() {
   }, [])
 
   useEffect(() => {
+    if (!status) return
+    const timer = setTimeout(() => setStatus(''), 5000)
+    return () => clearTimeout(timer)
+  }, [status])
+
+  useEffect(() => {
     if (!isSignedIn || !user) {
       setInternalUser(null)
       return
@@ -272,7 +278,12 @@ function App() {
         }
       }
 
-      setStatus(payload.message ?? 'Cuenta detectada y vinculada correctamente.')
+      const baseMessage = payload.message ?? 'Cuenta detectada y vinculada correctamente.'
+      setStatus(
+        payload.created
+          ? `${baseMessage} Sincroniza sus partidas para que el análisis sea preciso.`
+          : baseMessage,
+      )
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'No se pudo detectar la cuenta.')
     }
@@ -322,7 +333,7 @@ function App() {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ count: 10 }),
+        body: JSON.stringify({}),
       })
 
       const payload = (await response.json()) as { synced?: number; skipped?: number; message?: string }

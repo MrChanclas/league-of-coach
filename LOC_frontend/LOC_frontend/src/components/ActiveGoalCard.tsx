@@ -10,7 +10,7 @@ export function ActiveGoalCard({ goal, onGoToGoals }: ActiveGoalCardProps) {
     return (
       <div className="side-card side-card--goal">
         <div className="side-card-label">OBJETIVO ACTIVO</div>
-        <p className="side-empty">Todavía no tenés objetivos en curso para esta cuenta.</p>
+        <p className="side-empty">Todavía no tienes objetivos en curso para esta cuenta.</p>
         <button type="button" className="goal-highlight-cta" onClick={onGoToGoals}>
           Crear un objetivo
         </button>

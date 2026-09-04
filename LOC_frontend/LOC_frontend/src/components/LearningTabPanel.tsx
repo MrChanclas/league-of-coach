@@ -41,7 +41,7 @@ export function LearningTabPanel({ activeAccount, lessons, gamesAnalyzed }: Lear
 
       {lessons.length === 0 ? (
         <p className="empty-state">
-          Todavía no hay suficientes partidas sincronizadas para generar lecciones. Sincronizá más partidas desde el
+          Todavía no hay suficientes partidas sincronizadas para generar lecciones. Sincroniza más partidas desde el
           encabezado para desbloquear tu primer análisis.
         </p>
       ) : (

@@ -8,7 +8,7 @@
       "roleScope": ["TOP", "MIDDLE", "BOTTOM"],
       "condition": { "operator": "lt", "value": 6.5 },
       "title": "Tu CS/min está frenando tu progreso",
-      "body": "Promediás {{avgCsPerMin}} CS/min en tus últimas partidas, por debajo del {{benchmark}} recomendado para seguir escalando. Cada minuto de farmeo perdido es oro que tu rival sí está tomando.",
+      "body": "Promedias {{avgCsPerMin}} CS/min en tus últimas partidas, por debajo del {{benchmark}} recomendado para seguir escalando. Cada minuto de farmeo perdido es oro que tu rival sí está tomando.",
       "mediaType": "GOLD_GRAPH",
       "metaTemplate": "GRÁFICO DE ORO",
       "priority": 80
@@ -66,7 +66,7 @@
       "metric": "championWinrateWithMinGames",
       "condition": { "operator": "lt", "value": 0.45, "minGames": 5 },
       "title": "Este campeón no te está funcionando",
-      "body": "Con {{champion}} tenés {{championWinrate}}% de winrate en {{championGames}} partidas. Puede ser un tema de matchups: revisar la tabla antes de lockear te ahorra partidas cuesta arriba.",
+      "body": "Con {{champion}} tienes {{championWinrate}}% de winrate en {{championGames}} partidas. Puede ser un tema de matchups: revisar la tabla antes de lockear te ahorra partidas cuesta arriba.",
       "mediaType": "MATCHUP_TABLE",
       "metaTemplate": "TABLA DE MATCHUPS",
       "priority": 55
@@ -76,8 +76,8 @@
       "tag": "MENTALIDAD",
       "metric": "currentStreak",
       "condition": { "operator": "eq", "streakType": "loss", "minCount": 3 },
-      "title": "Cortá la racha antes de que te corte a vos",
-      "body": "Llevás {{streakCount}} derrotas seguidas. El tilt es acumulativo: un descanso corto entre partidas suele rendir más que la revancha inmediata.",
+      "title": "Corta la racha antes de que te corte",
+      "body": "Llevas {{streakCount}} derrotas seguidas. El tilt es acumulativo: un descanso corto entre partidas suele rendir más que la revancha inmediata.",
       "mediaType": "SESSION_REPORT",
       "metaTemplate": "GRÁFICO DE SESIÓN",
       "priority": 90
@@ -88,7 +88,7 @@
       "metric": "kdaTrendVsRolling",
       "condition": { "operator": "gt", "value": 0.2 },
       "title": "Vas en la dirección correcta",
-      "body": "Tu KDA de las últimas partidas ({{recentKda}}) mejora tu promedio anterior ({{rollingKda}}). Mantené la misma rutina de pre-partida que veniste usando esta semana.",
+      "body": "Tu KDA de las últimas partidas ({{recentKda}}) mejora tu promedio anterior ({{rollingKda}}). Mantén la misma rutina de pre-partida que has usado esta semana.",
       "mediaType": "SESSION_REPORT",
       "metaTemplate": "GRÁFICO DE SESIÓN",
       "priority": 50

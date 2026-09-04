@@ -88,8 +88,18 @@ export function MatchRow({ entry, ddragonVersion, showAgo = false }: MatchRowPro
         })}
       </div>
 
-      <div className="match-row-lp" style={{ color: 'var(--hf-muted-6)' }}>
-        —
+      <div
+        className="match-row-lp"
+        style={{
+          color:
+            entry.lpDelta === null
+              ? 'var(--hf-muted-6)'
+              : entry.lpDelta >= 0
+                ? 'var(--hf-win-green)'
+                : 'var(--hf-loss)',
+        }}
+      >
+        {entry.lpDelta === null ? '—' : `${entry.lpDelta >= 0 ? '+' : ''}${entry.lpDelta}`}
       </div>
     </div>
   )

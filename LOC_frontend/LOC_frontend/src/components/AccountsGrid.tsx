@@ -98,7 +98,7 @@ export function AccountsGrid({
   const handleDeleteClick = (event: React.MouseEvent, account: AccountCard) => {
     event.stopPropagation()
     const confirmed = window.confirm(
-      `¿Seguro que querés eliminar la cuenta "${account.summoner}#${account.tag}"? Esto también borra sus partidas, objetivos y aprendizaje guardados.`,
+      `¿Seguro que quieres eliminar la cuenta "${account.summoner}#${account.tag}"? Esto también borra sus partidas, objetivos y aprendizaje guardados.`,
     )
     if (confirmed) {
       onDeleteAccount(account.id)
@@ -118,7 +118,7 @@ export function AccountsGrid({
 
       {userAccounts.length === 0 ? (
         <p className="empty-state">
-          No hay cuentas detectadas todavía. Usá &quot;+ Vincular cuenta Riot&quot; para buscar una cuenta real y
+          No hay cuentas detectadas todavía. Usa &quot;+ Vincular cuenta Riot&quot; para buscar una cuenta real y
           empezar a entrenar.
         </p>
       ) : (

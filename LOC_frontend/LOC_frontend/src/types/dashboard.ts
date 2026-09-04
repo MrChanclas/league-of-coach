@@ -85,6 +85,7 @@ export type MatchParticipantEntry = {
   damageDealt: number
   itemIds: number[]
   damagePercentile: number
+  lpDelta: number | null
   teamId: number
   match: {
     id: string

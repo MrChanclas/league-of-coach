@@ -5,6 +5,8 @@ import { useSignIn, useSignUp, useUser } from '@clerk/clerk-react'
 type AuthMode = 'login' | 'register'
 type AuthView = 'form' | 'forgot-request' | 'forgot-reset'
 
+const APP_VERSION = __APP_VERSION__
+
 const CLAIMS = [
   'Tres correcciones concretas por semana, no cien estadísticas sueltas.',
   'Objetivos con progreso medible hasta el final del split.',
@@ -68,6 +70,29 @@ function Checkbox({
         {label}
       </span>
     </button>
+  )
+}
+
+function GoogleIcon() {
+  return (
+    <svg className="auth-social-mark" viewBox="0 0 18 18" width="18" height="18" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
+      />
+      <path
+        fill="#34A853"
+        d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"
+      />
+      <path
+        fill="#EA4335"
+        d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"
+      />
+    </svg>
   )
 }
 
@@ -148,7 +173,7 @@ export function CuentaTabPanel() {
       } else {
         if (!isSignUpLoaded) return
         if (!terms) {
-          setStatus('Tenés que aceptar los términos para continuar.')
+          setStatus('Tienes que aceptar los términos para continuar.')
           return
         }
 
@@ -275,7 +300,7 @@ export function CuentaTabPanel() {
         <div className="auth-step">
           <div className="auth-step-eyebrow">RECUPERAR ACCESO</div>
           <h2>Recuperá tu contraseña</h2>
-          <p className="auth-step-sub">Te mandamos un código a tu correo para elegir una nueva.</p>
+          <p className="auth-step-sub">Te enviamos un código a tu correo para elegir una nueva.</p>
 
           <form className="auth-fields" style={{ marginTop: 26 }} onSubmit={handleForgotRequestSubmit}>
             <label className="auth-field">
@@ -309,8 +334,8 @@ export function CuentaTabPanel() {
       return (
         <div className="auth-step">
           <div className="auth-step-eyebrow">RECUPERAR ACCESO</div>
-          <h2>Restablecé tu contraseña</h2>
-          <p className="auth-step-sub">Ingresá el código que te mandamos y tu nueva contraseña.</p>
+          <h2>Restablece tu contraseña</h2>
+          <p className="auth-step-sub">Ingresa el código que te enviamos y tu nueva contraseña.</p>
 
           <form className="auth-fields" style={{ marginTop: 26 }} onSubmit={handleForgotResetSubmit}>
             <label className="auth-field">
@@ -356,9 +381,9 @@ export function CuentaTabPanel() {
     if (pendingVerification) {
       return (
         <div className="auth-step">
-          <div className="auth-step-eyebrow">VERIFICÁ TU CORREO</div>
-          <h2>Ingresá el código</h2>
-          <p className="auth-step-sub">Te mandamos un código de 6 dígitos a tu correo.</p>
+          <div className="auth-step-eyebrow">VERIFICA TU CORREO</div>
+          <h2>Ingresa el código</h2>
+          <p className="auth-step-sub">Te enviamos un código de 6 dígitos a tu correo.</p>
 
           <form className="auth-fields" style={{ marginTop: 26 }} onSubmit={handleVerify}>
             <label className="auth-field">
@@ -388,12 +413,12 @@ export function CuentaTabPanel() {
       return (
         <div className="auth-step">
           <div className="auth-step-eyebrow">BIENVENIDO DE VUELTA</div>
-          <h2>Entrá a tu panel</h2>
+          <h2>Entra a tu panel</h2>
           <p className="auth-step-sub">Tus cuentas y el análisis del split te esperan donde los dejaste.</p>
 
           <div className="auth-socials">
             <button type="button" className="auth-social-btn" onClick={handleGoogleAuth}>
-              <span className="auth-social-mark" />
+              <GoogleIcon />
               <span className="auth-social-label">Continuar con Google</span>
             </button>
           </div>
@@ -450,9 +475,9 @@ export function CuentaTabPanel() {
 
           <div className="auth-footnote">
             <span className="auth-footnote-text">
-              ¿Primera vez acá?{' '}
+              ¿Primera vez aquí?{' '}
               <button type="button" className="auth-footnote-link" onClick={() => handleModeChange('register')}>
-                Creá tu cuenta gratis
+                Crea tu cuenta gratis
               </button>
             </span>
             <ClerkBadge />
@@ -468,19 +493,10 @@ export function CuentaTabPanel() {
     return (
       <div className="auth-step">
         <div className="auth-step-eyebrow">EMPECEMOS</div>
-        <h2>Creá tu cuenta</h2>
-        <p className="auth-step-sub">Sin tarjeta. Vinculás tu cuenta de Riot ya logueado, cuando quieras.</p>
+        <h2>Crea tu cuenta</h2>
+        <p className="auth-step-sub">Sin tarjeta. Vincula tu cuenta de Riot una vez que inicies sesión, cuando quieras.</p>
 
-        <div className="auth-socials">
-          <button type="button" className="auth-social-btn" onClick={handleGoogleAuth}>
-            <span className="auth-social-mark" />
-            <span className="auth-social-label">Registrarme con Google</span>
-          </button>
-        </div>
-
-        <OrDivider />
-
-        <form className="auth-fields" onSubmit={handleSubmit}>
+        <form className="auth-fields" style={{ marginTop: 26 }} onSubmit={handleSubmit}>
           <label className="auth-field">
             <span className="auth-field-label">CÓMO TE LLAMAMOS</span>
             <input
@@ -548,9 +564,9 @@ export function CuentaTabPanel() {
 
         <div className="auth-footnote">
           <span className="auth-footnote-text">
-            ¿Ya tenés cuenta?{' '}
+            ¿Ya tienes cuenta?{' '}
             <button type="button" className="auth-footnote-link" onClick={() => handleModeChange('login')}>
-              Entrá acá
+              Entra aquí
             </button>
           </span>
           <ClerkBadge />
@@ -564,8 +580,7 @@ export function CuentaTabPanel() {
   return (
     <div className="auth-shell">
       <section className="auth-brand-panel">
-        <div className="auth-brand-diamond-lg" />
-        <div className="auth-brand-diamond-float" />
+        <img className="auth-brand-challenger-emblem" src="/assets/rank-emblem.png" alt="" />
 
         <div className="auth-brand-logo">
           <img className="auth-brand-mark" src="/loc-mark.svg" alt="" />
@@ -579,7 +594,7 @@ export function CuentaTabPanel() {
           <div className="auth-brand-pitch-eyebrow">TEMPORADA 15 · SPLIT 3</div>
           <h1>Deja de adivinar por qué pierdes.</h1>
           <p>
-            Vinculás tus cuentas una vez. League of Coaching analiza cada partida y te devuelve tres cosas
+            Vincula tus cuentas una vez. League of Coaching analiza cada partida y te devuelve tres cosas
             concretas para arreglar esta semana.
           </p>
           <div className="auth-brand-claims">
@@ -601,7 +616,7 @@ export function CuentaTabPanel() {
           ))}
           <div className="auth-brand-status">
             <span className="auth-brand-status-dot" />
-            <span>BETA · SINCRONIZACIÓN AUTOMÁTICA</span>
+            <span>ALPHA {APP_VERSION} · SINCRONIZACIÓN AUTOMÁTICA</span>
           </div>
         </div>
       </section>

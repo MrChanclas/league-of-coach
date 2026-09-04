@@ -1,6 +1,6 @@
 import { formatCompactNumber, getLaneLabel, getNextRank, getTierColor } from '../lib/hexforge'
 import { getRankEmblemUrl } from '../lib/riotAssets'
-import type { AccountCard, AccountStatsSummary, LaneEntry, RankSnapshotEntry, StreakInfo } from '../types/dashboard'
+import type { AccountCard, AccountStatsSummary, LaneEntry, StreakInfo } from '../types/dashboard'
 
 type HeroCardProps = {
   account: AccountCard
@@ -9,7 +9,6 @@ type HeroCardProps = {
   statsSummary: AccountStatsSummary | null
   streak: StreakInfo | null
   lanes: LaneEntry[]
-  rankHistory: RankSnapshotEntry[]
   masteryTotalPoints: number
 }
 
@@ -20,7 +19,6 @@ export function HeroCard({
   statsSummary,
   streak,
   lanes,
-  rankHistory,
   masteryTotalPoints,
 }: HeroCardProps) {
   const tier = primaryQueue === 'solo' ? account.soloTier : account.flexTier
@@ -36,12 +34,6 @@ export function HeroCard({
   const wins = statsSummary?.wins ?? 0
   const losses = games - wins
   const winratePct = statsSummary ? Math.round(statsSummary.winrate * 100) : 0
-
-  const sortedHistory = [...rankHistory].sort(
-    (a, b) => new Date(a.capturedAt).getTime() - new Date(b.capturedAt).getTime(),
-  )
-  const netLp =
-    sortedHistory.length >= 2 ? sortedHistory[sortedHistory.length - 1].lp - sortedHistory[0].lp : null
 
   const primaryLane = lanes[0]
 
@@ -113,28 +105,6 @@ export function HeroCard({
             </div>
           </div>
 
-          <div className="hero-chart-box">
-            <div className="hero-chart-head">
-              <span className="hero-chart-label">LP · REGISTROS RECIENTES</span>
-              {netLp !== null && (
-                <span
-                  className="hero-chart-netlp"
-                  style={{ color: netLp >= 0 ? 'var(--hf-win-green)' : 'var(--hf-loss)' }}
-                >
-                  {netLp >= 0 ? '+' : ''}
-                  {netLp} LP
-                </span>
-              )}
-            </div>
-            {sortedHistory.length >= 2 ? (
-              <LpChart history={sortedHistory} />
-            ) : (
-              <div className="hero-chart-empty">
-                Necesitás más sincronizaciones para graficar tu progreso de LP.
-              </div>
-            )}
-          </div>
-
           <div className="hero-stats-grid">
             <div className="hero-stat">
               <div className="hero-stat-label">KDA PROMEDIO</div>
@@ -177,36 +147,5 @@ export function HeroCard({
         </div>
       </div>
     </section>
-  )
-}
-
-function LpChart({ history }: { history: RankSnapshotEntry[] }) {
-  const width = 620
-  const height = 96
-  const values = history.map((entry) => entry.lp)
-  const min = Math.min(...values) - 12
-  const max = Math.max(...values) + 12
-  const range = Math.max(max - min, 1)
-  const points = history.map((entry, index) => {
-    const x = (index / (history.length - 1)) * width
-    const y = height - ((entry.lp - min) / range) * (height - 8) - 4
-    return [x, y] as const
-  })
-  const lpLine = points.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ')
-  const lpArea = `M0,${height} L${lpLine.replace(/ /g, ' L')} L${width},${height} Z`
-
-  return (
-    <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="hero-chart-svg">
-      <defs>
-        <linearGradient id="hf-lp-gradient" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#63dcb8" stopOpacity="0.3" />
-          <stop offset="1" stopColor="#63dcb8" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <line x1="0" y1="24" x2={width} y2="24" stroke="rgba(255,255,255,.05)" strokeWidth="1" />
-      <line x1="0" y1="60" x2={width} y2="60" stroke="rgba(255,255,255,.05)" strokeWidth="1" />
-      <path d={lpArea} fill="url(#hf-lp-gradient)" />
-      <polyline points={lpLine} fill="none" stroke="#63dcb8" strokeWidth="2" strokeLinejoin="round" />
-    </svg>
   )
 }

@@ -6,7 +6,7 @@ import type { AuthenticatedRequest } from '../auth/clerk-auth.guard';
 import { MatchesService } from './matches.service';
 
 const SyncMatchesSchema = z.object({
-  count: z.number().int().min(1).max(20).optional(),
+  count: z.number().int().min(1).max(100).optional(),
 });
 
 const ListMatchesQuerySchema = z.object({
@@ -29,7 +29,7 @@ export class MatchesController {
     body: z.infer<typeof SyncMatchesSchema>,
   ) {
     await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
-    return this.matchesService.syncAccount(accountId, body.count ?? 10);
+    return this.matchesService.syncAccount(accountId, body.count);
   }
 
   @Get('account/:accountId')

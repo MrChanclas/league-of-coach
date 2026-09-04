@@ -68,8 +68,8 @@ export function AccountTabPanel({
         <div className="page-head">
           <div>
             <div className="page-head-eyebrow">BIENVENIDO</div>
-            <h1>Vinculá tu primera cuenta de Riot</h1>
-            <p>Usá &quot;+ Vincular cuenta Riot&quot; en la barra lateral para empezar a ver tus estadísticas.</p>
+            <h1>Vincula tu primera cuenta de Riot</h1>
+            <p>Usa &quot;+ Vincular cuenta Riot&quot; en la barra lateral para empezar a ver tus estadísticas.</p>
           </div>
         </div>
         <AccountsGrid
@@ -99,9 +99,9 @@ export function AccountTabPanel({
   const heroTitle = netLp !== null && netLp < 0 ? 'Tu semana en revisión' : 'Tu progreso semanal'
   const insight =
     statsSummary && statsSummary.gamesPlayed > 0
-      ? `Llevás ${statsSummary.gamesPlayed} partidas con ${Math.round(statsSummary.winrate * 100)}% de winrate` +
+      ? `Llevas ${statsSummary.gamesPlayed} partidas con ${Math.round(statsSummary.winrate * 100)}% de winrate` +
         (netLp !== null ? ` y ${netLp >= 0 ? '+' : ''}${netLp} LP en el período.` : '.')
-      : 'Sincronizá tus partidas para ver un resumen de tu progreso.'
+      : 'Sincroniza tus partidas para ver un resumen de tu progreso.'
 
   const activeGoal = goalsByAccount.find((goal) => goal.status === 'in_progress') ?? null
   const recentMatches = matches.slice(0, 4)
@@ -141,7 +141,6 @@ export function AccountTabPanel({
             statsSummary={statsSummary}
             streak={streak}
             lanes={lanes}
-            rankHistory={rankHistory}
             masteryTotalPoints={masteryTotalPoints}
           />
 
