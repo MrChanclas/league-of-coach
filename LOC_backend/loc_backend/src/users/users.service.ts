@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
+import { DiscordService } from '../discord/discord.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly discord: DiscordService,
+  ) {}
 
   async createUser(createUserDto: CreateUserDto) {
     return this.prisma.user.create({
@@ -25,6 +29,9 @@ export class UsersService {
   async findOrCreateByClerkId(clerkId: string, name: string, email: string) {
     const existingByClerkId = await this.prisma.user.findUnique({ where: { clerkId } });
     if (existingByClerkId) {
+      this.discord.notifySession(
+        `🔐 Inicio de sesión: **${existingByClerkId.name}** (${existingByClerkId.email})`,
+      );
       return existingByClerkId;
     }
 
@@ -33,15 +40,23 @@ export class UsersService {
     // insert a second row and hitting the unique constraint on email.
     const existingByEmail = await this.prisma.user.findUnique({ where: { email } });
     if (existingByEmail) {
-      return this.prisma.user.update({
+      const updated = await this.prisma.user.update({
         where: { id: existingByEmail.id },
         data: { clerkId, name },
       });
+      this.discord.notifySession(
+        `🔐 Inicio de sesión: **${updated.name}** (${updated.email})`,
+      );
+      return updated;
     }
 
-    return this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: { clerkId, name, email, role: 'user' },
     });
+    this.discord.notifySession(
+      `🆕 Nuevo registro: **${user.name}** (${user.email})`,
+    );
+    return user;
   }
 
   async findAll() {

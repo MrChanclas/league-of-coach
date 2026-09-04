@@ -1,8 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ClerkProvider } from '@clerk/clerk-react'
+import * as Sentry from '@sentry/react'
 import './index.css'
 import App from './App.tsx'
+import { initSentry } from './lib/sentry'
 
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
@@ -10,10 +12,14 @@ if (!CLERK_PUBLISHABLE_KEY) {
   throw new Error('Falta la variable de entorno VITE_CLERK_PUBLISHABLE_KEY')
 }
 
+initSentry()
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
-      <App />
-    </ClerkProvider>
+    <Sentry.ErrorBoundary fallback={<p>Ocurrió un error inesperado. Recargá la página.</p>}>
+      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+        <App />
+      </ClerkProvider>
+    </Sentry.ErrorBoundary>
   </StrictMode>,
 )

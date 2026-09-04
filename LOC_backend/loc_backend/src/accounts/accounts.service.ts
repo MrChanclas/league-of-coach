@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { z } from 'zod';
+import { DiscordService } from '../discord/discord.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RankSnapshotsService } from '../rank-snapshots/rank-snapshots.service';
 import { RiotApiService, RiotLeagueEntryDto } from '../riot/riot-api.service';
@@ -17,6 +18,7 @@ export class AccountsService {
     private readonly prisma: PrismaService,
     private readonly riotApi: RiotApiService,
     private readonly rankSnapshots: RankSnapshotsService,
+    private readonly discord: DiscordService,
   ) {}
 
   async create(input: z.infer<typeof AccountSchema>) {
@@ -74,6 +76,10 @@ export class AccountsService {
     await this.rankSnapshots.recordFromLeagueEntries(
       account.id,
       resolved.leagueEntries,
+    );
+
+    this.discord.notifySession(
+      `🔗 Cuenta vinculada: **${account.summoner}#${account.tag}** (${account.server})`,
     );
 
     return {

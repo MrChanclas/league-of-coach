@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { DiscordService } from '../discord/discord.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueueKey, RankSnapshotsService } from '../rank-snapshots/rank-snapshots.service';
 import { RiotApiService, RiotMatchDto } from '../riot/riot-api.service';
@@ -26,6 +27,7 @@ export class MatchesService {
     private readonly prisma: PrismaService,
     private readonly riotApi: RiotApiService,
     private readonly rankSnapshots: RankSnapshotsService,
+    private readonly discord: DiscordService,
   ) {}
 
   async syncAccount(accountId: string, targetCount = DEFAULT_TARGET_MATCH_COUNT) {
@@ -87,6 +89,12 @@ export class MatchesService {
     }
 
     await this.rankSnapshots.refreshAccountRank(account);
+
+    if (synced > 0) {
+      this.discord.notifySession(
+        `🔄 Sync de **${account.summoner}#${account.tag}**: ${synced} partida(s) nueva(s).`,
+      );
+    }
 
     return { synced, skipped, totalFetched };
   }

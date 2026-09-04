@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
+import { DiscordService } from '../discord/discord.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 describe('UsersService', () => {
@@ -23,6 +24,13 @@ describe('UsersService', () => {
     },
   };
 
+  const discordMock = {
+    notifySession: jest.fn(),
+    notifyIssue: jest.fn(),
+    notifyDeploy: jest.fn(),
+    notifyIssueThrottled: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -30,6 +38,10 @@ describe('UsersService', () => {
         {
           provide: PrismaService,
           useValue: prismaMock,
+        },
+        {
+          provide: DiscordService,
+          useValue: discordMock,
         },
       ],
     }).compile();
