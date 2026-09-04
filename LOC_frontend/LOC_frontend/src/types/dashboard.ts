@@ -14,6 +14,7 @@ export type AccountCard = {
   tag: string
   server: string
   profileIconId: number
+  summonerLevel: number
   soloTier: string
   soloDivision: string
   soloLp: number
@@ -33,13 +34,17 @@ export type ChampionStat = {
   csMin: number
 }
 
+export type GoalType = 'rank' | 'consistency' | 'mechanic' | 'habit'
+export type GoalStatus = 'completed' | 'in_progress' | 'behind'
+
 export type GoalItem = {
   id: string
   accountId: string
-  type: 'rank' | 'role' | 'champion'
+  type: GoalType
   title: string
   progress: number
   deadline?: string | null
+  status: GoalStatus
 }
 
 export type DashboardSummary = {
@@ -66,7 +71,7 @@ export type AccountForm = {
 export type MatchParticipantEntry = {
   id: string
   matchId: string
-  accountId: string
+  accountId: string | null
   champion: string
   championId: number
   teamPosition: string
@@ -76,6 +81,11 @@ export type MatchParticipantEntry = {
   assists: number
   csTotal: number
   goldEarned: number
+  visionScore: number
+  damageDealt: number
+  itemIds: number[]
+  damagePercentile: number
+  lpDelta: number | null
   teamId: number
   match: {
     id: string
@@ -105,3 +115,44 @@ export type AccountStatsSummary = {
   avgKda: number
   avgCsPerMin: number
 }
+
+export type ChampionSplitStat = AccountStatsSummary & {
+  champion: string
+}
+
+export type RankSnapshotEntry = {
+  id: string
+  queueType: 'solo' | 'flex'
+  tier: string
+  division: string
+  lp: number
+  capturedAt: string
+}
+
+export type ActivityDay = {
+  date: string
+  wins: number
+  losses: number
+  minutesPlayed: number
+}
+
+export type StreakInfo = {
+  type: 'win' | 'loss' | 'none'
+  count: number
+}
+
+export type LaneEntry = {
+  lane: string
+  games: number
+  share: number
+}
+
+export type LessonCard = {
+  tag: string
+  title: string
+  body: string
+  mediaType: 'CLIP' | 'HEATMAP' | 'GOLD_GRAPH' | 'MATCHUP_TABLE' | 'SESSION_REPORT'
+  meta: string
+}
+
+export type TimeRange = '7d' | 'split'

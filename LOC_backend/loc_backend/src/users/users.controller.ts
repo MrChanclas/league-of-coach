@@ -16,16 +16,22 @@ import type { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateUserSchema } from './dto/update-user.dto';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { UsersService } from './users.service';
+import { AuthzService } from '../auth/authz.service';
 import type { AuthenticatedRequest } from '../auth/clerk-auth.guard';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly authz: AuthzService,
+  ) {}
 
   @Post()
-  create(
+  async create(
+    @Req() request: AuthenticatedRequest,
     @Body(new ZodValidationPipe(CreateUserSchema)) createUserDto: CreateUserDto,
   ) {
+    await this.authz.assertAdmin(request.clerkUserId);
     return this.usersService.create(createUserDto);
   }
 
@@ -42,30 +48,36 @@ export class UsersController {
   }
 
   @Get()
-  findAll() {
+  async findAll(@Req() request: AuthenticatedRequest) {
+    await this.authz.assertAdmin(request.clerkUserId);
     return this.usersService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  async findOne(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    await this.authz.assertUserOwnership(id, request.clerkUserId);
     return this.usersService.findOne(id);
   }
 
   @Get(':id/dashboard')
-  getDashboard(@Param('id') id: string) {
+  async getDashboard(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    await this.authz.assertUserOwnership(id, request.clerkUserId);
     return this.usersService.getUserDashboard(id);
   }
 
   @Patch(':id')
-  update(
+  async update(
+    @Req() request: AuthenticatedRequest,
     @Param('id') id: string,
     @Body(new ZodValidationPipe(UpdateUserSchema)) updateUserDto: UpdateUserDto,
   ) {
+    await this.authz.assertUserOwnership(id, request.clerkUserId);
     return this.usersService.update(id, updateUserDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  async remove(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    await this.authz.assertUserOwnership(id, request.clerkUserId);
     return this.usersService.remove(id);
   }
 }

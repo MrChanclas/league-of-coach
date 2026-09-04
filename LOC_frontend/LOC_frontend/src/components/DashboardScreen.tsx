@@ -13,11 +13,17 @@ import type {
   AccountCard,
   AccountForm,
   AccountStatsSummary,
-  ChampionStat,
+  ActivityDay,
+  ChampionSplitStat,
   GoalItem,
+  LaneEntry,
+  LessonCard,
   MasteryEntry,
   MatchParticipantEntry,
+  RankSnapshotEntry,
+  StreakInfo,
   TabKey,
+  TimeRange,
 } from '../types/dashboard'
 
 type DashboardScreenProps = {
@@ -29,17 +35,25 @@ type DashboardScreenProps = {
   currentAccountId: string
   activeAccount?: AccountCard
   goalsByAccount: GoalItem[]
-  championData: ChampionStat[]
   status: string
   isLoadingDashboard: boolean
   accountForm: AccountForm
   matches: MatchParticipantEntry[]
   mastery: MasteryEntry[]
   statsSummary: AccountStatsSummary | null
-  isLoadingMatches: boolean
+  streak: StreakInfo | null
+  lanes: LaneEntry[]
+  weeklyActivity: ActivityDay[]
+  championsSplit: ChampionSplitStat[]
+  rankHistory: RankSnapshotEntry[]
+  lessons: LessonCard[]
+  ddragonVersion: string | null
+  timeRange: TimeRange
+  isSyncing: boolean
+  lastSyncedLabel: string
+  onTimeRangeChange: (range: TimeRange) => void
   onTabChange: (tab: TabKey) => void
   onLogout: () => void
-  onGoToAccountsTab: () => void
   onSetCurrentAccountId: (id: string) => void
   onAccountFieldChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   onCreateAccount: (event: FormEvent<HTMLFormElement>) => void
@@ -56,17 +70,25 @@ export function DashboardScreen({
   currentAccountId,
   activeAccount,
   goalsByAccount,
-  championData,
   status,
   isLoadingDashboard,
   accountForm,
   matches,
   mastery,
   statsSummary,
-  isLoadingMatches,
+  streak,
+  lanes,
+  weeklyActivity,
+  championsSplit,
+  rankHistory,
+  lessons,
+  ddragonVersion,
+  timeRange,
+  isSyncing,
+  lastSyncedLabel,
+  onTimeRangeChange,
   onTabChange,
   onLogout,
-  onGoToAccountsTab,
   onSetCurrentAccountId,
   onAccountFieldChange,
   onCreateAccount,
@@ -76,68 +98,104 @@ export function DashboardScreen({
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false)
 
   const handleOpenAccountModal = () => {
-    onGoToAccountsTab()
+    onTabChange('cuentas')
     setIsAccountModalOpen(true)
   }
 
+  const navMeta = {
+    cuentas: userAccounts.length,
+    partidas: statsSummary?.gamesPlayed ?? matches.length,
+    aprendizaje: lessons.length,
+    objetivos: goalsByAccount.length,
+  }
+
+  if (!isSignedIn) {
+    return <CuentaTabPanel />
+  }
+
   return (
-    <div className={isSignedIn ? 'forge-shell' : 'forge-shell forge-shell--auth-only'}>
-      {isSignedIn && (
-        <DashboardSidebar
-          userDisplayName={userDisplayName}
-          userDisplayEmail={userDisplayEmail}
-          activeTab={activeTab}
-          onTabChange={onTabChange}
-          onLogout={onLogout}
-        />
-      )}
+    <div className="forge-shell">
+      <DashboardSidebar
+        userDisplayName={userDisplayName}
+        userDisplayEmail={userDisplayEmail}
+        activeTab={activeTab}
+        onTabChange={onTabChange}
+        onLogout={onLogout}
+        userAccounts={userAccounts}
+        currentAccountId={currentAccountId}
+        onSetCurrentAccountId={onSetCurrentAccountId}
+        onOpenAccountModal={handleOpenAccountModal}
+        navMeta={navMeta}
+      />
 
       <main className="forge-main">
-        {isSignedIn && (
-          <>
-            <DashboardHeader onOpenAccountModal={handleOpenAccountModal} />
+        <DashboardHeader
+          userAccounts={userAccounts}
+          currentAccountId={currentAccountId}
+          activeAccount={activeAccount}
+          onSetCurrentAccountId={onSetCurrentAccountId}
+          onSyncMatches={onSyncMatches}
+          isSyncing={isSyncing}
+          lastSyncedLabel={lastSyncedLabel}
+        />
 
-            {status && <p className="dashboard-status">{status}</p>}
-            {isLoadingDashboard && <p className="dashboard-status">Cargando dashboard…</p>}
-          </>
-        )}
+        {status && <p className="dashboard-status">{status}</p>}
+        {isLoadingDashboard && <p className="dashboard-status">Cargando dashboard…</p>}
 
-        {isSignedIn && activeTab === 'cuentas' && (
+        {activeTab === 'cuentas' && (
           <AccountTabPanel
             userAccounts={userAccounts}
             activeAccount={activeAccount}
             currentAccountId={currentAccountId}
+            ddragonVersion={ddragonVersion}
+            statsSummary={statsSummary}
+            streak={streak}
+            lanes={lanes}
+            rankHistory={rankHistory}
+            weeklyActivity={weeklyActivity}
+            championsSplit={championsSplit}
+            goalsByAccount={goalsByAccount}
+            matches={matches}
+            mastery={mastery}
+            timeRange={timeRange}
+            onTimeRangeChange={onTimeRangeChange}
             onSetCurrentAccountId={onSetCurrentAccountId}
             onDeleteAccount={onDeleteAccount}
+            onGoToMatches={() => onTabChange('partidas')}
+            onGoToGoals={() => onTabChange('objetivos')}
           />
         )}
 
-        {isSignedIn && activeTab === 'partidas' && (
+        {activeTab === 'partidas' && (
           <MatchesTabPanel
             activeAccount={activeAccount}
             matches={matches}
-            mastery={mastery}
             statsSummary={statsSummary}
-            isLoading={isLoadingMatches}
-            onSyncMatches={onSyncMatches}
+            streak={streak}
+            rankHistory={rankHistory}
+            ddragonVersion={ddragonVersion}
           />
         )}
 
-        {isSignedIn && activeTab === 'aprendizaje' && <LearningTabPanel championData={championData} />}
-        {isSignedIn && activeTab === 'objetivos' && <GoalsTabPanel goalsByAccount={goalsByAccount} />}
-        {!isSignedIn && <CuentaTabPanel />}
+        {activeTab === 'aprendizaje' && (
+          <LearningTabPanel
+            activeAccount={activeAccount}
+            lessons={lessons}
+            gamesAnalyzed={statsSummary?.gamesPlayed ?? 0}
+          />
+        )}
+
+        {activeTab === 'objetivos' && <GoalsTabPanel goalsByAccount={goalsByAccount} />}
       </main>
 
-      {isSignedIn && (
-        <AccountSearchModal
-          isOpen={isAccountModalOpen}
-          accountForm={accountForm}
-          status={status}
-          onClose={() => setIsAccountModalOpen(false)}
-          onAccountFieldChange={onAccountFieldChange}
-          onCreateAccount={onCreateAccount}
-        />
-      )}
+      <AccountSearchModal
+        isOpen={isAccountModalOpen}
+        accountForm={accountForm}
+        status={status}
+        onClose={() => setIsAccountModalOpen(false)}
+        onAccountFieldChange={onAccountFieldChange}
+        onCreateAccount={onCreateAccount}
+      />
     </div>
   )
 }

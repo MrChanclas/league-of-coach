@@ -1,9 +1,9 @@
 :root {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #f3f0e8;
-  background: #0a0e14;
+  color: #e8e4da;
+  background: #07080b;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -14,7 +14,7 @@ html, body, #root {
   margin: 0;
   width: 100%;
   min-height: 100vh;
-  background: #0a0e14;
+  background: #07080b;
 }
 
 body {

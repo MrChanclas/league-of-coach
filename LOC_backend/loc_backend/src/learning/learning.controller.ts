@@ -1,7 +1,10 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { z } from 'zod';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
+import { AuthzService } from '../auth/authz.service';
+import type { AuthenticatedRequest } from '../auth/clerk-auth.guard';
 import { LearningService } from './learning.service';
+import { LessonsService } from './lessons.service';
 
 const CreateLearningSchema = z.object({
   champion: z.string().min(2).max(80),
@@ -17,18 +20,31 @@ const CreateLearningSchema = z.object({
 
 @Controller('learning')
 export class LearningController {
-  constructor(private readonly learningService: LearningService) {}
+  constructor(
+    private readonly learningService: LearningService,
+    private readonly lessonsService: LessonsService,
+    private readonly authz: AuthzService,
+  ) {}
 
   @Post()
-  create(
+  async create(
+    @Req() request: AuthenticatedRequest,
     @Body(new ZodValidationPipe(CreateLearningSchema))
     body: z.infer<typeof CreateLearningSchema>,
   ) {
+    await this.authz.assertAccountOwnership(body.accountId, request.clerkUserId);
     return this.learningService.create(body);
   }
 
   @Get('account/:accountId')
-  listByAccount(@Param('accountId') accountId: string) {
+  async listByAccount(@Req() request: AuthenticatedRequest, @Param('accountId') accountId: string) {
+    await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
     return this.learningService.listByAccount(accountId);
+  }
+
+  @Get('account/:accountId/lessons')
+  async getLessons(@Req() request: AuthenticatedRequest, @Param('accountId') accountId: string) {
+    await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
+    return this.lessonsService.generateForAccount(accountId);
   }
 }

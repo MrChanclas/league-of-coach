@@ -34,3 +34,12 @@ export function getRankEmblemUrl(tier: string): string | null {
   if (!RANKED_TIERS.includes(normalized)) return null
   return `https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-${normalized.toLowerCase()}.png`
 }
+
+export function getChampionIconUrl(championKey: string, version: string) {
+  return `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${championKey}.png`
+}
+
+export function getItemIconUrl(itemId: number, version: string): string | null {
+  if (!itemId) return null
+  return `https://ddragon.leagueoflegends.com/cdn/${version}/img/item/${itemId}.png`
+}

@@ -34,5 +34,8 @@ Thumbs.db
 .claude/settings.json
 .claude/settings.local.json
 
+# Infra scripts (GCP project IDs, service account naming, deploy topology)
+infra/
+
 # Misc
 *.tsbuildinfo

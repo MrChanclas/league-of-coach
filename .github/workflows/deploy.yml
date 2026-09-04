@@ -60,7 +60,7 @@ jobs:
             --platform=managed \
             --service-account="${{ vars.RUNTIME_SA_EMAIL }}" \
             --add-cloudsql-instances="${{ vars.CLOUDSQL_CONNECTION_NAME }}" \
-            --set-secrets="DATABASE_URL=loc-database-url:latest,CLERK_SECRET_KEY=loc-clerk-secret-key:latest,RIOT_API_KEY=loc-riot-api-key:latest" \
+            --set-secrets="DATABASE_URL=loc-database-url:latest,CLERK_SECRET_KEY=loc-clerk-secret-key:latest,RIOT_API_KEY=loc-riot-api-key:latest,INTERNAL_POLL_SECRET=loc-internal-poll-secret:latest" \
             --set-env-vars="RIOT_DEFAULT_SERVER=LAS" \
             --port=8080 \
             --allow-unauthenticated \
@@ -71,6 +71,24 @@ jobs:
         run: |
           URL=$(gcloud run services describe loc-backend --region="${REGION}" --format='value(status.url)')
           echo "url=${URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Schedule periodic rank polling
+        run: |
+          POLL_SECRET=$(gcloud secrets versions access latest --secret=loc-internal-poll-secret)
+          gcloud scheduler jobs create http loc-rank-poller \
+            --location="${REGION}" \
+            --schedule="*/30 * * * *" \
+            --uri="${{ steps.backend_url.outputs.url }}/internal/poll-ranks" \
+            --http-method=POST \
+            --headers="X-Internal-Secret=${POLL_SECRET}" \
+            --quiet \
+          || gcloud scheduler jobs update http loc-rank-poller \
+            --location="${REGION}" \
+            --schedule="*/30 * * * *" \
+            --uri="${{ steps.backend_url.outputs.url }}/internal/poll-ranks" \
+            --http-method=POST \
+            --headers="X-Internal-Secret=${POLL_SECRET}" \
+            --quiet
 
       - name: Build & push frontend image
         working-directory: LOC_frontend/LOC_frontend
