@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useSignIn, useSignUp, useUser } from '@clerk/clerk-react'
 import { API_URL } from '../lib/api'
+import { FeedbackModal } from './FeedbackModal'
 
 type AuthMode = 'login' | 'register'
 type AuthView = 'form' | 'forgot-request' | 'forgot-reset'
@@ -135,6 +136,7 @@ export function CuentaTabPanel() {
   const [newPassword, setNewPassword] = useState('')
 
   const [totalAccountsAnalyzed, setTotalAccountsAnalyzed] = useState<number | null>(null)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -499,12 +501,6 @@ export function CuentaTabPanel() {
           </form>
 
           <div className="auth-footnote">
-            <span className="auth-footnote-text">
-              ¿Primera vez aquí?{' '}
-              <button type="button" className="auth-footnote-link" onClick={() => handleModeChange('register')}>
-                Crea tu cuenta gratis
-              </button>
-            </span>
             <ClerkBadge />
           </div>
 
@@ -682,7 +678,14 @@ export function CuentaTabPanel() {
             <a href="#">Términos</a>
           </span>
         </div>
+
+        <button type="button" className="feedback-fab" onClick={() => setFeedbackOpen(true)}>
+          <span className="feedback-fab-icon" aria-hidden="true">💬</span>
+          <span>Danos tu feedback</span>
+        </button>
       </section>
+
+      <FeedbackModal isOpen={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </div>
   )
 }

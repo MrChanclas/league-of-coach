@@ -9,6 +9,7 @@ import { AccountsModule } from './accounts/accounts.module';
 import { ClerkAuthGuard } from './auth/clerk-auth.guard';
 import { AppExceptionFilter } from './discord/app-exception.filter';
 import { DiscordModule } from './discord/discord.module';
+import { FeedbackModule } from './feedback/feedback.module';
 import { GoalsModule } from './goals/goals.module';
 import { LearningModule } from './learning/learning.module';
 import { MasteryModule } from './mastery/mastery.module';
@@ -28,6 +29,7 @@ import { UsersModule } from './users/users.module';
     UsersModule,
     RiotModule,
     AccountsModule,
+    FeedbackModule,
     GoalsModule,
     LearningModule,
     MatchesModule,
