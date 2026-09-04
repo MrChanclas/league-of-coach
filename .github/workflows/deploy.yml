@@ -72,24 +72,6 @@ jobs:
           URL=$(gcloud run services describe loc-backend --region="${REGION}" --format='value(status.url)')
           echo "url=${URL}" >> "$GITHUB_OUTPUT"
 
-      - name: Schedule periodic rank polling
-        run: |
-          POLL_SECRET=$(gcloud secrets versions access latest --secret=loc-internal-poll-secret)
-          gcloud scheduler jobs create http loc-rank-poller \
-            --location="${REGION}" \
-            --schedule="*/30 * * * *" \
-            --uri="${{ steps.backend_url.outputs.url }}/internal/poll-ranks" \
-            --http-method=POST \
-            --headers="X-Internal-Secret=${POLL_SECRET}" \
-            --quiet \
-          || gcloud scheduler jobs update http loc-rank-poller \
-            --location="${REGION}" \
-            --schedule="*/30 * * * *" \
-            --uri="${{ steps.backend_url.outputs.url }}/internal/poll-ranks" \
-            --http-method=POST \
-            --headers="X-Internal-Secret=${POLL_SECRET}" \
-            --quiet
-
       - name: Build & push frontend image
         working-directory: LOC_frontend/LOC_frontend
         run: |
@@ -108,4 +90,25 @@ jobs:
             --service-account="${{ vars.RUNTIME_SA_EMAIL }}" \
             --port=8080 \
             --allow-unauthenticated \
+            --quiet
+
+      # Non-blocking: a scheduler hiccup here shouldn't fail a deploy where
+      # the actual app (backend + frontend) already shipped successfully.
+      - name: Schedule periodic rank polling
+        continue-on-error: true
+        run: |
+          POLL_SECRET=$(gcloud secrets versions access latest --secret=loc-internal-poll-secret)
+          gcloud scheduler jobs create http loc-rank-poller \
+            --location="${REGION}" \
+            --schedule="*/30 * * * *" \
+            --uri="${{ steps.backend_url.outputs.url }}/internal/poll-ranks" \
+            --http-method=POST \
+            --headers="X-Internal-Secret=${POLL_SECRET}" \
+            --quiet \
+          || gcloud scheduler jobs update http loc-rank-poller \
+            --location="${REGION}" \
+            --schedule="*/30 * * * *" \
+            --uri="${{ steps.backend_url.outputs.url }}/internal/poll-ranks" \
+            --http-method=POST \
+            --update-headers="X-Internal-Secret=${POLL_SECRET}" \
             --quiet
