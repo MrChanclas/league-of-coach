@@ -9,8 +9,8 @@ Aplicación web para gestionar cuentas de League of Legends, objetivos de aprend
 
 ## Estructura
 
-- `LOC_backend/loc_backend/` - API REST y modelo de datos
-- `LOC_frontend/LOC_frontend/` - aplicación frontend
+- `LOC_backend/` - API REST y modelo de datos
+- `LOC_frontend/` - aplicación frontend
 
 ## Requisitos
 
@@ -23,7 +23,7 @@ Aplicación web para gestionar cuentas de League of Legends, objetivos de aprend
 ### Backend
 
 ```bash
-cd LOC_backend/loc_backend
+cd LOC_backend
 npm install
 cp .env.example .env
 npm run start:dev
@@ -32,7 +32,7 @@ npm run start:dev
 ### Frontend
 
 ```bash
-cd LOC_frontend/LOC_frontend
+cd LOC_frontend
 npm install
 npm run dev
 ```

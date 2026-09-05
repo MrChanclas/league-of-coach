@@ -33,7 +33,7 @@ jobs:
         run: gcloud auth configure-docker "${AR_HOST}" --quiet
 
       - name: Build & push backend image
-        working-directory: LOC_backend/loc_backend
+        working-directory: LOC_backend
         run: |
           docker build -t "${BACKEND_IMAGE}" .
           docker push "${BACKEND_IMAGE}"
@@ -73,7 +73,7 @@ jobs:
           echo "url=${URL}" >> "$GITHUB_OUTPUT"
 
       - name: Build & push frontend image
-        working-directory: LOC_frontend/LOC_frontend
+        working-directory: LOC_frontend
         run: |
           docker build \
             --build-arg VITE_API_URL="https://api.leagueofcoach.pro" \
