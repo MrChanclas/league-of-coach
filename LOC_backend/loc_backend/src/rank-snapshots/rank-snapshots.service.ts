@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { RiotApiService, RiotLeagueEntryDto } from '../riot/riot-api.service';
+import { PuuidRefreshService } from '../riot/puuid-refresh.service';
+import { isStalePuuidError, RiotApiService, RiotLeagueEntryDto } from '../riot/riot-api.service';
 
 export type QueueKey = 'solo' | 'flex';
 
@@ -16,6 +17,7 @@ export class RankSnapshotsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly riotApi: RiotApiService,
+    private readonly puuidRefresh: PuuidRefreshService,
   ) {}
 
   async recordFromLeagueEntries(
@@ -62,10 +64,26 @@ export class RankSnapshotsService {
    * cached tier/division/LP on LolAccount, and records a snapshot row.
    * Shared by manual match sync and the periodic background poller.
    */
-  async refreshAccountRank(account: { id: string; server: string; puuid: string }) {
-    const entries = await this.riotApi
-      .getLeagueEntriesByPuuid(account.server, account.puuid)
-      .catch((): RiotLeagueEntryDto[] => []);
+  async refreshAccountRank(account: {
+    id: string;
+    server: string;
+    summoner: string;
+    tag: string;
+    puuid: string;
+  }) {
+    let entries: RiotLeagueEntryDto[];
+    try {
+      entries = await this.riotApi.getLeagueEntriesByPuuid(account.server, account.puuid);
+    } catch (error) {
+      if (!isStalePuuidError(error)) {
+        this.logger.warn(`No se pudo obtener el rango de la cuenta ${account.id}: ${error}`);
+        return;
+      }
+      const freshPuuid = await this.puuidRefresh.refresh(account);
+      entries = await this.riotApi
+        .getLeagueEntriesByPuuid(account.server, freshPuuid)
+        .catch((): RiotLeagueEntryDto[] => []);
+    }
 
     if (entries.length === 0) return;
 
@@ -98,7 +116,7 @@ export class RankSnapshotsService {
    */
   async pollAllAccounts() {
     const accounts = await this.prisma.lolAccount.findMany({
-      select: { id: true, server: true, puuid: true },
+      select: { id: true, server: true, summoner: true, tag: true, puuid: true },
     });
 
     let refreshed = 0;

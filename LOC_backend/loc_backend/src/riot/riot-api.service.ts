@@ -120,6 +120,21 @@ const PLATFORM_HOSTS: Record<string, string> = {
   RU: 'https://ru.api.riotgames.com',
 };
 
+/**
+ * Riot's puuids are tied to the API key that resolved them — rotating the
+ * key (e.g. swapping a personal key for a registered app's key) leaves
+ * every puuid stored before the rotation undecryptable on Riot's side.
+ * Callers holding a stored puuid can use this to detect that specific
+ * failure and re-resolve the account instead of surfacing a raw 400.
+ */
+export function isStalePuuidError(error: unknown): boolean {
+  if (!(error instanceof BadRequestException)) return false;
+  const response = error.getResponse();
+  if (typeof response !== 'object' || response === null) return false;
+  const riot = (response as Record<string, unknown>).riot;
+  return typeof riot === 'string' && riot.includes('Exception decrypting');
+}
+
 const MAX_REQUESTS_PER_SECOND = 18;
 const MAX_REQUESTS_PER_TWO_MINUTES = 95;
 

@@ -6,7 +6,8 @@ import {
 import { DiscordService } from '../discord/discord.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueueKey, RankSnapshotsService } from '../rank-snapshots/rank-snapshots.service';
-import { RiotApiService, RiotMatchDto } from '../riot/riot-api.service';
+import { PuuidRefreshService } from '../riot/puuid-refresh.service';
+import { isStalePuuidError, RiotApiService, RiotMatchDto } from '../riot/riot-api.service';
 
 const RANKED_QUEUE_TO_KEY: Record<number, QueueKey> = { 420: 'solo', 440: 'flex' };
 
@@ -28,6 +29,7 @@ export class MatchesService {
     private readonly riotApi: RiotApiService,
     private readonly rankSnapshots: RankSnapshotsService,
     private readonly discord: DiscordService,
+    private readonly puuidRefresh: PuuidRefreshService,
   ) {}
 
   async syncAccount(accountId: string, targetCount = DEFAULT_TARGET_MATCH_COUNT) {
@@ -49,6 +51,7 @@ export class MatchesService {
       where: { accountId: account.id },
     });
 
+    let puuid = account.puuid;
     let synced = 0;
     let skipped = 0;
     let totalFetched = 0;
@@ -58,11 +61,23 @@ export class MatchesService {
     // newly played games get picked up; later pages only run if we're still
     // short of the target depth, backfilling further into history.
     for (let page = 0; page < MAX_BACKFILL_PAGES; page += 1) {
-      const matchIds = await this.riotApi.getMatchIdsByPuuid(
-        account.server,
-        account.puuid,
-        { start, count: PAGE_SIZE },
-      );
+      let matchIds: string[];
+      try {
+        matchIds = await this.riotApi.getMatchIdsByPuuid(account.server, puuid, {
+          start,
+          count: PAGE_SIZE,
+        });
+      } catch (error) {
+        // The stored puuid can go stale if the Riot API key was rotated
+        // since this account was last resolved; only worth retrying once,
+        // right at the start of the sync.
+        if (page > 0 || !isStalePuuidError(error)) throw error;
+        puuid = await this.puuidRefresh.refresh(account);
+        matchIds = await this.riotApi.getMatchIdsByPuuid(account.server, puuid, {
+          start,
+          count: PAGE_SIZE,
+        });
+      }
 
       if (matchIds.length === 0) break;
       totalFetched += matchIds.length;
@@ -77,7 +92,7 @@ export class MatchesService {
 
       for (const matchId of newIds) {
         const matchDto = await this.riotApi.getMatchById(account.server, matchId);
-        await this.storeMatch(account.id, account.server, account.puuid, matchDto);
+        await this.storeMatch(account.id, account.server, puuid, matchDto);
         synced += 1;
       }
 
@@ -88,7 +103,7 @@ export class MatchesService {
       start += PAGE_SIZE;
     }
 
-    await this.rankSnapshots.refreshAccountRank(account);
+    await this.rankSnapshots.refreshAccountRank({ ...account, puuid });
 
     if (synced > 0) {
       this.discord.notifySession(
