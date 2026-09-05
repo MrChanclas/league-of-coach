@@ -4,6 +4,7 @@ import { AccountTabPanel } from './AccountTabPanel'
 import { CuentaTabPanel } from './CuentaTabPanel'
 import { DashboardHeader } from './DashboardHeader'
 import { DashboardSidebar } from './DashboardSidebar'
+import { GoalFormModal } from './GoalFormModal'
 import { GoalsTabPanel } from './GoalsTabPanel'
 import { LearningTabPanel } from './LearningTabPanel'
 import { MatchesTabPanel } from './MatchesTabPanel'
@@ -15,6 +16,7 @@ import type {
   AccountStatsSummary,
   ActivityDay,
   ChampionSplitStat,
+  GoalCreateInput,
   GoalItem,
   LaneEntry,
   LessonCard,
@@ -59,6 +61,8 @@ type DashboardScreenProps = {
   onCreateAccount: (event: FormEvent<HTMLFormElement>) => void
   onDeleteAccount: (accountId: string) => void
   onSyncMatches: () => void
+  onCreateGoal: (input: GoalCreateInput) => Promise<boolean>
+  onDeleteGoal: (goalId: string) => void
 }
 
 export function DashboardScreen({
@@ -94,8 +98,11 @@ export function DashboardScreen({
   onCreateAccount,
   onDeleteAccount,
   onSyncMatches,
+  onCreateGoal,
+  onDeleteGoal,
 }: DashboardScreenProps) {
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false)
+  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false)
 
   const handleOpenAccountModal = () => {
     onTabChange('cuentas')
@@ -185,7 +192,14 @@ export function DashboardScreen({
           />
         )}
 
-        {activeTab === 'objetivos' && <GoalsTabPanel goalsByAccount={goalsByAccount} />}
+        {activeTab === 'objetivos' && (
+          <GoalsTabPanel
+            goalsByAccount={goalsByAccount}
+            onOpenGoalModal={() => setIsGoalModalOpen(true)}
+            onDeleteGoal={onDeleteGoal}
+            onGoToMatches={() => onTabChange('partidas')}
+          />
+        )}
       </main>
 
       <AccountSearchModal
@@ -195,6 +209,14 @@ export function DashboardScreen({
         onClose={() => setIsAccountModalOpen(false)}
         onAccountFieldChange={onAccountFieldChange}
         onCreateAccount={onCreateAccount}
+      />
+
+      <GoalFormModal
+        isOpen={isGoalModalOpen}
+        accountId={activeAccount?.id ?? ''}
+        status={status}
+        onClose={() => setIsGoalModalOpen(false)}
+        onSubmit={onCreateGoal}
       />
     </div>
   )

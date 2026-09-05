@@ -299,7 +299,7 @@ export class RiotApiService {
   async getMatchIdsByPuuid(
     server: string,
     puuid: string,
-    options: { start?: number; count?: number; queue?: number } = {},
+    options: { start?: number; count?: number; queue?: number; type?: string } = {},
   ): Promise<string[]> {
     const host = this.getRegionalHost(server);
     const params = new URLSearchParams();
@@ -307,6 +307,9 @@ export class RiotApiService {
     params.set('count', String(Math.min(options.count ?? 10, 20)));
     if (options.queue) {
       params.set('queue', String(options.queue));
+    }
+    if (options.type) {
+      params.set('type', options.type);
     }
 
     return this.request<string[]>(

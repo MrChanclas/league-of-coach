@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DiscordService } from '../discord/discord.service';
+import { GoalsService } from '../goals/goals.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -9,6 +10,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly discord: DiscordService,
+    private readonly goalsService: GoalsService,
   ) {}
 
   async createUser(createUserDto: CreateUserDto) {
@@ -100,14 +102,10 @@ export class UsersService {
         })
       : [];
 
-    const goals = accountIds.length
-      ? await this.prisma.goal.findMany({
-          where: {
-            accountId: { in: accountIds },
-          },
-          orderBy: { createdAt: 'desc' },
-        })
-      : [];
+    const goalsByAccount = await Promise.all(
+      accountIds.map((accountId) => this.goalsService.listByAccount(accountId)),
+    );
+    const goals = goalsByAccount.flat();
 
     const accountsWithDetails = await Promise.all(
       accounts.map(async (account) => ({

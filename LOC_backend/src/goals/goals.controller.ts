@@ -1,17 +1,8 @@
-import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
-import { z } from 'zod';
+import { Body, Controller, Delete, Get, Param, Post, Req } from '@nestjs/common';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { AuthzService } from '../auth/authz.service';
 import type { AuthenticatedRequest } from '../auth/clerk-auth.guard';
-import { GoalsService } from './goals.service';
-
-const CreateGoalSchema = z.object({
-  type: z.enum(['rank', 'consistency', 'mechanic', 'habit']),
-  title: z.string().min(2).max(120),
-  progress: z.number().int().min(0).max(100),
-  deadline: z.coerce.date().optional(),
-  accountId: z.string().min(1),
-});
+import { CreateGoalSchema, GoalsService, type CreateGoalInput } from './goals.service';
 
 @Controller('goals')
 export class GoalsController {
@@ -24,7 +15,7 @@ export class GoalsController {
   async create(
     @Req() request: AuthenticatedRequest,
     @Body(new ZodValidationPipe(CreateGoalSchema))
-    body: z.infer<typeof CreateGoalSchema>,
+    body: CreateGoalInput,
   ) {
     await this.authz.assertAccountOwnership(body.accountId, request.clerkUserId);
     return this.goalsService.create(body);
@@ -34,5 +25,12 @@ export class GoalsController {
   async listByAccount(@Req() request: AuthenticatedRequest, @Param('accountId') accountId: string) {
     await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
     return this.goalsService.listByAccount(accountId);
+  }
+
+  @Delete(':id')
+  async remove(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    const goal = await this.goalsService.findOneOrThrow(id);
+    await this.authz.assertAccountOwnership(goal.accountId, request.clerkUserId);
+    return this.goalsService.remove(id);
   }
 }

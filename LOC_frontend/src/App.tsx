@@ -11,6 +11,7 @@ import type {
   AuthUser,
   ChampionSplitStat,
   DashboardPayload,
+  GoalCreateInput,
   LaneEntry,
   LessonCard,
   MasteryEntry,
@@ -321,6 +322,62 @@ function App() {
     }
   }
 
+  const refreshDashboard = async (token: string | null) => {
+    if (!internalUser) return
+    const response = await fetch(`${API_URL}/users/${internalUser.id}/dashboard`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    })
+    if (response.ok) {
+      setDashboard((await response.json()) as DashboardPayload)
+    }
+  }
+
+  const handleCreateGoal = async (input: GoalCreateInput): Promise<boolean> => {
+    try {
+      const token = await getToken()
+      const response = await fetch(`${API_URL}/goals`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(input),
+      })
+
+      const payload = (await response.json()) as { message?: string }
+
+      if (!response.ok) {
+        throw new Error(payload.message ?? 'No se pudo crear el objetivo.')
+      }
+
+      await refreshDashboard(token)
+      setStatus('Objetivo creado correctamente.')
+      return true
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'No se pudo crear el objetivo.')
+      return false
+    }
+  }
+
+  const handleDeleteGoal = async (goalId: string) => {
+    try {
+      const token = await getToken()
+      const response = await fetch(`${API_URL}/goals/${goalId}`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      })
+
+      if (!response.ok) {
+        throw new Error('No se pudo eliminar el objetivo.')
+      }
+
+      await refreshDashboard(token)
+      setStatus('Objetivo eliminado correctamente.')
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'No se pudo eliminar el objetivo.')
+    }
+  }
+
   const handleSyncMatches = async () => {
     if (!currentAccountId) return
 
@@ -336,13 +393,21 @@ function App() {
         body: JSON.stringify({}),
       })
 
-      const payload = (await response.json()) as { synced?: number; skipped?: number; message?: string }
+      const payload = (await response.json()) as {
+        synced?: number
+        skipped?: number
+        relinked?: number
+        message?: string
+      }
 
       if (!response.ok) {
         throw new Error(payload.message ?? 'No se pudieron sincronizar las partidas.')
       }
 
-      setStatus(`Se sincronizaron ${payload.synced ?? 0} partidas nuevas (${payload.skipped ?? 0} ya existían).`)
+      const relinkedNote = payload.relinked ? `, ${payload.relinked} recuperadas de cuentas compartidas` : ''
+      setStatus(
+        `Se sincronizaron ${payload.synced ?? 0} partidas nuevas (${payload.skipped ?? 0} ya existían${relinkedNote}).`,
+      )
       setLastSyncedAt(new Date())
 
       const history = await loadAccountData()
@@ -413,6 +478,8 @@ function App() {
       onCreateAccount={handleCreateAccount}
       onDeleteAccount={handleDeleteAccount}
       onSyncMatches={handleSyncMatches}
+      onCreateGoal={handleCreateGoal}
+      onDeleteGoal={handleDeleteGoal}
     />
   )
 }

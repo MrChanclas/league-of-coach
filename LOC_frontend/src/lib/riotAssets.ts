@@ -39,6 +39,18 @@ export function getChampionIconUrl(championKey: string, version: string) {
   return `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${championKey}.png`
 }
 
+let cachedChampionListPromise: Promise<string[]> | null = null
+
+export function getChampionList(version: string): Promise<string[]> {
+  if (!cachedChampionListPromise) {
+    cachedChampionListPromise = fetch(`https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion.json`)
+      .then((response) => response.json() as Promise<{ data: Record<string, { name: string }> }>)
+      .then((payload) => Object.values(payload.data).map((champion) => champion.name).sort())
+      .catch(() => [])
+  }
+  return cachedChampionListPromise
+}
+
 export function getItemIconUrl(itemId: number, version: string): string | null {
   if (!itemId) return null
   return `https://ddragon.leagueoflegends.com/cdn/${version}/img/item/${itemId}.png`

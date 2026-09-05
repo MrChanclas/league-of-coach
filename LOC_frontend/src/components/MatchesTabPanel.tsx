@@ -11,18 +11,16 @@ type MatchesTabPanelProps = {
   ddragonVersion: string | null
 }
 
-type QueueFilter = 'all' | 420 | 440 | 'normal'
+type QueueFilter = 'all' | 420 | 440
 
 const FILTERS: { key: QueueFilter; label: string }[] = [
-  { key: 'all', label: 'Todas las colas' },
+  { key: 'all', label: 'Solo/dúo + Flexible' },
   { key: 420, label: 'Clasif. solo/dúo' },
   { key: 440, label: 'Flexible' },
-  { key: 'normal', label: 'Normal' },
 ]
 
 function matchesFilter(entry: MatchParticipantEntry, filter: QueueFilter) {
   if (filter === 'all') return true
-  if (filter === 'normal') return entry.match.queueId === 400 || entry.match.queueId === 430
   return entry.match.queueId === filter
 }
 

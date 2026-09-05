@@ -11,6 +11,8 @@ type ParticipantWithMatch = {
   match: { gameDuration: number };
 };
 
+type ParticipantWithMatchAndRole = ParticipantWithMatch & { teamPosition: string };
+
 @Injectable()
 export class StatsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -61,6 +63,24 @@ export class StatsService {
 
     return Array.from(byChampion.entries())
       .map(([champion, entries]) => ({ champion, ...this.summarize(entries) }))
+      .sort((a, b) => b.gamesPlayed - a.gamesPlayed);
+  }
+
+  async getByRole(accountId: string) {
+    const participants = await this.prisma.matchParticipant.findMany({
+      where: { accountId },
+      include: { match: true },
+    });
+
+    const byRole = new Map<string, ParticipantWithMatchAndRole[]>();
+    for (const participant of participants) {
+      const list = byRole.get(participant.teamPosition) ?? [];
+      list.push(participant);
+      byRole.set(participant.teamPosition, list);
+    }
+
+    return Array.from(byRole.entries())
+      .map(([teamPosition, entries]) => ({ teamPosition, ...this.summarize(entries) }))
       .sort((a, b) => b.gamesPlayed - a.gamesPlayed);
   }
 

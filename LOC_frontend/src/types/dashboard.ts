@@ -34,18 +34,69 @@ export type ChampionStat = {
   csMin: number
 }
 
-export type GoalType = 'rank' | 'consistency' | 'mechanic' | 'habit'
+export type GoalType = 'rango' | 'rol' | 'campeon'
 export type GoalStatus = 'completed' | 'in_progress' | 'behind'
+export type GoalQueue = 'solo' | 'flex'
+
+export type GoalCurrent = {
+  tier?: string
+  division?: string
+  lp?: number
+  winrate?: number
+  avgKda?: number
+  gamesPlayed?: number
+}
 
 export type GoalItem = {
   id: string
   accountId: string
   type: GoalType
-  title: string
   progress: number
   deadline?: string | null
   status: GoalStatus
+  current?: GoalCurrent
+  // type = 'rango'
+  queueType?: GoalQueue
+  targetTier?: string
+  targetDivision?: string | null
+  // type = 'rol'
+  targetRole?: string
+  // type = 'rol' y 'campeon'
+  targetWinrate?: number
+  // type = 'campeon'
+  targetChampion?: string
+  targetKda?: number | null
+  // derivados (brecha / ritmo), null cuando el objetivo ya está completado
+  gap?: number | null
+  gapLabel?: string | null
+  pace?: string | null
+  paceSub?: string | null
 }
+
+export type GoalCreateInput =
+  | {
+      type: 'rango'
+      accountId: string
+      queueType: GoalQueue
+      targetTier: string
+      targetDivision?: string
+      deadline?: string
+    }
+  | {
+      type: 'rol'
+      accountId: string
+      targetRole: string
+      targetWinrate: number
+      deadline?: string
+    }
+  | {
+      type: 'campeon'
+      accountId: string
+      targetChampion: string
+      targetWinrate: number
+      targetKda?: number
+      deadline?: string
+    }
 
 export type DashboardSummary = {
   totalAccounts: number

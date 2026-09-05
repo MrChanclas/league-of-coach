@@ -81,13 +81,26 @@ model LearningSession {
 
 model Goal {
   id        String    @id @default(cuid())
-  type      String
-  title     String
-  progress  Int       @default(0)
+  type      String // 'rango' | 'rol' | 'campeon'
   deadline  DateTime?
   accountId String
   account   LolAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
   createdAt DateTime  @default(now())
+
+  // type = 'rango'
+  queueType      String? // 'solo' | 'flex'
+  targetTier     String? // IRON..CHALLENGER
+  targetDivision String? // I..IV, null en Master+
+
+  // type = 'rol'
+  targetRole String? // TOP | JUNGLE | MIDDLE | BOTTOM | UTILITY
+
+  // type = 'rol' y 'campeon'
+  targetWinrate Float? // 0..1
+
+  // type = 'campeon'
+  targetChampion String?
+  targetKda      Float?
 }
 
 model Match {

@@ -1,4 +1,5 @@
 import type { GoalItem } from '../types/dashboard'
+import { formatGoalGap, formatGoalPace, formatGoalTitle } from '../lib/goalLabels'
 
 type ActiveGoalCardProps = {
   goal: GoalItem | null
@@ -18,21 +19,23 @@ export function ActiveGoalCard({ goal, onGoToGoals }: ActiveGoalCardProps) {
     )
   }
 
+  const gap = formatGoalGap(goal)
+  const pace = formatGoalPace(goal)
+
   return (
     <div className="side-card side-card--goal">
       <div className="side-card-label">OBJETIVO ACTIVO</div>
-      <div className="goal-highlight-title">{goal.title}</div>
+      <div className="goal-highlight-title">{formatGoalTitle(goal)}</div>
       <div className="goal-highlight-progress">
         <div className="goal-highlight-track">
           <div className="goal-highlight-fill" style={{ width: `${goal.progress}%` }} />
         </div>
-        <span className="goal-highlight-pct">{goal.progress}%</span>
+        <span className="goal-highlight-pct">{gap.value}</span>
       </div>
-      {goal.deadline && (
-        <div className="goal-highlight-note">
-          Fecha límite: {new Date(goal.deadline).toLocaleDateString()}
-        </div>
-      )}
+      <div className="goal-highlight-note">
+        {gap.label && <span>{gap.label} · </span>}
+        {pace.action}
+      </div>
       <button type="button" className="goal-highlight-cta" onClick={onGoToGoals}>
         Ver todos los objetivos
       </button>

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { DiscordService } from '../discord/discord.service';
@@ -10,20 +11,42 @@ import { PuuidRefreshService } from '../riot/puuid-refresh.service';
 import { isStalePuuidError, RiotApiService, RiotMatchDto } from '../riot/riot-api.service';
 
 const RANKED_QUEUE_TO_KEY: Record<number, QueueKey> = { 420: 'solo', 440: 'flex' };
+// The match history view only ever shows ranked Solo/Duo and Flex games,
+// regardless of what other queues get synced.
+const HISTORY_QUEUE_IDS = [420, 440];
 
 // Riot's match-ids endpoint accepts up to 20 per page.
 const PAGE_SIZE = 20;
 // How many pages of history we're willing to page back through in one sync
-// call, as a safety cap against runaway loops for accounts with very sparse
-// (or no) ranked history.
+// call, as a safety cap against runaway loops for brand-new accounts with a
+// long ranked history (normal top-ups stop far sooner, see hasCaughtUp
+// below).
 const MAX_BACKFILL_PAGES = 5;
-// Standard history depth every account converges to, matching the "20
-// partidas por análisis" the app promises regardless of how often an
-// account plays.
+// Initial backfill depth for a brand-new account link, matching the "20
+// partidas por análisis" the app promises. Irrelevant once an account
+// already has some history — see hasCaughtUp below.
 const DEFAULT_TARGET_MATCH_COUNT = 20;
+// A single match can transiently 404 right after it finishes (Riot's match
+// details lag slightly behind the ids list). Retry with backoff instead of
+// giving up — we'd rather a sync take longer than silently skip a recent
+// match and let older ones fill in for it.
+const MATCH_FETCH_RETRIES = 5;
+const MATCH_FETCH_RETRY_DELAY_MS = 3000;
+// Riot's match-ids list endpoint can itself serve a stale cached response
+// for a short while right after a new game finishes (different edge nodes
+// catch up at different times) — so "nothing new" on the freshest page
+// isn't trusted until it's confirmed a couple of times.
+const LIST_RECHECK_ATTEMPTS = 4;
+const LIST_RECHECK_DELAY_MS = 5000;
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 @Injectable()
 export class MatchesService {
+  private readonly logger = new Logger(MatchesService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly riotApi: RiotApiService,
@@ -47,13 +70,17 @@ export class MatchesService {
       );
     }
 
+    // Counted as ranked-only so the backfill target below means "20 ranked
+    // matches", matching what the history view actually shows — not diluted
+    // by older normal/ARAM games synced before ranked-only syncing.
     const storedCount = await this.prisma.matchParticipant.count({
-      where: { accountId: account.id },
+      where: { accountId: account.id, match: { queueId: { in: HISTORY_QUEUE_IDS } } },
     });
 
     let puuid = account.puuid;
     let synced = 0;
     let skipped = 0;
+    let relinked = 0;
     let totalFetched = 0;
     let start = 0;
 
@@ -61,57 +88,138 @@ export class MatchesService {
     // newly played games get picked up; later pages only run if we're still
     // short of the target depth, backfilling further into history.
     for (let page = 0; page < MAX_BACKFILL_PAGES; page += 1) {
-      let matchIds: string[];
-      try {
-        matchIds = await this.riotApi.getMatchIdsByPuuid(account.server, puuid, {
-          start,
-          count: PAGE_SIZE,
+      const isFirstPage = page === 0;
+      const listAttempts = isFirstPage ? LIST_RECHECK_ATTEMPTS : 1;
+      let matchIds: string[] = [];
+      let newIds: string[] = [];
+
+      for (let listAttempt = 1; listAttempt <= listAttempts; listAttempt += 1) {
+        try {
+          matchIds = await this.riotApi.getMatchIdsByPuuid(account.server, puuid, {
+            start,
+            count: PAGE_SIZE,
+            type: 'ranked',
+          });
+        } catch (error) {
+          // The stored puuid can go stale if the Riot API key was rotated
+          // since this account was last resolved; only worth retrying once,
+          // right at the start of the sync.
+          if (page > 0 || !isStalePuuidError(error)) throw error;
+          puuid = await this.puuidRefresh.refresh(account);
+          matchIds = await this.riotApi.getMatchIdsByPuuid(account.server, puuid, {
+            start,
+            count: PAGE_SIZE,
+            type: 'ranked',
+          });
+        }
+
+        if (matchIds.length === 0) break;
+
+        const existingMatches = await this.prisma.match.findMany({
+          where: { matchId: { in: matchIds } },
+          select: { id: true, matchId: true },
         });
-      } catch (error) {
-        // The stored puuid can go stale if the Riot API key was rotated
-        // since this account was last resolved; only worth retrying once,
-        // right at the start of the sync.
-        if (page > 0 || !isStalePuuidError(error)) throw error;
-        puuid = await this.puuidRefresh.refresh(account);
-        matchIds = await this.riotApi.getMatchIdsByPuuid(account.server, puuid, {
-          start,
-          count: PAGE_SIZE,
+        const internalIdByRiotId = new Map(existingMatches.map((match) => [match.matchId, match.id]));
+
+        // A match already known globally (synced earlier via a different
+        // tracked account that shared the game) can still be missing THIS
+        // account's own participant row entirely — either it was never
+        // linked at the time (participant row exists with accountId: null)
+        // or this account was deleted and re-added since (deleting a
+        // LolAccount cascades its MatchParticipant rows, but the shared
+        // Match row stays). Both cases silently drop this account's most
+        // recent games unless we check for them here instead of just
+        // trusting "the match exists" and skipping it.
+        const ourParticipants = existingMatches.length
+          ? await this.prisma.matchParticipant.findMany({
+              where: { matchId: { in: [...internalIdByRiotId.values()] }, puuid },
+              select: { matchId: true, accountId: true },
+            })
+          : [];
+        const ourParticipantByInternalId = new Map(ourParticipants.map((p) => [p.matchId, p]));
+
+        newIds = matchIds.filter((id) => {
+          const internalId = internalIdByRiotId.get(id);
+          return !internalId || !ourParticipantByInternalId.has(internalId);
         });
+
+        let relinkedThisAttempt = 0;
+        const orphanedInternalIds = ourParticipants
+          .filter((p) => p.accountId === null)
+          .map((p) => p.matchId);
+        if (orphanedInternalIds.length > 0) {
+          const result = await this.prisma.matchParticipant.updateMany({
+            where: { matchId: { in: orphanedInternalIds }, puuid, accountId: null },
+            data: { accountId: account.id },
+          });
+          relinkedThisAttempt = result.count;
+          relinked += relinkedThisAttempt;
+        }
+
+        // Riot's match-ids list endpoint can itself serve a stale cached
+        // response for a short while right after a new game finishes —
+        // only worth rechecking when this page looked like it found
+        // nothing at all (no new match, nothing to relink either).
+        const looksStale =
+          isFirstPage && newIds.length === 0 && relinkedThisAttempt === 0 && listAttempt < listAttempts;
+        if (!looksStale) break;
+        await sleep(LIST_RECHECK_DELAY_MS);
       }
 
       if (matchIds.length === 0) break;
       totalFetched += matchIds.length;
-
-      const existing = await this.prisma.match.findMany({
-        where: { matchId: { in: matchIds } },
-        select: { matchId: true },
-      });
-      const existingIds = new Set(existing.map((match) => match.matchId));
-      const newIds = matchIds.filter((id) => !existingIds.has(id));
       skipped += matchIds.length - newIds.length;
 
       for (const matchId of newIds) {
-        const matchDto = await this.riotApi.getMatchById(account.server, matchId);
-        await this.storeMatch(account.id, account.server, puuid, matchDto);
-        synced += 1;
+        try {
+          const matchDto = await this.fetchMatchWithRetry(account.server, matchId);
+          await this.storeMatch(account.id, account.server, puuid, matchDto);
+          synced += 1;
+        } catch (error) {
+          this.logger.warn(
+            `No se pudo sincronizar la partida ${matchId} tras ${MATCH_FETCH_RETRIES} intentos: ${error}`,
+          );
+        }
       }
 
+      // Once a page contains a match we already had stored, everything
+      // older than it is guaranteed to be already-synced too — stop right
+      // there instead of continuing to page back into history just to hit
+      // targetCount. That backfill target only matters for a brand-new
+      // account's very first sync (an all-new page keeps it paging).
+      const hasCaughtUpToKnownHistory = newIds.length < matchIds.length;
       const hasReachedTarget = storedCount + synced >= targetCount;
       const hasReachedEndOfHistory = matchIds.length < PAGE_SIZE;
-      if (hasReachedTarget || hasReachedEndOfHistory) break;
+      if (hasCaughtUpToKnownHistory || hasReachedTarget || hasReachedEndOfHistory) break;
 
       start += PAGE_SIZE;
     }
 
     await this.rankSnapshots.refreshAccountRank({ ...account, puuid });
 
-    if (synced > 0) {
+    if (synced > 0 || relinked > 0) {
       this.discord.notifySession(
-        `🔄 Sync de **${account.summoner}#${account.tag}**: ${synced} partida(s) nueva(s).`,
+        `🔄 Sync de **${account.summoner}#${account.tag}**: ${synced} partida(s) nueva(s)` +
+          (relinked > 0 ? `, ${relinked} recuperada(s) de cuentas compartidas.` : '.'),
       );
     }
 
-    return { synced, skipped, totalFetched };
+    return { synced, skipped, relinked, totalFetched };
+  }
+
+  private async fetchMatchWithRetry(server: string, matchId: string): Promise<RiotMatchDto> {
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= MATCH_FETCH_RETRIES; attempt += 1) {
+      try {
+        return await this.riotApi.getMatchById(server, matchId);
+      } catch (error) {
+        lastError = error;
+        if (attempt < MATCH_FETCH_RETRIES) {
+          await sleep(attempt * MATCH_FETCH_RETRY_DELAY_MS);
+        }
+      }
+    }
+    throw lastError;
   }
 
   private async storeMatch(
@@ -129,8 +237,14 @@ export class MatchesService {
       return;
     }
 
-    const match = await this.prisma.match.create({
-      data: {
+    // Upsert, not create: the match itself (or some of its participants) can
+    // already exist if another tracked account shared the game and synced
+    // it first, or if this account was deleted and re-added — deleting a
+    // LolAccount cascades its own MatchParticipant rows but never touches
+    // the shared Match row.
+    const match = await this.prisma.match.upsert({
+      where: { matchId: matchDto.metadata.matchId },
+      create: {
         matchId: matchDto.metadata.matchId,
         server,
         gameCreation: new Date(matchDto.info.gameCreation),
@@ -139,6 +253,7 @@ export class MatchesService {
         gameVersion: matchDto.info.gameVersion,
         queueId: matchDto.info.queueId,
       },
+      update: {},
     });
 
     const knownAccounts = await this.prisma.lolAccount.findMany({
@@ -150,7 +265,12 @@ export class MatchesService {
     );
     accountIdByPuuid.set(puuid, accountId);
 
+    // skipDuplicates so re-running this for an already-known match only
+    // inserts the participant rows that are actually missing (this
+    // account's own, most commonly) without erroring on the ones other
+    // accounts already stored.
     await this.prisma.matchParticipant.createMany({
+      skipDuplicates: true,
       data: participants.map((participant) => ({
         matchId: match.id,
         accountId: accountIdByPuuid.get(participant.puuid) ?? null,
@@ -254,15 +374,17 @@ export class MatchesService {
   }
 
   async listByAccount(accountId: string, page: number, pageSize: number) {
+    const where = { accountId, match: { queueId: { in: HISTORY_QUEUE_IDS } } };
+
     const [items, total] = await Promise.all([
       this.prisma.matchParticipant.findMany({
-        where: { accountId },
+        where,
         include: { match: true },
         orderBy: { match: { gameCreation: 'desc' } },
         skip: (page - 1) * pageSize,
         take: pageSize,
       }),
-      this.prisma.matchParticipant.count({ where: { accountId } }),
+      this.prisma.matchParticipant.count({ where }),
     ]);
 
     const matchIds = items.map((item) => item.matchId);
