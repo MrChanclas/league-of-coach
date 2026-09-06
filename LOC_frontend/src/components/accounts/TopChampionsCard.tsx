@@ -1,5 +1,5 @@
-import { getChampionIconUrl } from '../lib/riotAssets'
-import type { ChampionSplitStat } from '../types/dashboard'
+import { getChampionIconUrl } from '../../lib/riotAssets'
+import type { ChampionSplitStat } from '../../types/dashboard'
 
 type TopChampionsCardProps = {
   champions: ChampionSplitStat[]

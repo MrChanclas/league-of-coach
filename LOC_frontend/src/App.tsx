@@ -1,26 +1,37 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { AuthenticateWithRedirectCallback, useAuth, useClerk, useUser } from '@clerk/clerk-react'
-import { DashboardScreen } from './components/DashboardScreen'
-import { API_URL, fetchJson } from './lib/api'
+import { useQueryClient } from '@tanstack/react-query'
+import { DashboardScreen } from './components/layout/DashboardScreen'
+import {
+  useCreateGoalMutation,
+  useDeleteAccountMutation,
+  useDeleteGoalMutation,
+  useResolveAccountMutation,
+  useSyncMatchesMutation,
+} from './hooks/useApiMutations'
+import {
+  queryKeys,
+  useAccountActivity,
+  useAccountChampions,
+  useAccountLanes,
+  useAccountLessons,
+  useAccountMatches,
+  useAccountRankHistory,
+  useAccountStats,
+  useAccountStreak,
+  useDashboard,
+  useInternalUser,
+} from './hooks/useApiQueries'
 import { getDdragonVersion } from './lib/riotAssets'
-import type {
-  AccountForm,
-  AccountStatsSummary,
-  ActivityDay,
-  AuthUser,
-  ChampionSplitStat,
-  DashboardPayload,
-  GoalCreateInput,
-  LaneEntry,
-  LessonCard,
-  MasteryEntry,
-  MatchParticipantEntry,
-  RankSnapshotEntry,
-  StreakInfo,
-  TabKey,
-  TimeRange,
-} from './types/dashboard'
+import type { AccountForm, GoalCreateInput, TabKey, TimeRange } from './types/dashboard'
+
+function formatLastSyncedLabel(lastSyncedAt: Date | null): string {
+  if (!lastSyncedAt) return 'Sin sincronizar en esta sesión'
+  const minutes = Math.max(0, Math.round((Date.now() - lastSyncedAt.getTime()) / 60_000))
+  if (minutes < 1) return 'Sincronizado hace instantes'
+  return `Sincronizado hace ${minutes} min`
+}
 
 const blankAccountForm: AccountForm = {
   summoner: '',
@@ -29,31 +40,18 @@ const blankAccountForm: AccountForm = {
 }
 
 function App() {
-  const { isSignedIn, getToken } = useAuth()
+  const { isSignedIn } = useAuth()
   const { user } = useUser()
   const { signOut } = useClerk()
+  const queryClient = useQueryClient()
 
   const [activeTab, setActiveTab] = useState<TabKey>('cuentas')
   const [currentAccountId, setCurrentAccountId] = useState('')
   const [accountForm, setAccountForm] = useState<AccountForm>(blankAccountForm)
-  const [dashboard, setDashboard] = useState<DashboardPayload | null>(null)
-  const [isLoadingDashboard, setIsLoadingDashboard] = useState(false)
   const [status, setStatus] = useState('')
-  const [internalUser, setInternalUser] = useState<AuthUser | null>(null)
   const [ddragonVersion, setDdragonVersion] = useState<string | null>(null)
-
   const [timeRange, setTimeRange] = useState<TimeRange>('7d')
-  const [isSyncing, setIsSyncing] = useState(false)
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null)
-
-  const [matches, setMatches] = useState<MatchParticipantEntry[]>([])
-  const [mastery, setMastery] = useState<MasteryEntry[]>([])
-  const [statsSummary, setStatsSummary] = useState<AccountStatsSummary | null>(null)
-  const [streak, setStreak] = useState<StreakInfo | null>(null)
-  const [lanes, setLanes] = useState<LaneEntry[]>([])
-  const [weeklyActivity, setWeeklyActivity] = useState<ActivityDay[]>([])
-  const [championsSplit, setChampionsSplit] = useState<ChampionSplitStat[]>([])
-  const [lessons, setLessons] = useState<LessonCard[]>([])
 
   useEffect(() => {
     void getDdragonVersion().then(setDdragonVersion)
@@ -65,168 +63,80 @@ function App() {
     return () => clearTimeout(timer)
   }, [status])
 
-  useEffect(() => {
-    if (!isSignedIn || !user) {
-      setInternalUser(null)
-      return
-    }
+  const userDisplayName = useMemo(
+    () => user?.fullName ?? user?.primaryEmailAddress?.emailAddress ?? 'League of Coach',
+    [user],
+  )
+  const userDisplayEmail = useMemo(
+    () => user?.primaryEmailAddress?.emailAddress ?? 'coach@leagueofcoach.com',
+    [user],
+  )
 
-    let cancelled = false
+  const internalUserQuery = useInternalUser(
+    Boolean(isSignedIn),
+    user?.id,
+    user?.fullName ?? user?.primaryEmailAddress?.emailAddress ?? 'Coach',
+    user?.primaryEmailAddress?.emailAddress ?? '',
+  )
+  const internalUser = internalUserQuery.data
 
-    const resolveUser = async () => {
-      try {
-        const token = await getToken()
-        const response = await fetch(`${API_URL}/users/me`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({
-            name: user.fullName ?? user.primaryEmailAddress?.emailAddress ?? 'Coach',
-            email: user.primaryEmailAddress?.emailAddress ?? '',
-          }),
-        })
-
-        if (!response.ok) {
-          throw new Error('No se pudo resolver el usuario.')
-        }
-
-        const payload = (await response.json()) as AuthUser
-        if (!cancelled) {
-          setInternalUser(payload)
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setStatus(error instanceof Error ? error.message : 'No se pudo resolver el usuario.')
-        }
-      }
-    }
-
-    resolveUser()
-
-    return () => {
-      cancelled = true
-    }
-  }, [isSignedIn, user, getToken])
-
-  useEffect(() => {
-    if (!internalUser) {
-      setDashboard(null)
-      setCurrentAccountId('')
-      return
-    }
-
-    const loadDashboard = async () => {
-      try {
-        setIsLoadingDashboard(true)
-        const token = await getToken()
-        const response = await fetch(`${API_URL}/users/${internalUser.id}/dashboard`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        })
-
-        if (!response.ok) {
-          throw new Error('No se pudo cargar el dashboard del usuario.')
-        }
-
-        const payload = (await response.json()) as DashboardPayload
-        setDashboard(payload)
-        if (payload.accounts.length > 0) {
-          setCurrentAccountId((previous) => previous || payload.accounts[0].id)
-        }
-      } catch (error) {
-        setStatus(error instanceof Error ? error.message : 'No se pudo cargar el dashboard.')
-      } finally {
-        setIsLoadingDashboard(false)
-      }
-    }
-
-    loadDashboard()
-  }, [internalUser, getToken])
-
+  const dashboardQuery = useDashboard(internalUser?.id)
+  const dashboard = dashboardQuery.data ?? null
   const userAccounts = useMemo(() => dashboard?.accounts ?? [], [dashboard])
+
+  // Keeps the selection valid as the dashboard identity/content changes:
+  // cleared on sign-out (dashboard becomes null), defaulted to the first
+  // account on load, and re-validated whenever the account list changes
+  // (e.g. falls back to the first remaining account right after a delete).
+  // Adjusting state during render, rather than in an effect, avoids an extra
+  // commit-then-rerender pass for what's really a render-time derivation —
+  // see https://react.dev/learn/you-might-not-need-an-effect.
+  const [syncedDashboard, setSyncedDashboard] = useState(dashboard)
+  if (dashboard !== syncedDashboard) {
+    setSyncedDashboard(dashboard)
+    setCurrentAccountId((previous) => {
+      if (!dashboard) return ''
+      if (previous && dashboard.accounts.some((account) => account.id === previous)) return previous
+      return dashboard.accounts[0]?.id ?? ''
+    })
+  }
 
   const activeAccount = useMemo(
     () => userAccounts.find((account) => account.id === currentAccountId) ?? userAccounts[0],
     [currentAccountId, userAccounts],
   )
 
-  const loadAccountData = async () => {
-    if (!currentAccountId) {
-      setMatches([])
-      setMastery([])
-      setStatsSummary(null)
-      setStreak(null)
-      setLanes([])
-      setWeeklyActivity([])
-      setChampionsSplit([])
-      setLessons([])
-      return
-    }
+  const splitDays = timeRange === '7d' ? 7 : 30
+  const primaryQueue = activeAccount && activeAccount.soloTier !== 'Unranked' ? 'solo' : 'flex'
 
-    const token = await getToken()
-    const splitDays = timeRange === '7d' ? 7 : 30
-    const account = userAccounts.find((entry) => entry.id === currentAccountId)
-    const primaryQueue = account && account.soloTier !== 'Unranked' ? 'solo' : 'flex'
+  const matchesQuery = useAccountMatches(currentAccountId)
+  const statsQuery = useAccountStats(currentAccountId)
+  const streakQuery = useAccountStreak(currentAccountId)
+  const lanesQuery = useAccountLanes(currentAccountId)
+  const activityQuery = useAccountActivity(currentAccountId)
+  const championsQuery = useAccountChampions(currentAccountId, splitDays)
+  const rankHistoryQuery = useAccountRankHistory(currentAccountId, primaryQueue)
+  const lessonsQuery = useAccountLessons(currentAccountId)
 
-    const [
-      matchesResult,
-      masteryResult,
-      statsResult,
-      streakResult,
-      lanesResult,
-      activityResult,
-      championsResult,
-      rankHistoryResult,
-      lessonsResult,
-    ] = await Promise.all([
-      fetchJson<{ items: MatchParticipantEntry[] }>(`/matches/account/${currentAccountId}?pageSize=20`, token),
-      fetchJson<MasteryEntry[]>(`/mastery/account/${currentAccountId}`, token),
-      fetchJson<AccountStatsSummary>(`/stats/account/${currentAccountId}`, token),
-      fetchJson<StreakInfo>(`/stats/account/${currentAccountId}/streak`, token),
-      fetchJson<LaneEntry[]>(`/stats/account/${currentAccountId}/lanes`, token),
-      fetchJson<ActivityDay[]>(`/stats/account/${currentAccountId}/activity?days=7`, token),
-      fetchJson<ChampionSplitStat[]>(`/stats/account/${currentAccountId}/champions?days=${splitDays}`, token),
-      fetchJson<RankSnapshotEntry[]>(`/accounts/${currentAccountId}/rank-history?queue=${primaryQueue}&days=90`, token),
-      fetchJson<LessonCard[]>(`/learning/account/${currentAccountId}/lessons`, token),
-    ])
-
-    setMatches(matchesResult?.items ?? [])
-    setMastery(masteryResult ?? [])
-    setStatsSummary(statsResult)
-    setStreak(streakResult)
-    setLanes(lanesResult ?? [])
-    setWeeklyActivity(activityResult ?? [])
-    setChampionsSplit(championsResult ?? [])
-    setLessons(lessonsResult ?? [])
-
-    return rankHistoryResult ?? []
-  }
-
-  const [rankHistory, setRankHistory] = useState<RankSnapshotEntry[]>([])
-
-  useEffect(() => {
-    let cancelled = false
-
-    const run = async () => {
-      const history = await loadAccountData()
-      if (!cancelled) {
-        setRankHistory(history ?? [])
-      }
-    }
-
-    void run()
-
-    return () => {
-      cancelled = true
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentAccountId, timeRange, getToken])
+  const matches = matchesQuery.data?.items ?? []
+  const statsSummary = statsQuery.data ?? null
+  const streak = streakQuery.data ?? null
+  const lanes = lanesQuery.data ?? []
+  const weeklyActivity = activityQuery.data ?? []
+  const championsSplit = championsQuery.data ?? []
+  const rankHistory = rankHistoryQuery.data ?? []
+  const lessons = lessonsQuery.data ?? []
 
   const goalsByAccount = useMemo(
     () => (dashboard?.goals ?? []).filter((goal) => goal.accountId === (activeAccount?.id ?? '')),
     [activeAccount, dashboard],
   )
+
+  const resolveAccountMutation = useResolveAccountMutation()
+  const deleteAccountMutation = useDeleteAccountMutation()
+  const createGoalMutation = useCreateGoalMutation()
+  const deleteGoalMutation = useDeleteGoalMutation()
+  const syncMatchesMutation = useSyncMatchesMutation()
 
   const handleAccountFieldChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target
@@ -236,48 +146,20 @@ function App() {
     }))
   }
 
-  const handleCreateAccount = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleCreateAccount = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!internalUser) return
 
     try {
-      const token = await getToken()
-      const response = await fetch(`${API_URL}/accounts/search`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          summoner: accountForm.summoner,
-          tag: accountForm.tag,
-          server: accountForm.server,
-          userId: internalUser.id,
-        }),
+      const payload = await resolveAccountMutation.mutateAsync({
+        summoner: accountForm.summoner,
+        tag: accountForm.tag,
+        server: accountForm.server,
+        userId: internalUser.id,
       })
-
-      const payload = (await response.json()) as {
-        message?: string
-        found?: boolean
-        created?: boolean
-      }
-
-      if (!response.ok || !payload.found) {
-        throw new Error(payload?.message ?? 'No se pudo detectar la cuenta de Riot.')
-      }
 
       setAccountForm(blankAccountForm)
-      const updatedDashboard = await fetch(`${API_URL}/users/${internalUser.id}/dashboard`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      })
-
-      if (updatedDashboard.ok) {
-        const data = (await updatedDashboard.json()) as DashboardPayload
-        setDashboard(data)
-        if (data.accounts.length > 0) {
-          setCurrentAccountId((previous) => previous || data.accounts[0].id)
-        }
-      }
+      await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard(internalUser.id) })
 
       const baseMessage = payload.message ?? 'Cuenta detectada y vinculada correctamente.'
       setStatus(
@@ -294,63 +176,19 @@ function App() {
     if (!internalUser) return
 
     try {
-      const token = await getToken()
-      const response = await fetch(`${API_URL}/accounts/${accountId}`, {
-        method: 'DELETE',
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      })
-
-      if (!response.ok) {
-        throw new Error('No se pudo eliminar la cuenta.')
-      }
-
-      const updatedDashboard = await fetch(`${API_URL}/users/${internalUser.id}/dashboard`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      })
-
-      if (updatedDashboard.ok) {
-        const data = (await updatedDashboard.json()) as DashboardPayload
-        setDashboard(data)
-        setCurrentAccountId((previous) =>
-          previous === accountId ? (data.accounts[0]?.id ?? '') : previous,
-        )
-      }
-
+      await deleteAccountMutation.mutateAsync(accountId)
+      await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard(internalUser.id) })
+      setCurrentAccountId((previous) => (previous === accountId ? '' : previous))
       setStatus('Cuenta eliminada correctamente.')
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'No se pudo eliminar la cuenta.')
     }
   }
 
-  const refreshDashboard = async (token: string | null) => {
-    if (!internalUser) return
-    const response = await fetch(`${API_URL}/users/${internalUser.id}/dashboard`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    })
-    if (response.ok) {
-      setDashboard((await response.json()) as DashboardPayload)
-    }
-  }
-
   const handleCreateGoal = async (input: GoalCreateInput): Promise<boolean> => {
     try {
-      const token = await getToken()
-      const response = await fetch(`${API_URL}/goals`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(input),
-      })
-
-      const payload = (await response.json()) as { message?: string }
-
-      if (!response.ok) {
-        throw new Error(payload.message ?? 'No se pudo crear el objetivo.')
-      }
-
-      await refreshDashboard(token)
+      await createGoalMutation.mutateAsync(input)
+      await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard(internalUser?.id) })
       setStatus('Objetivo creado correctamente.')
       return true
     } catch (error) {
@@ -361,17 +199,8 @@ function App() {
 
   const handleDeleteGoal = async (goalId: string) => {
     try {
-      const token = await getToken()
-      const response = await fetch(`${API_URL}/goals/${goalId}`, {
-        method: 'DELETE',
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      })
-
-      if (!response.ok) {
-        throw new Error('No se pudo eliminar el objetivo.')
-      }
-
-      await refreshDashboard(token)
+      await deleteGoalMutation.mutateAsync(goalId)
+      await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard(internalUser?.id) })
       setStatus('Objetivo eliminado correctamente.')
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'No se pudo eliminar el objetivo.')
@@ -382,40 +211,15 @@ function App() {
     if (!currentAccountId) return
 
     try {
-      setIsSyncing(true)
-      const token = await getToken()
-      const response = await fetch(`${API_URL}/matches/sync/${currentAccountId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({}),
-      })
-
-      const payload = (await response.json()) as {
-        synced?: number
-        skipped?: number
-        relinked?: number
-        message?: string
-      }
-
-      if (!response.ok) {
-        throw new Error(payload.message ?? 'No se pudieron sincronizar las partidas.')
-      }
-
+      const payload = await syncMatchesMutation.mutateAsync(currentAccountId)
       const relinkedNote = payload.relinked ? `, ${payload.relinked} recuperadas de cuentas compartidas` : ''
       setStatus(
         `Se sincronizaron ${payload.synced ?? 0} partidas nuevas (${payload.skipped ?? 0} ya existían${relinkedNote}).`,
       )
       setLastSyncedAt(new Date())
-
-      const history = await loadAccountData()
-      setRankHistory(history ?? [])
+      await queryClient.invalidateQueries({ queryKey: queryKeys.account(currentAccountId) })
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'No se pudieron sincronizar las partidas.')
-    } finally {
-      setIsSyncing(false)
     }
   }
 
@@ -424,21 +228,10 @@ function App() {
     void signOut()
   }
 
-  const userDisplayName = useMemo(
-    () => user?.fullName ?? user?.primaryEmailAddress?.emailAddress ?? 'League of Coach',
-    [user],
-  )
-  const userDisplayEmail = useMemo(
-    () => user?.primaryEmailAddress?.emailAddress ?? 'coach@leagueofcoach.com',
-    [user],
-  )
-
-  const lastSyncedLabel = useMemo(() => {
-    if (!lastSyncedAt) return 'Sin sincronizar en esta sesión'
-    const minutes = Math.max(0, Math.round((Date.now() - lastSyncedAt.getTime()) / 60_000))
-    if (minutes < 1) return 'Sincronizado hace instantes'
-    return `Sincronizado hace ${minutes} min`
-  }, [lastSyncedAt])
+  // Not memoized: it depends on the current time, not just `lastSyncedAt`, so
+  // memoizing it would freeze the label's wording at whatever it was right
+  // after the sync instead of it staying accurate as time passes.
+  const lastSyncedLabel = formatLastSyncedLabel(lastSyncedAt)
 
   if (window.location.pathname === '/sso-callback') {
     return <AuthenticateWithRedirectCallback signInForceRedirectUrl="/" signUpForceRedirectUrl="/" />
@@ -455,10 +248,9 @@ function App() {
       activeAccount={activeAccount}
       goalsByAccount={goalsByAccount}
       status={status}
-      isLoadingDashboard={isLoadingDashboard}
+      isLoadingDashboard={dashboardQuery.isLoading}
       accountForm={accountForm}
       matches={matches}
-      mastery={mastery}
       statsSummary={statsSummary}
       streak={streak}
       lanes={lanes}
@@ -468,7 +260,7 @@ function App() {
       lessons={lessons}
       ddragonVersion={ddragonVersion}
       timeRange={timeRange}
-      isSyncing={isSyncing}
+      isSyncing={syncMatchesMutation.isPending}
       lastSyncedLabel={lastSyncedLabel}
       onTimeRangeChange={setTimeRange}
       onTabChange={setActiveTab}

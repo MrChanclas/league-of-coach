@@ -1,15 +1,15 @@
 import { useState } from 'react'
-import { AccountSearchModal } from './AccountSearchModal'
-import { AccountTabPanel } from './AccountTabPanel'
-import { CuentaTabPanel } from './CuentaTabPanel'
+import { AccountSearchModal } from '../accounts/AccountSearchModal'
+import { AccountTabPanel } from '../accounts/AccountTabPanel'
+import { CuentaTabPanel } from '../auth/CuentaTabPanel'
 import { DashboardHeader } from './DashboardHeader'
 import { DashboardSidebar } from './DashboardSidebar'
-import { GoalFormModal } from './GoalFormModal'
-import { GoalsTabPanel } from './GoalsTabPanel'
-import { LearningTabPanel } from './LearningTabPanel'
-import { MatchesTabPanel } from './MatchesTabPanel'
+import { GoalFormModal } from '../goals/GoalFormModal'
+import { GoalsTabPanel } from '../goals/GoalsTabPanel'
+import { LearningTabPanel } from '../learning/LearningTabPanel'
+import { MatchesTabPanel } from '../matches/MatchesTabPanel'
 
-import type { FormEvent } from 'react'
+import type { SubmitEvent } from 'react'
 import type {
   AccountCard,
   AccountForm,
@@ -20,13 +20,12 @@ import type {
   GoalItem,
   LaneEntry,
   LessonCard,
-  MasteryEntry,
   MatchParticipantEntry,
   RankSnapshotEntry,
   StreakInfo,
   TabKey,
   TimeRange,
-} from '../types/dashboard'
+} from '../../types/dashboard'
 
 type DashboardScreenProps = {
   isSignedIn: boolean
@@ -41,7 +40,6 @@ type DashboardScreenProps = {
   isLoadingDashboard: boolean
   accountForm: AccountForm
   matches: MatchParticipantEntry[]
-  mastery: MasteryEntry[]
   statsSummary: AccountStatsSummary | null
   streak: StreakInfo | null
   lanes: LaneEntry[]
@@ -58,7 +56,7 @@ type DashboardScreenProps = {
   onLogout: () => void
   onSetCurrentAccountId: (id: string) => void
   onAccountFieldChange: (event: React.ChangeEvent<HTMLInputElement>) => void
-  onCreateAccount: (event: FormEvent<HTMLFormElement>) => void
+  onCreateAccount: (event: SubmitEvent<HTMLFormElement>) => void
   onDeleteAccount: (accountId: string) => void
   onSyncMatches: () => void
   onCreateGoal: (input: GoalCreateInput) => Promise<boolean>
@@ -78,7 +76,6 @@ export function DashboardScreen({
   isLoadingDashboard,
   accountForm,
   matches,
-  mastery,
   statsSummary,
   streak,
   lanes,
@@ -163,7 +160,6 @@ export function DashboardScreen({
             championsSplit={championsSplit}
             goalsByAccount={goalsByAccount}
             matches={matches}
-            mastery={mastery}
             timeRange={timeRange}
             onTimeRangeChange={onTimeRangeChange}
             onSetCurrentAccountId={onSetCurrentAccountId}

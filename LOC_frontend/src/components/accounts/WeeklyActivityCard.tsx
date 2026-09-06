@@ -1,4 +1,4 @@
-import type { ActivityDay } from '../types/dashboard'
+import type { ActivityDay } from '../../types/dashboard'
 
 const WEEKDAY_LABELS = ['D', 'L', 'M', 'X', 'J', 'V', 'S']
 const BAR_SCALE_PX = 26

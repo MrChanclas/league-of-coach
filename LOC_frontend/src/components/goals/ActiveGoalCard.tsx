@@ -1,5 +1,5 @@
-import type { GoalItem } from '../types/dashboard'
-import { formatGoalGap, formatGoalPace, formatGoalTitle } from '../lib/goalLabels'
+import type { GoalItem } from '../../types/dashboard'
+import { formatGoalGap, formatGoalPace, formatGoalTitle } from '../../lib/goalLabels'
 
 type ActiveGoalCardProps = {
   goal: GoalItem | null

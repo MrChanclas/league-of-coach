@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
-import type { FormEvent } from 'react'
+import { useState } from 'react'
+import type { SubmitEvent } from 'react'
 import { useSignIn, useSignUp, useUser } from '@clerk/clerk-react'
-import { API_URL } from '../lib/api'
-import { FeedbackModal } from './FeedbackModal'
+import { usePlatformStats } from '../../hooks/useApiQueries'
+import { FeedbackModal } from '../feedback/FeedbackModal'
 
 type AuthMode = 'login' | 'register'
 type AuthView = 'form' | 'forgot-request' | 'forgot-reset'
@@ -135,23 +135,10 @@ export function CuentaTabPanel() {
   const [resetCode, setResetCode] = useState('')
   const [newPassword, setNewPassword] = useState('')
 
-  const [totalAccountsAnalyzed, setTotalAccountsAnalyzed] = useState<number | null>(null)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
 
-  useEffect(() => {
-    let cancelled = false
-
-    fetch(`${API_URL}/stats/platform`)
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data: { totalAccountsAnalyzed?: number } | null) => {
-        if (!cancelled && data) setTotalAccountsAnalyzed(data.totalAccountsAnalyzed ?? null)
-      })
-      .catch(() => {})
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  const platformStatsQuery = usePlatformStats()
+  const totalAccountsAnalyzed = platformStatsQuery.data?.totalAccountsAnalyzed ?? null
 
   const proof = [
     {
@@ -177,7 +164,7 @@ export function CuentaTabPanel() {
     setForm((previous) => ({ ...previous, [name]: value }))
   }
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
     setStatus('')
     setIsSubmitting(true)
@@ -226,7 +213,7 @@ export function CuentaTabPanel() {
     }
   }
 
-  const handleVerify = async (event: FormEvent<HTMLFormElement>) => {
+  const handleVerify = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!isSignUpLoaded) return
 
@@ -249,7 +236,7 @@ export function CuentaTabPanel() {
     }
   }
 
-  const handleForgotRequestSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleForgotRequestSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!isSignInLoaded) return
 
@@ -267,7 +254,7 @@ export function CuentaTabPanel() {
     }
   }
 
-  const handleForgotResetSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleForgotResetSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!isSignInLoaded) return
 
@@ -515,7 +502,7 @@ export function CuentaTabPanel() {
       <div className="auth-step">
         <div className="auth-step-eyebrow">EMPECEMOS</div>
         <h2>Crea tu cuenta</h2>
-        <p className="auth-step-sub">Sin tarjeta. Vincula tu cuenta de Riot una vez que inicies sesión, cuando quieras.</p>
+        <p className="auth-step-sub">Vincula tu cuenta de Riot una vez que inicies sesión, cuando quieras.</p>
 
         <form className="auth-fields" style={{ marginTop: 26 }} onSubmit={handleSubmit}>
           <label className="auth-field">
@@ -674,8 +661,6 @@ export function CuentaTabPanel() {
         <div className="auth-legal-footer">
           <span>LEAGUE OF COACHING · NO AFILIADO A RIOT GAMES</span>
           <span className="auth-legal-links">
-            <a href="#">Privacidad</a>
-            <a href="#">Términos</a>
           </span>
         </div>
 

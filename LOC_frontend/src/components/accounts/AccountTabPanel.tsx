@@ -1,10 +1,10 @@
-import { ActiveGoalCard } from './ActiveGoalCard'
+import { ActiveGoalCard } from '../goals/ActiveGoalCard'
 import { AccountsGrid } from './AccountsGrid'
-import { HeroCard } from './HeroCard'
-import { MatchRow } from './MatchRow'
+import { AccountSummaryCard } from './AccountSummaryCard'
+import { MatchRow } from '../matches/MatchRow'
 import { TopChampionsCard } from './TopChampionsCard'
 import { WeeklyActivityCard } from './WeeklyActivityCard'
-import { getProfileIconUrl } from '../lib/riotAssets'
+import { getProfileIconUrl } from '../../lib/riotAssets'
 import type {
   AccountCard,
   AccountStatsSummary,
@@ -12,12 +12,11 @@ import type {
   ChampionSplitStat,
   GoalItem,
   LaneEntry,
-  MasteryEntry,
   MatchParticipantEntry,
   RankSnapshotEntry,
   StreakInfo,
   TimeRange,
-} from '../types/dashboard'
+} from '../../types/dashboard'
 
 type AccountTabPanelProps = {
   userAccounts: AccountCard[]
@@ -32,7 +31,6 @@ type AccountTabPanelProps = {
   championsSplit: ChampionSplitStat[]
   goalsByAccount: GoalItem[]
   matches: MatchParticipantEntry[]
-  mastery: MasteryEntry[]
   timeRange: TimeRange
   onTimeRangeChange: (range: TimeRange) => void
   onSetCurrentAccountId: (id: string) => void
@@ -54,7 +52,6 @@ export function AccountTabPanel({
   championsSplit,
   goalsByAccount,
   matches,
-  mastery,
   timeRange,
   onTimeRangeChange,
   onSetCurrentAccountId,
@@ -88,7 +85,6 @@ export function AccountTabPanel({
     ddragonVersion && activeAccount.profileIconId > 0
       ? getProfileIconUrl(activeAccount.profileIconId, ddragonVersion)
       : null
-  const masteryTotalPoints = mastery.reduce((sum, entry) => sum + entry.championPoints, 0)
 
   const sortedHistory = [...rankHistory].sort(
     (a, b) => new Date(a.capturedAt).getTime() - new Date(b.capturedAt).getTime(),
@@ -134,14 +130,13 @@ export function AccountTabPanel({
             </div>
           </div>
 
-          <HeroCard
+          <AccountSummaryCard
             account={activeAccount}
             profileIconUrl={profileIconUrl}
             primaryQueue={primaryQueue}
             statsSummary={statsSummary}
             streak={streak}
             lanes={lanes}
-            masteryTotalPoints={masteryTotalPoints}
           />
 
           <AccountsGrid

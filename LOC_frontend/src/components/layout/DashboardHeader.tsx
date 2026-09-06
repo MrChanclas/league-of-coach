@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { AccountCard } from '../types/dashboard'
+import type { AccountCard } from '../../types/dashboard'
 
 type DashboardHeaderProps = {
   userAccounts: AccountCard[]

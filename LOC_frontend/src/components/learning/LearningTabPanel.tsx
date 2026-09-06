@@ -1,4 +1,4 @@
-import type { AccountCard, LessonCard } from '../types/dashboard'
+import type { AccountCard, LessonCard } from '../../types/dashboard'
 
 type LearningTabPanelProps = {
   activeAccount?: AccountCard

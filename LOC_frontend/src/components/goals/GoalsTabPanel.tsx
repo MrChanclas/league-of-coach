@@ -1,5 +1,5 @@
-import type { GoalItem } from '../types/dashboard'
-import { KIND_LABELS, formatGoalCurrent, formatGoalGap, formatGoalPace, formatGoalTitle } from '../lib/goalLabels'
+import type { GoalItem } from '../../types/dashboard'
+import { KIND_LABELS, formatGoalCurrent, formatGoalGap, formatGoalPace, formatGoalTitle } from '../../lib/goalLabels'
 
 type GoalsTabPanelProps = {
   goalsByAccount: GoalItem[]

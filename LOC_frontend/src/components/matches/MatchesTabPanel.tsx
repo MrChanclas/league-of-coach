@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { MatchRow } from './MatchRow'
-import type { AccountCard, AccountStatsSummary, MatchParticipantEntry, RankSnapshotEntry, StreakInfo } from '../types/dashboard'
+import { QUEUE_IDS } from '../../lib/constants'
+import type { AccountCard, AccountStatsSummary, MatchParticipantEntry, RankSnapshotEntry, StreakInfo } from '../../types/dashboard'
 
 type MatchesTabPanelProps = {
   activeAccount?: AccountCard
@@ -11,12 +12,12 @@ type MatchesTabPanelProps = {
   ddragonVersion: string | null
 }
 
-type QueueFilter = 'all' | 420 | 440
+type QueueFilter = 'all' | typeof QUEUE_IDS.SOLO | typeof QUEUE_IDS.FLEX
 
 const FILTERS: { key: QueueFilter; label: string }[] = [
   { key: 'all', label: 'Solo/dúo + Flexible' },
-  { key: 420, label: 'Clasif. solo/dúo' },
-  { key: 440, label: 'Flexible' },
+  { key: QUEUE_IDS.SOLO, label: 'Clasif. solo/dúo' },
+  { key: QUEUE_IDS.FLEX, label: 'Flexible' },
 ]
 
 function matchesFilter(entry: MatchParticipantEntry, filter: QueueFilter) {

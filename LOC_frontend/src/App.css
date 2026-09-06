@@ -1800,6 +1800,13 @@
   outline-offset: 1px;
 }
 
+.form-hint {
+  margin: -6px 0 0;
+  color: #9a948a;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
 .auth-submit {
   width: 100%;
   margin-top: 8px;
