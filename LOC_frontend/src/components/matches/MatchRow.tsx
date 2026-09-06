@@ -46,6 +46,10 @@ export function MatchRow({ entry, ddragonVersion, showAgo = false }: MatchRowPro
           {getQueueLabel(entry.match.queueId)} · {formatGameDuration(entry.match.gameDuration)}
         </div>
         {showAgo && <div className="match-row-ago">{formatRelativeTime(entry.match.gameCreation)}</div>}
+        <div className="match-row-meta-mobile">
+          {getQueueLabel(entry.match.queueId)} · {formatGameDuration(entry.match.gameDuration)} · {entry.csTotal} CS
+          {showAgo ? ` · ${formatRelativeTime(entry.match.gameCreation)}` : ''}
+        </div>
       </div>
 
       <div className="match-row-kda-col">

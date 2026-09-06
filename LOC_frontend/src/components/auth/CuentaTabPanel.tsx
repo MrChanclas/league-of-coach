@@ -630,6 +630,14 @@ export function CuentaTabPanel() {
       </section>
 
       <section className="auth-form-panel">
+        <div className="auth-mobile-brand">
+          <img className="auth-mobile-brand-mark" src="/loc-mark.svg" alt="" />
+          <div>
+            <div className="auth-brand-eyebrow">LEAGUE OF COACHING</div>
+            <div className="auth-mobile-brand-wordmark">LoC</div>
+          </div>
+        </div>
+
         <div className="auth-form-header">
           {showTabs ? (
             <div className="auth-tabs">

@@ -4,6 +4,7 @@ import { AuthenticateWithRedirectCallback, useAuth, useClerk, useUser } from '@c
 import { useQueryClient } from '@tanstack/react-query'
 import { DashboardScreen } from './components/layout/DashboardScreen'
 import {
+  useCompleteOnboardingMutation,
   useCreateGoalMutation,
   useDeleteAccountMutation,
   useDeleteGoalMutation,
@@ -137,6 +138,14 @@ function App() {
   const createGoalMutation = useCreateGoalMutation()
   const deleteGoalMutation = useDeleteGoalMutation()
   const syncMatchesMutation = useSyncMatchesMutation()
+  const completeOnboardingMutation = useCompleteOnboardingMutation()
+
+  const handleCompleteOnboarding = () => {
+    if (!internalUser) return
+    completeOnboardingMutation.mutate(internalUser.id, {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.internalUser(user?.id) }),
+    })
+  }
 
   const handleAccountFieldChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target
@@ -262,6 +271,8 @@ function App() {
       timeRange={timeRange}
       isSyncing={syncMatchesMutation.isPending}
       lastSyncedLabel={lastSyncedLabel}
+      onboardingCompletedAt={internalUser?.onboardingCompletedAt}
+      onCompleteOnboarding={handleCompleteOnboarding}
       onTimeRangeChange={setTimeRange}
       onTabChange={setActiveTab}
       onLogout={handleLogout}

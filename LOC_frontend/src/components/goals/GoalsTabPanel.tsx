@@ -55,8 +55,14 @@ export function GoalsTabPanel({ goalsByAccount, onOpenGoalModal, onDeleteGoal, o
               <span className="goals-panel-days">{daysRemaining} DÍAS RESTANTES</span>
             )}
             {sortedGoals.length > 0 && (
-              <button type="button" className="primary-btn" onClick={onOpenGoalModal}>
-                + Nuevo objetivo
+              <button
+                type="button"
+                className="primary-btn goals-panel-add-btn"
+                onClick={onOpenGoalModal}
+                aria-label="Nuevo objetivo"
+              >
+                <span aria-hidden="true">+</span>
+                <span className="goals-panel-add-btn-label">Nuevo objetivo</span>
               </button>
             )}
           </div>

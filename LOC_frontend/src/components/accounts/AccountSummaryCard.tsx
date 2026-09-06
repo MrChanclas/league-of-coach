@@ -36,7 +36,7 @@ export function AccountSummaryCard({
   const primaryLane = lanes[0]
 
   return (
-    <section className="hero-card">
+    <section className="hero-card" data-tour="hero">
       <div className="hero-grid">
         <div className="hero-tier-col">
           <div className="hero-tier-diamond">

@@ -5,6 +5,7 @@ export type AuthUser = {
   name: string
   email: string
   role: string
+  onboardingCompletedAt: string | null
 }
 
 export type AccountCard = {

@@ -7,13 +7,17 @@ datasource db {
 }
 
 model User {
-  id        String       @id @default(cuid())
-  clerkId   String       @unique
-  name      String
-  email     String       @unique
-  role      String       @default("user")
-  createdAt DateTime     @default(now())
-  accounts  LolAccount[]
+  id                    String       @id @default(cuid())
+  clerkId               String       @unique
+  name                  String
+  email                 String       @unique
+  role                  String       @default("user")
+  createdAt             DateTime     @default(now())
+  // Null hasta que el usuario termina o salta el recorrido de onboarding en
+  // su primer ingreso al panel. Se guarda en la base (no en localStorage)
+  // para que no vuelva a aparecer al cambiar de dispositivo.
+  onboardingCompletedAt DateTime?
+  accounts              LolAccount[]
 }
 
 model LolAccount {

@@ -60,9 +60,21 @@ export class UsersController {
   }
 
   @Get(':id/dashboard')
-  async getDashboard(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+  async getDashboard(
+    @Req() request: AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
     await this.authz.assertUserOwnership(id, request.clerkUserId);
     return this.usersService.getUserDashboard(id);
+  }
+
+  @Post(':id/onboarding-complete')
+  async completeOnboarding(
+    @Req() request: AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
+    await this.authz.assertUserOwnership(id, request.clerkUserId);
+    return this.usersService.markOnboardingCompleted(id);
   }
 
   @Patch(':id')

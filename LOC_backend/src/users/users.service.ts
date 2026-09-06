@@ -29,7 +29,9 @@ export class UsersService {
   }
 
   async findOrCreateByClerkId(clerkId: string, name: string, email: string) {
-    const existingByClerkId = await this.prisma.user.findUnique({ where: { clerkId } });
+    const existingByClerkId = await this.prisma.user.findUnique({
+      where: { clerkId },
+    });
     if (existingByClerkId) {
       this.discord.notifySession(
         `🔐 Inicio de sesión: **${existingByClerkId.name}** (${existingByClerkId.email})`,
@@ -40,7 +42,9 @@ export class UsersService {
     // Clerk can issue a new user id for the same person (account recreated,
     // login method switched, etc). Reconcile by email instead of trying to
     // insert a second row and hitting the unique constraint on email.
-    const existingByEmail = await this.prisma.user.findUnique({ where: { email } });
+    const existingByEmail = await this.prisma.user.findUnique({
+      where: { email },
+    });
     if (existingByEmail) {
       const updated = await this.prisma.user.update({
         where: { id: existingByEmail.id },
@@ -127,6 +131,13 @@ export class UsersService {
         activeFocus: learnings[0]?.champion ?? 'Sin foco activo',
       },
     };
+  }
+
+  async markOnboardingCompleted(id: string) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { onboardingCompletedAt: new Date() },
+    });
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
