@@ -22,11 +22,17 @@ export type RiotLeagueEntryDto = {
   losses: number;
 };
 
-export type RiotChampionMasteryDto = {
-  championId: number;
-  championLevel: number;
-  championPoints: number;
-  lastPlayTime: number;
+export type RiotLeagueListDto = {
+  leagueId: string;
+  tier: string;
+  name: string;
+  queue: string;
+  entries: Array<{
+    puuid: string;
+    leaguePoints: number;
+    wins: number;
+    losses: number;
+  }>;
 };
 
 export type RiotMatchParticipantDto = {
@@ -44,6 +50,18 @@ export type RiotMatchParticipantDto = {
   goldEarned: number;
   visionScore: number;
   totalDamageDealtToChampions: number;
+  challenges?: {
+    killParticipation?: number;
+    teamDamagePercentage?: number;
+    soloKills?: number;
+    turretTakedowns?: number;
+    maxLevelLeadLaneOpponent?: number;
+    maxCsAdvantageOnLaneOpponent?: number;
+    dragonTakedowns?: number;
+    baronTakedowns?: number;
+    riftHeraldTakedowns?: number;
+    controlWardsPlaced?: number;
+  };
   item0: number;
   item1: number;
   item2: number;
@@ -65,6 +83,14 @@ export type RiotMatchDto = {
     gameVersion: string;
     queueId: number;
     participants: RiotMatchParticipantDto[];
+    teams: Array<{
+      teamId: number;
+      objectives: {
+        dragon: { kills: number };
+        baron: { kills: number };
+        riftHerald: { kills: number };
+      };
+    }>;
   };
 };
 
@@ -286,20 +312,41 @@ export class RiotApiService {
     );
   }
 
-  async getChampionMasteryByPuuid(
+  /**
+   * Grandmaster and Challenger have no fixed LP threshold — Riot cuts the
+   * leaderboard at a dynamic rank (e.g. top 300), not a score — so the only
+   * way to know the real, current promotion threshold is the lowest LP
+   * actually on this leaderboard right now.
+   */
+  async getGrandmasterLeague(
     server: string,
-    puuid: string,
-  ): Promise<RiotChampionMasteryDto[]> {
+    riotQueue: string,
+  ): Promise<RiotLeagueListDto> {
     const host = this.getPlatformHost(server);
-    return this.request<RiotChampionMasteryDto[]>(
-      `${host}/lol/champion-mastery/v4/champion-masteries/by-puuid/${encodeURIComponent(puuid)}`,
+    return this.request<RiotLeagueListDto>(
+      `${host}/lol/league/v4/grandmasterleagues/by-queue/${encodeURIComponent(riotQueue)}`,
+    );
+  }
+
+  async getChallengerLeague(
+    server: string,
+    riotQueue: string,
+  ): Promise<RiotLeagueListDto> {
+    const host = this.getPlatformHost(server);
+    return this.request<RiotLeagueListDto>(
+      `${host}/lol/league/v4/challengerleagues/by-queue/${encodeURIComponent(riotQueue)}`,
     );
   }
 
   async getMatchIdsByPuuid(
     server: string,
     puuid: string,
-    options: { start?: number; count?: number; queue?: number; type?: string } = {},
+    options: {
+      start?: number;
+      count?: number;
+      queue?: number;
+      type?: string;
+    } = {},
   ): Promise<string[]> {
     const host = this.getRegionalHost(server);
     const params = new URLSearchParams();

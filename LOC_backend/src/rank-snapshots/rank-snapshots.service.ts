@@ -1,14 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PuuidRefreshService } from '../riot/puuid-refresh.service';
-import { isStalePuuidError, RiotApiService, RiotLeagueEntryDto } from '../riot/riot-api.service';
-
-export type QueueKey = 'solo' | 'flex';
-
-const QUEUE_TYPE_BY_RIOT_QUEUE: Record<string, QueueKey> = {
-  RANKED_SOLO_5x5: 'solo',
-  RANKED_FLEX_SR: 'flex',
-};
+import {
+  isStalePuuidError,
+  RiotApiService,
+  RiotLeagueEntryDto,
+} from '../riot/riot-api.service';
+import {
+  QUEUE_KEY_BY_RIOT_QUEUE_TYPE,
+  RIOT_QUEUE_TYPE_BY_KEY,
+  type QueueKey,
+} from '../common/queue';
 
 @Injectable()
 export class RankSnapshotsService {
@@ -26,7 +28,7 @@ export class RankSnapshotsService {
   ) {
     const rows = entries
       .map((entry) => {
-        const queueType = QUEUE_TYPE_BY_RIOT_QUEUE[entry.queueType];
+        const queueType = QUEUE_KEY_BY_RIOT_QUEUE_TYPE[entry.queueType];
         if (!queueType) return null;
         return {
           accountId,
@@ -73,10 +75,15 @@ export class RankSnapshotsService {
   }) {
     let entries: RiotLeagueEntryDto[];
     try {
-      entries = await this.riotApi.getLeagueEntriesByPuuid(account.server, account.puuid);
+      entries = await this.riotApi.getLeagueEntriesByPuuid(
+        account.server,
+        account.puuid,
+      );
     } catch (error) {
       if (!isStalePuuidError(error)) {
-        this.logger.warn(`No se pudo obtener el rango de la cuenta ${account.id}: ${error}`);
+        this.logger.warn(
+          `No se pudo obtener el rango de la cuenta ${account.id}: ${error}`,
+        );
         return;
       }
       const freshPuuid = await this.puuidRefresh.refresh(account);
@@ -87,8 +94,12 @@ export class RankSnapshotsService {
 
     if (entries.length === 0) return;
 
-    const soloEntry = entries.find((entry) => entry.queueType === 'RANKED_SOLO_5x5');
-    const flexEntry = entries.find((entry) => entry.queueType === 'RANKED_FLEX_SR');
+    const soloEntry = entries.find(
+      (entry) => entry.queueType === RIOT_QUEUE_TYPE_BY_KEY.solo,
+    );
+    const flexEntry = entries.find(
+      (entry) => entry.queueType === RIOT_QUEUE_TYPE_BY_KEY.flex,
+    );
 
     await this.prisma.lolAccount.update({
       where: { id: account.id },
@@ -116,7 +127,13 @@ export class RankSnapshotsService {
    */
   async pollAllAccounts() {
     const accounts = await this.prisma.lolAccount.findMany({
-      select: { id: true, server: true, summoner: true, tag: true, puuid: true },
+      select: {
+        id: true,
+        server: true,
+        summoner: true,
+        tag: true,
+        puuid: true,
+      },
     });
 
     let refreshed = 0;
@@ -131,7 +148,9 @@ export class RankSnapshotsService {
       }
     }
 
-    this.logger.log(`Polling de rango completado: ${refreshed}/${accounts.length} cuentas.`);
+    this.logger.log(
+      `Polling de rango completado: ${refreshed}/${accounts.length} cuentas.`,
+    );
     return { total: accounts.length, refreshed };
   }
 }

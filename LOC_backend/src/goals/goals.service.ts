@@ -2,24 +2,24 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import type { Goal, Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { PrismaService } from '../prisma/prisma.service';
+import { LeagueCutoffService } from '../riot/league-cutoff.service';
 import { StatsService } from '../stats/stats.service';
-import { rankGoalAnchor, rankScore, rankValue } from '../common/rank-order';
+import {
+  DIVISION_ORDER,
+  rankGoalAnchor,
+  rankScore,
+  rankValue,
+  TIER_ORDER,
+} from '../common/rank-order';
+import {
+  computeRolePerformance,
+  formatMetricDelta,
+  getRankBand,
+  ROLE_KEYS,
+  type RoleKey,
+} from '../common/role-performance';
+import { RIOT_QUEUE_TYPE_BY_KEY } from '../common/queue';
 import { computeWinratePace } from './goal-pace';
-
-const TIERS = [
-  'IRON',
-  'BRONZE',
-  'SILVER',
-  'GOLD',
-  'PLATINUM',
-  'EMERALD',
-  'DIAMOND',
-  'MASTER',
-  'GRANDMASTER',
-  'CHALLENGER',
-] as const;
-const DIVISIONS = ['I', 'II', 'III', 'IV'] as const;
-const ROLES = ['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY'] as const;
 
 const BaseGoalFields = {
   accountId: z.string().min(1),
@@ -30,14 +30,13 @@ export const CreateGoalSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('rango'),
     queueType: z.enum(['solo', 'flex']),
-    targetTier: z.enum(TIERS),
-    targetDivision: z.enum(DIVISIONS).optional(),
+    targetTier: z.enum(TIER_ORDER),
+    targetDivision: z.enum(DIVISION_ORDER).optional(),
     ...BaseGoalFields,
   }),
   z.object({
     type: z.literal('rol'),
-    targetRole: z.enum(ROLES),
-    targetWinrate: z.number().min(0).max(1),
+    targetRole: z.enum(ROLE_KEYS),
     ...BaseGoalFields,
   }),
   z.object({
@@ -68,6 +67,7 @@ function daysUntil(deadline: Date | null): number | null {
 }
 
 type AccountForGoal = {
+  server: string;
   soloTier: string;
   soloDivision: string;
   soloLp: number;
@@ -81,6 +81,7 @@ export class GoalsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly statsService: StatsService,
+    private readonly leagueCutoff: LeagueCutoffService,
   ) {}
 
   async create(input: CreateGoalInput) {
@@ -103,7 +104,6 @@ export class GoalsService {
     } else if (input.type === 'rol') {
       Object.assign(data, {
         targetRole: input.targetRole,
-        targetWinrate: input.targetWinrate,
       });
     } else {
       Object.assign(data, {
@@ -161,28 +161,54 @@ export class GoalsService {
       // target tier, never a numeric score comparison.
       const anchor = rankGoalAnchor(goal.targetTier ?? '');
       const anchorScore = rankScore(anchor.tier, anchor.division, 0);
-      const targetScore = rankScore(goal.targetTier, goal.targetDivision, 0);
+      // Grandmaster/Challenger have no fixed LP threshold (Riot cuts the
+      // leaderboard at a dynamic rank), so their target LP comes from the
+      // real, current leaderboard cutoff instead of a flat 0 — see
+      // resolveApexTargetLp.
+      const apexTargetLp = await this.resolveApexTargetLp(
+        account.server,
+        goal.queueType,
+        goal.targetTier,
+      );
+      const targetScore = rankScore(
+        goal.targetTier,
+        goal.targetDivision,
+        apexTargetLp ?? 0,
+      );
       const currentScore = rankScore(currentTier, currentDivision, currentLp);
 
       const span = targetScore - anchorScore;
-      const rawProgress = span <= 0 ? 100 : clampProgress(((currentScore - anchorScore) / span) * 100);
+      const rawProgress =
+        span <= 0
+          ? 100
+          : clampProgress(((currentScore - anchorScore) / span) * 100);
       const progress = completed ? 100 : Math.min(rawProgress, 99);
       const status = computeStatus(progress, goal.deadline);
 
-      // Floored at 1, not 0, when not completed: a high-LP apex account can
-      // numerically match or exceed the target's score before Riot actually
-      // reports the promotion (see rankScore) — "0 LP restantes" while still
-      // "en curso" would read as a contradiction.
-      const gap = completed ? null : Math.max(Math.round(targetScore - currentScore), 1);
+      // Floored at 1, not 0, when not completed: the leaderboard cutoff can
+      // lag a few minutes behind an account's very latest game, so LP can
+      // transiently match or exceed it before Riot actually reports the
+      // promotion — "0 LP restantes" while still "en curso" would read as a
+      // contradiction.
+      const gap = completed
+        ? null
+        : Math.max(Math.round(targetScore - currentScore), 1);
       const daysRemaining = daysUntil(goal.deadline);
       const pace =
         gap != null && daysRemaining != null && daysRemaining > 0
-          ? { action: `${Math.ceil(gap / daysRemaining)} LP por día`, context: `EN ${daysRemaining} DÍAS` }
+          ? {
+              action: `${Math.ceil(gap / daysRemaining)} LP por día`,
+              context: `EN ${daysRemaining} DÍAS`,
+            }
           : null;
 
       return {
         ...goal,
-        current: { tier: currentTier, division: currentDivision, lp: currentLp },
+        current: {
+          tier: currentTier,
+          division: currentDivision,
+          lp: currentLp,
+        },
         progress,
         status,
         gap,
@@ -193,53 +219,91 @@ export class GoalsService {
     }
 
     if (goal.type === 'rol') {
-      const byRole = await this.statsService.getByRole(goal.accountId);
-      const stats = byRole.find((entry) => entry.teamPosition === goal.targetRole);
-      const gamesPlayed = stats?.gamesPlayed ?? 0;
-      const wins = stats?.wins ?? 0;
-      const winrate = stats?.winrate ?? 0;
-      const targetWinrate = goal.targetWinrate ?? 0;
+      const role = goal.targetRole as RoleKey;
+      const metrics = await this.statsService.getRoleMetrics(
+        goal.accountId,
+        role,
+      );
+      const soloRanked = account.soloTier && account.soloTier !== 'Unranked';
+      const band = getRankBand(
+        soloRanked ? account.soloTier : account.flexTier,
+      );
+      const perf = computeRolePerformance(
+        role,
+        band,
+        metrics.gamesPlayed,
+        metrics,
+      );
 
-      const progress = gamesPlayed === 0 ? 0 : clampProgress((winrate / targetWinrate) * 100);
-      const completed = gamesPlayed > 0 && winrate >= targetWinrate;
+      const gamesPlayed = perf.gamesPlayed;
+      const completed = gamesPlayed > 0 && perf.score >= 100;
+      const progress = gamesPlayed === 0 ? 0 : clampProgress(perf.score);
 
-      const gap = completed ? null : Math.max(Math.round((targetWinrate - winrate) * 100), 1);
-      const pace = completed ? null : computeWinratePace(wins, gamesPlayed, targetWinrate);
+      const gap =
+        completed || gamesPlayed === 0
+          ? null
+          : Math.max(Math.round(100 - perf.score), 1);
+      const hasPace = !completed && gamesPlayed >= 5 && perf.weakest != null;
 
       return {
         ...goal,
-        current: { winrate, gamesPlayed },
+        current: {
+          roleScore: perf.score,
+          rankBand: perf.band,
+          gamesPlayed,
+          roleMetrics: perf.metrics,
+        },
         progress,
         status: computeStatus(completed ? 100 : progress, goal.deadline),
         gap,
-        gapLabel: gap != null ? 'PUNTOS DE WR' : null,
-        pace: pace?.action ?? (gap != null ? 'Faltan partidas' : null),
-        paceSub: pace?.context ?? null,
+        gapLabel: gap != null ? 'PUNTOS PARA EL BENCHMARK' : null,
+        pace: hasPace
+          ? formatMetricDelta(perf.weakest!)
+          : gap != null
+            ? 'Faltan partidas'
+            : null,
+        paceSub: hasPace ? 'MÉTRICA A MEJORAR' : null,
       };
     }
 
     // type === 'campeon'
     const byChampion = await this.statsService.getByChampion(goal.accountId);
-    const stats = byChampion.find((entry) => entry.champion === goal.targetChampion);
+    const stats = byChampion.find(
+      (entry) => entry.champion === goal.targetChampion,
+    );
     const gamesPlayed = stats?.gamesPlayed ?? 0;
     const wins = stats?.wins ?? 0;
     const winrate = stats?.winrate ?? 0;
     const avgKda = stats?.avgKda ?? 0;
     const targetWinrate = goal.targetWinrate ?? 0;
 
-    const winrateProgress = gamesPlayed === 0 ? 0 : clampProgress((winrate / targetWinrate) * 100);
+    const winrateProgress =
+      gamesPlayed === 0 ? 0 : clampProgress((winrate / targetWinrate) * 100);
     const kdaProgress =
-      goal.targetKda != null ? (gamesPlayed === 0 ? 0 : clampProgress((avgKda / goal.targetKda) * 100)) : null;
+      goal.targetKda != null
+        ? gamesPlayed === 0
+          ? 0
+          : clampProgress((avgKda / goal.targetKda) * 100)
+        : null;
 
-    const progress = kdaProgress != null ? Math.round((winrateProgress + kdaProgress) / 2) : winrateProgress;
+    const progress =
+      kdaProgress != null
+        ? Math.round((winrateProgress + kdaProgress) / 2)
+        : winrateProgress;
     const completed =
-      gamesPlayed > 0 && winrate >= targetWinrate && (goal.targetKda == null || avgKda >= goal.targetKda);
+      gamesPlayed > 0 &&
+      winrate >= targetWinrate &&
+      (goal.targetKda == null || avgKda >= goal.targetKda);
 
     // The gap/pace narrative is driven by winrate (the primary metric in the
     // example rows); KDA stays visible via `current` but doesn't get its own
     // gap — mirroring the design doc, which never gaps two metrics at once.
-    const gap = completed ? null : Math.max(Math.round((targetWinrate - winrate) * 100), 1);
-    const pace = completed ? null : computeWinratePace(wins, gamesPlayed, targetWinrate);
+    const gap = completed
+      ? null
+      : Math.max(Math.round((targetWinrate - winrate) * 100), 1);
+    const pace = completed
+      ? null
+      : computeWinratePace(wins, gamesPlayed, targetWinrate);
 
     return {
       ...goal,
@@ -251,5 +315,25 @@ export class GoalsService {
       pace: pace?.action ?? (gap != null ? 'Faltan partidas' : null),
       paceSub: pace?.context ?? null,
     };
+  }
+
+  /**
+   * Live LP cutoff for a Grandmaster/Challenger target, or null for any
+   * other target tier (including Master, which still promotes on a fixed
+   * LP threshold from Diamond I, unlike GM/Challenger).
+   */
+  private async resolveApexTargetLp(
+    server: string,
+    queueType: string | null,
+    targetTier: string | null,
+  ): Promise<number | null> {
+    if (targetTier !== 'GRANDMASTER' && targetTier !== 'CHALLENGER')
+      return null;
+
+    const riotQueue =
+      queueType === 'flex'
+        ? RIOT_QUEUE_TYPE_BY_KEY.flex
+        : RIOT_QUEUE_TYPE_BY_KEY.solo;
+    return this.leagueCutoff.getCutoffLp(server, riotQueue, targetTier);
   }
 }

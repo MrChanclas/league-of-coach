@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { ChampionDataService } from './champion-data.service';
+import { LeagueCutoffService } from './league-cutoff.service';
 import { PuuidRefreshService } from './puuid-refresh.service';
 import { RiotApiService } from './riot-api.service';
 
 @Module({
-  providers: [RiotApiService, ChampionDataService, PuuidRefreshService],
-  exports: [RiotApiService, ChampionDataService, PuuidRefreshService],
+  providers: [RiotApiService, PuuidRefreshService, LeagueCutoffService],
+  exports: [RiotApiService, PuuidRefreshService, LeagueCutoffService],
 })
 export class RiotModule {}

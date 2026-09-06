@@ -6,14 +6,24 @@ import {
 } from '@nestjs/common';
 import { DiscordService } from '../discord/discord.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { QueueKey, RankSnapshotsService } from '../rank-snapshots/rank-snapshots.service';
+import { RankSnapshotsService } from '../rank-snapshots/rank-snapshots.service';
 import { PuuidRefreshService } from '../riot/puuid-refresh.service';
-import { isStalePuuidError, RiotApiService, RiotMatchDto } from '../riot/riot-api.service';
+import {
+  isStalePuuidError,
+  RiotApiService,
+  RiotMatchDto,
+} from '../riot/riot-api.service';
+import {
+  QUEUE_KEY_BY_ID,
+  RANKED_QUEUE_IDS,
+  type QueueKey,
+} from '../common/queue';
 
-const RANKED_QUEUE_TO_KEY: Record<number, QueueKey> = { 420: 'solo', 440: 'flex' };
 // The match history view only ever shows ranked Solo/Duo and Flex games,
-// regardless of what other queues get synced.
-const HISTORY_QUEUE_IDS = [420, 440];
+// regardless of what other queues get synced. Copied into a plain mutable
+// array since Prisma's `in` filters want number[], not the shared readonly
+// tuple.
+const HISTORY_QUEUE_IDS: number[] = [...RANKED_QUEUE_IDS];
 
 // Riot's match-ids endpoint accepts up to 20 per page.
 const PAGE_SIZE = 20;
@@ -55,7 +65,10 @@ export class MatchesService {
     private readonly puuidRefresh: PuuidRefreshService,
   ) {}
 
-  async syncAccount(accountId: string, targetCount = DEFAULT_TARGET_MATCH_COUNT) {
+  async syncAccount(
+    accountId: string,
+    targetCount = DEFAULT_TARGET_MATCH_COUNT,
+  ) {
     const account = await this.prisma.lolAccount.findUnique({
       where: { id: accountId },
     });
@@ -74,7 +87,10 @@ export class MatchesService {
     // matches", matching what the history view actually shows — not diluted
     // by older normal/ARAM games synced before ranked-only syncing.
     const storedCount = await this.prisma.matchParticipant.count({
-      where: { accountId: account.id, match: { queueId: { in: HISTORY_QUEUE_IDS } } },
+      where: {
+        accountId: account.id,
+        match: { queueId: { in: HISTORY_QUEUE_IDS } },
+      },
     });
 
     let puuid = account.puuid;
@@ -95,22 +111,30 @@ export class MatchesService {
 
       for (let listAttempt = 1; listAttempt <= listAttempts; listAttempt += 1) {
         try {
-          matchIds = await this.riotApi.getMatchIdsByPuuid(account.server, puuid, {
-            start,
-            count: PAGE_SIZE,
-            type: 'ranked',
-          });
+          matchIds = await this.riotApi.getMatchIdsByPuuid(
+            account.server,
+            puuid,
+            {
+              start,
+              count: PAGE_SIZE,
+              type: 'ranked',
+            },
+          );
         } catch (error) {
           // The stored puuid can go stale if the Riot API key was rotated
           // since this account was last resolved; only worth retrying once,
           // right at the start of the sync.
           if (page > 0 || !isStalePuuidError(error)) throw error;
           puuid = await this.puuidRefresh.refresh(account);
-          matchIds = await this.riotApi.getMatchIdsByPuuid(account.server, puuid, {
-            start,
-            count: PAGE_SIZE,
-            type: 'ranked',
-          });
+          matchIds = await this.riotApi.getMatchIdsByPuuid(
+            account.server,
+            puuid,
+            {
+              start,
+              count: PAGE_SIZE,
+              type: 'ranked',
+            },
+          );
         }
 
         if (matchIds.length === 0) break;
@@ -119,7 +143,9 @@ export class MatchesService {
           where: { matchId: { in: matchIds } },
           select: { id: true, matchId: true },
         });
-        const internalIdByRiotId = new Map(existingMatches.map((match) => [match.matchId, match.id]));
+        const internalIdByRiotId = new Map(
+          existingMatches.map((match) => [match.matchId, match.id]),
+        );
 
         // A match already known globally (synced earlier via a different
         // tracked account that shared the game) can still be missing THIS
@@ -132,11 +158,16 @@ export class MatchesService {
         // trusting "the match exists" and skipping it.
         const ourParticipants = existingMatches.length
           ? await this.prisma.matchParticipant.findMany({
-              where: { matchId: { in: [...internalIdByRiotId.values()] }, puuid },
+              where: {
+                matchId: { in: [...internalIdByRiotId.values()] },
+                puuid,
+              },
               select: { matchId: true, accountId: true },
             })
           : [];
-        const ourParticipantByInternalId = new Map(ourParticipants.map((p) => [p.matchId, p]));
+        const ourParticipantByInternalId = new Map(
+          ourParticipants.map((p) => [p.matchId, p]),
+        );
 
         newIds = matchIds.filter((id) => {
           const internalId = internalIdByRiotId.get(id);
@@ -149,7 +180,11 @@ export class MatchesService {
           .map((p) => p.matchId);
         if (orphanedInternalIds.length > 0) {
           const result = await this.prisma.matchParticipant.updateMany({
-            where: { matchId: { in: orphanedInternalIds }, puuid, accountId: null },
+            where: {
+              matchId: { in: orphanedInternalIds },
+              puuid,
+              accountId: null,
+            },
             data: { accountId: account.id },
           });
           relinkedThisAttempt = result.count;
@@ -161,7 +196,10 @@ export class MatchesService {
         // only worth rechecking when this page looked like it found
         // nothing at all (no new match, nothing to relink either).
         const looksStale =
-          isFirstPage && newIds.length === 0 && relinkedThisAttempt === 0 && listAttempt < listAttempts;
+          isFirstPage &&
+          newIds.length === 0 &&
+          relinkedThisAttempt === 0 &&
+          listAttempt < listAttempts;
         if (!looksStale) break;
         await sleep(LIST_RECHECK_DELAY_MS);
       }
@@ -172,7 +210,10 @@ export class MatchesService {
 
       for (const matchId of newIds) {
         try {
-          const matchDto = await this.fetchMatchWithRetry(account.server, matchId);
+          const matchDto = await this.fetchMatchWithRetry(
+            account.server,
+            matchId,
+          );
           await this.storeMatch(account.id, account.server, puuid, matchDto);
           synced += 1;
         } catch (error) {
@@ -190,7 +231,12 @@ export class MatchesService {
       const hasCaughtUpToKnownHistory = newIds.length < matchIds.length;
       const hasReachedTarget = storedCount + synced >= targetCount;
       const hasReachedEndOfHistory = matchIds.length < PAGE_SIZE;
-      if (hasCaughtUpToKnownHistory || hasReachedTarget || hasReachedEndOfHistory) break;
+      if (
+        hasCaughtUpToKnownHistory ||
+        hasReachedTarget ||
+        hasReachedEndOfHistory
+      )
+        break;
 
       start += PAGE_SIZE;
     }
@@ -200,14 +246,19 @@ export class MatchesService {
     if (synced > 0 || relinked > 0) {
       this.discord.notifySession(
         `🔄 Sync de **${account.summoner}#${account.tag}**: ${synced} partida(s) nueva(s)` +
-          (relinked > 0 ? `, ${relinked} recuperada(s) de cuentas compartidas.` : '.'),
+          (relinked > 0
+            ? `, ${relinked} recuperada(s) de cuentas compartidas.`
+            : '.'),
       );
     }
 
     return { synced, skipped, relinked, totalFetched };
   }
 
-  private async fetchMatchWithRetry(server: string, matchId: string): Promise<RiotMatchDto> {
+  private async fetchMatchWithRetry(
+    server: string,
+    matchId: string,
+  ): Promise<RiotMatchDto> {
     let lastError: unknown;
     for (let attempt = 1; attempt <= MATCH_FETCH_RETRIES; attempt += 1) {
       try {
@@ -265,39 +316,64 @@ export class MatchesService {
     );
     accountIdByPuuid.set(puuid, accountId);
 
+    const objectivesByTeam = new Map(
+      matchDto.info.teams.map((team) => [team.teamId, team.objectives]),
+    );
+
     // skipDuplicates so re-running this for an already-known match only
     // inserts the participant rows that are actually missing (this
     // account's own, most commonly) without erroring on the ones other
     // accounts already stored.
     await this.prisma.matchParticipant.createMany({
       skipDuplicates: true,
-      data: participants.map((participant) => ({
-        matchId: match.id,
-        accountId: accountIdByPuuid.get(participant.puuid) ?? null,
-        puuid: participant.puuid,
-        champion: participant.championName,
-        championId: participant.championId,
-        teamPosition: participant.teamPosition,
-        win: participant.win,
-        kills: participant.kills,
-        deaths: participant.deaths,
-        assists: participant.assists,
-        csTotal:
-          participant.totalMinionsKilled + participant.neutralMinionsKilled,
-        goldEarned: participant.goldEarned,
-        visionScore: participant.visionScore,
-        damageDealt: participant.totalDamageDealtToChampions,
-        itemIds: [
-          participant.item0,
-          participant.item1,
-          participant.item2,
-          participant.item3,
-          participant.item4,
-          participant.item5,
-          participant.item6,
-        ],
-        teamId: participant.teamId,
-      })),
+      data: participants.map((participant) => {
+        const teamObjectives = objectivesByTeam.get(participant.teamId);
+        return {
+          matchId: match.id,
+          accountId: accountIdByPuuid.get(participant.puuid) ?? null,
+          puuid: participant.puuid,
+          champion: participant.championName,
+          championId: participant.championId,
+          teamPosition: participant.teamPosition,
+          win: participant.win,
+          kills: participant.kills,
+          deaths: participant.deaths,
+          assists: participant.assists,
+          csTotal:
+            participant.totalMinionsKilled + participant.neutralMinionsKilled,
+          goldEarned: participant.goldEarned,
+          visionScore: participant.visionScore,
+          damageDealt: participant.totalDamageDealtToChampions,
+          killParticipation: participant.challenges?.killParticipation ?? null,
+          teamDamagePercentage:
+            participant.challenges?.teamDamagePercentage ?? null,
+          soloKills: participant.challenges?.soloKills ?? null,
+          turretTakedowns: participant.challenges?.turretTakedowns ?? null,
+          maxLevelLeadLaneOpponent:
+            participant.challenges?.maxLevelLeadLaneOpponent ?? null,
+          maxCsAdvantageOnLaneOpponent:
+            participant.challenges?.maxCsAdvantageOnLaneOpponent ?? null,
+          dragonTakedowns: participant.challenges?.dragonTakedowns ?? null,
+          baronTakedowns: participant.challenges?.baronTakedowns ?? null,
+          riftHeraldTakedowns:
+            participant.challenges?.riftHeraldTakedowns ?? null,
+          controlWardsPlaced:
+            participant.challenges?.controlWardsPlaced ?? null,
+          teamDragonKills: teamObjectives?.dragon.kills ?? null,
+          teamBaronKills: teamObjectives?.baron.kills ?? null,
+          teamRiftHeraldKills: teamObjectives?.riftHerald.kills ?? null,
+          itemIds: [
+            participant.item0,
+            participant.item1,
+            participant.item2,
+            participant.item3,
+            participant.item4,
+            participant.item5,
+            participant.item6,
+          ],
+          teamId: participant.teamId,
+        };
+      }),
     });
 
     await this.upsertChampionLearning(
@@ -443,7 +519,7 @@ export class MatchesService {
 
     const neededQueues = new Set<QueueKey>();
     for (const item of items) {
-      const key = RANKED_QUEUE_TO_KEY[item.match.queueId];
+      const key = QUEUE_KEY_BY_ID[item.match.queueId];
       if (key) neededQueues.add(key);
     }
     if (neededQueues.size === 0) return deltas;
@@ -453,46 +529,61 @@ export class MatchesService {
       Awaited<ReturnType<RankSnapshotsService['getAllHistory']>>
     >();
     for (const key of neededQueues) {
-      snapshotsByQueue.set(key, await this.rankSnapshots.getAllHistory(accountId, key));
+      snapshotsByQueue.set(
+        key,
+        await this.rankSnapshots.getAllHistory(accountId, key),
+      );
     }
 
     const rankedParticipants = await this.prisma.matchParticipant.findMany({
-      where: { accountId, match: { queueId: { in: [420, 440] } } },
+      where: { accountId, match: { queueId: { in: HISTORY_QUEUE_IDS } } },
       select: {
-        match: { select: { queueId: true, gameCreation: true, gameDuration: true } },
+        match: {
+          select: { queueId: true, gameCreation: true, gameDuration: true },
+        },
       },
     });
     const endTimesByQueue = new Map<QueueKey, number[]>();
     for (const participant of rankedParticipants) {
-      const key = RANKED_QUEUE_TO_KEY[participant.match.queueId];
+      const key = QUEUE_KEY_BY_ID[participant.match.queueId];
       if (!key) continue;
       const endTime =
-        participant.match.gameCreation.getTime() + participant.match.gameDuration * 1000;
+        participant.match.gameCreation.getTime() +
+        participant.match.gameDuration * 1000;
       const list = endTimesByQueue.get(key) ?? [];
       list.push(endTime);
       endTimesByQueue.set(key, list);
     }
 
     for (const item of items) {
-      const key = RANKED_QUEUE_TO_KEY[item.match.queueId];
+      const key = QUEUE_KEY_BY_ID[item.match.queueId];
       if (!key) {
         deltas.set(item.id, null);
         continue;
       }
 
       const snapshots = snapshotsByQueue.get(key) ?? [];
-      const endTime = item.match.gameCreation.getTime() + item.match.gameDuration * 1000;
+      const endTime =
+        item.match.gameCreation.getTime() + item.match.gameDuration * 1000;
 
-      const before = [...snapshots].reverse().find((s) => s.capturedAt.getTime() <= endTime);
+      const before = [...snapshots]
+        .reverse()
+        .find((s) => s.capturedAt.getTime() <= endTime);
       const after = snapshots.find((s) => s.capturedAt.getTime() > endTime);
 
-      if (!before || !after || before.tier !== after.tier || before.division !== after.division) {
+      if (
+        !before ||
+        !after ||
+        before.tier !== after.tier ||
+        before.division !== after.division
+      ) {
         deltas.set(item.id, null);
         continue;
       }
 
       const windowMatchCount = (endTimesByQueue.get(key) ?? []).filter(
-        (t) => t > before.capturedAt.getTime() && t <= after.capturedAt.getTime(),
+        (t) =>
+          t > before.capturedAt.getTime() && t <= after.capturedAt.getTime(),
       ).length;
 
       deltas.set(item.id, windowMatchCount === 1 ? after.lp - before.lp : null);

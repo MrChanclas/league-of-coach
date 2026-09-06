@@ -12,7 +12,6 @@ import { DiscordModule } from './discord/discord.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { GoalsModule } from './goals/goals.module';
 import { LearningModule } from './learning/learning.module';
-import { MasteryModule } from './mastery/mastery.module';
 import { MatchesModule } from './matches/matches.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RiotModule } from './riot/riot.module';
@@ -33,7 +32,6 @@ import { UsersModule } from './users/users.module';
     GoalsModule,
     LearningModule,
     MatchesModule,
-    MasteryModule,
     StatsModule,
   ],
   controllers: [AppController],

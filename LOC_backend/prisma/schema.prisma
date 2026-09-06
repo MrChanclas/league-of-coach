@@ -69,36 +69,35 @@ model ChampionLearning {
 }
 
 model LearningSession {
-  id         String   @id @default(cuid())
+  id         String           @id @default(cuid())
   date       DateTime
   duration   Int
   focus      String
   ratings    Json
   learningId String
   learning   ChampionLearning @relation(fields: [learningId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now())
+  createdAt  DateTime         @default(now())
 }
 
 model Goal {
-  id        String    @id @default(cuid())
+  id        String     @id @default(cuid())
   type      String // 'rango' | 'rol' | 'campeon'
   deadline  DateTime?
   accountId String
   account   LolAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  createdAt DateTime  @default(now())
+  createdAt DateTime   @default(now())
 
   // type = 'rango'
   queueType      String? // 'solo' | 'flex'
   targetTier     String? // IRON..CHALLENGER
   targetDivision String? // I..IV, null en Master+
 
-  // type = 'rol'
+  // type = 'rol' (el objetivo se compara contra el benchmark de la banda de
+  // rango actual de la cuenta, no un winrate fijo — ver role-performance.ts)
   targetRole String? // TOP | JUNGLE | MIDDLE | BOTTOM | UTILITY
 
-  // type = 'rol' y 'campeon'
-  targetWinrate Float? // 0..1
-
   // type = 'campeon'
+  targetWinrate  Float? // 0..1
   targetChampion String?
   targetKda      Float?
 }
@@ -137,6 +136,26 @@ model MatchParticipant {
   itemIds      Int[]       @default([])
   teamId       Int
   createdAt    DateTime    @default(now())
+
+  // Per-role performance metrics, all from Riot's challenges object (see
+  // common/role-performance.ts) — nullable because they're null on matches
+  // synced before each field was added.
+  killParticipation            Float? // 0..1
+  teamDamagePercentage         Float? // 0..1, this participant's share of their team's total champion damage
+  soloKills                    Int?
+  turretTakedowns              Int?
+  maxLevelLeadLaneOpponent     Int?
+  maxCsAdvantageOnLaneOpponent Float? // vs. the lane opponent, or vs. the enemy jungler for JUNGLE
+  dragonTakedowns              Int?
+  baronTakedowns               Int?
+  riftHeraldTakedowns          Int?
+  controlWardsPlaced           Int?
+  // Denormalized from the match's team-level objectives (info.teams[].objectives)
+  // at ingestion time, so objective participation can be computed per-row
+  // without joining back to teammates.
+  teamDragonKills              Int?
+  teamBaronKills               Int?
+  teamRiftHeraldKills          Int?
 
   @@unique([matchId, puuid])
 }
