@@ -213,7 +213,7 @@ export function OnboardingTour({ onClose, onLoadMatches }: OnboardingTourProps) 
             <h2 className="onboard-modal-title">Cuatro minutos y tu panel queda armado</h2>
             <p className="onboard-modal-body">
               LoC no te tira cien estadísticas. Lee tus partidas y te devuelve tres cosas concretas para arreglar
-              esta semana, más objetivos que sabés si vas a cumplir o no.
+              esta semana, más objetivos que sabes si vas a cumplir o no.
             </p>
             <div className="onboard-welcome-steps">
               {WELCOME_STEPS.map((item) => (
@@ -243,13 +243,13 @@ export function OnboardingTour({ onClose, onLoadMatches }: OnboardingTourProps) 
           <div aria-hidden className="onboard-backdrop" onClick={onClose} />
           <div role="dialog" aria-modal="true" aria-label="Recorrido completo" className="onboard-modal onboard-modal--done">
             <div className="onboard-tooltip-tag">RECORRIDO COMPLETO</div>
-            <h2 className="onboard-modal-title onboard-modal-title--done">Ya sabés dónde está todo</h2>
+            <h2 className="onboard-modal-title onboard-modal-title--done">Ya sabes dónde está todo</h2>
             <p className="onboard-modal-body">
-              Lo único que le falta a tu panel son partidas. Cargá una sesión y el análisis se actualiza solo:
+              Lo único que le falta a tu panel son partidas. Carga una sesión y el análisis se actualiza solo:
               winrate, tendencias, lecciones y el ritmo de tus objetivos.
             </p>
             <div className="onboard-done-note">
-              <div className="onboard-done-note-title">Podés volver a ver esto cuando quieras</div>
+              <div className="onboard-done-note-title">Puedes volver a ver esto cuando quieras</div>
               <div className="onboard-done-note-body">
                 Está en tu menú de usuario, abajo a la izquierda, en «Ver el recorrido».
               </div>
