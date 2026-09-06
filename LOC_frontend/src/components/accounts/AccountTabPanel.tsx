@@ -4,7 +4,9 @@ import { AccountSummaryCard } from './AccountSummaryCard'
 import { MatchRow } from '../matches/MatchRow'
 import { TopChampionsCard } from './TopChampionsCard'
 import { WeeklyActivityCard } from './WeeklyActivityCard'
+import { FirstStepsChecklist } from '../onboarding/FirstStepsChecklist'
 import { getProfileIconUrl } from '../../lib/riotAssets'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 import type {
   AccountCard,
   AccountStatsSummary,
@@ -32,6 +34,7 @@ type AccountTabPanelProps = {
   goalsByAccount: GoalItem[]
   matches: MatchParticipantEntry[]
   timeRange: TimeRange
+  checklistCompleted: boolean[]
   onTimeRangeChange: (range: TimeRange) => void
   onSetCurrentAccountId: (id: string) => void
   onDeleteAccount: (accountId: string) => void
@@ -53,15 +56,26 @@ export function AccountTabPanel({
   goalsByAccount,
   matches,
   timeRange,
+  checklistCompleted,
   onTimeRangeChange,
   onSetCurrentAccountId,
   onDeleteAccount,
   onGoToMatches,
   onGoToGoals,
 }: AccountTabPanelProps) {
+  // Debajo de 1180px, cuentas-view pasa a una sola columna: el objetivo activo
+  // sube justo debajo del hero en vez de quedar al fondo del scroll — ver
+  // handoff_loc/05-movil.md.
+  const isStackedLayout = useMediaQuery('(max-width: 1180px)')
+  // Debajo de 1024px la barra lateral se reemplaza por la barra de pestañas
+  // inferior: el widget "primeros pasos" pasa de flotante (choca con esa
+  // barra) a ser el primer bloque del scroll de esta vista.
+  const isMobileShell = useMediaQuery('(max-width: 1023.98px)')
+
   if (!activeAccount) {
     return (
       <div className="view-content">
+        {isMobileShell && <FirstStepsChecklist completed={checklistCompleted} variant="inline" />}
         <div className="page-head">
           <div>
             <div className="page-head-eyebrow">BIENVENIDO</div>
@@ -139,6 +153,8 @@ export function AccountTabPanel({
             lanes={lanes}
           />
 
+          {isStackedLayout && <ActiveGoalCard goal={activeGoal} onGoToGoals={onGoToGoals} />}
+
           <AccountsGrid
             userAccounts={userAccounts}
             currentAccountId={currentAccountId}
@@ -167,7 +183,7 @@ export function AccountTabPanel({
         <aside className="cuentas-aside">
           <WeeklyActivityCard activity={weeklyActivity} />
           <TopChampionsCard champions={championsSplit} ddragonVersion={ddragonVersion} />
-          <ActiveGoalCard goal={activeGoal} onGoToGoals={onGoToGoals} />
+          {!isStackedLayout && <ActiveGoalCard goal={activeGoal} onGoToGoals={onGoToGoals} />}
         </aside>
       </div>
     </div>

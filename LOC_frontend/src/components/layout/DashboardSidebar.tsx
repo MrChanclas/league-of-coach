@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { getTierColor } from '../../lib/hexforge'
 import type { AccountCard, TabKey } from '../../types/dashboard'
 
@@ -11,14 +12,15 @@ type DashboardSidebarProps = {
   currentAccountId: string
   onSetCurrentAccountId: (id: string) => void
   onOpenAccountModal: () => void
+  onReplayOnboarding: () => void
   navMeta: { cuentas: number; partidas: number; aprendizaje: number; objetivos: number }
 }
 
-const navItems: { key: TabKey; label: string }[] = [
+const navItems: { key: TabKey; label: string; tour?: string }[] = [
   { key: 'cuentas', label: 'Cuentas' },
   { key: 'partidas', label: 'Partidas' },
-  { key: 'aprendizaje', label: 'Aprendizaje' },
-  { key: 'objetivos', label: 'Objetivos' },
+  { key: 'aprendizaje', label: 'Aprendizaje', tour: 'nav-aprendizaje' },
+  { key: 'objetivos', label: 'Objetivos', tour: 'nav-objetivos' },
 ]
 
 function titleCaseTier(tier: string) {
@@ -46,8 +48,11 @@ export function DashboardSidebar({
   currentAccountId,
   onSetCurrentAccountId,
   onOpenAccountModal,
+  onReplayOnboarding,
   navMeta,
 }: DashboardSidebarProps) {
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
+
   return (
     <aside className="forge-sidebar">
       <div className="sidebar-scroll">
@@ -65,6 +70,7 @@ export function DashboardSidebar({
             <button
               key={item.key}
               type="button"
+              data-tour={item.tour}
               className={activeTab === item.key ? 'nav-item active' : 'nav-item'}
               onClick={() => onTabChange(item.key)}
             >
@@ -96,23 +102,53 @@ export function DashboardSidebar({
             )
           })}
 
-          <button type="button" className="sidebar-link-account" onClick={onOpenAccountModal}>
+          <button type="button" data-tour="registrar-cuenta" className="sidebar-link-account" onClick={onOpenAccountModal}>
             + Vincular cuenta Riot
           </button>
         </div>
       </div>
 
       <div className="profile-card">
-        <div className="profile-card-info">
+        <button
+          type="button"
+          className="profile-card-info profile-card-trigger"
+          onClick={() => setIsProfileMenuOpen((open) => !open)}
+          aria-haspopup="menu"
+          aria-expanded={isProfileMenuOpen}
+        >
           <span className="status-dot" />
           <div className="profile-card-text">
             <strong>{userDisplayName}</strong>
             <small>{userDisplayEmail}</small>
           </div>
-        </div>
-        <button type="button" className="link-btn profile-card-logout" onClick={onLogout}>
-          Salir
         </button>
+
+        {isProfileMenuOpen && (
+          <div className="profile-menu" role="menu">
+            <button
+              type="button"
+              role="menuitem"
+              className="profile-menu-item"
+              onClick={() => {
+                setIsProfileMenuOpen(false)
+                onReplayOnboarding()
+              }}
+            >
+              Ver el recorrido
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              className="profile-menu-item profile-menu-item--danger"
+              onClick={() => {
+                setIsProfileMenuOpen(false)
+                onLogout()
+              }}
+            >
+              Salir
+            </button>
+          </div>
+        )}
       </div>
     </aside>
   )

@@ -4,10 +4,13 @@ import { AccountTabPanel } from '../accounts/AccountTabPanel'
 import { CuentaTabPanel } from '../auth/CuentaTabPanel'
 import { DashboardHeader } from './DashboardHeader'
 import { DashboardSidebar } from './DashboardSidebar'
+import { MobileTabBar } from './MobileTabBar'
 import { GoalFormModal } from '../goals/GoalFormModal'
 import { GoalsTabPanel } from '../goals/GoalsTabPanel'
 import { LearningTabPanel } from '../learning/LearningTabPanel'
 import { MatchesTabPanel } from '../matches/MatchesTabPanel'
+import { FirstStepsChecklist } from '../onboarding/FirstStepsChecklist'
+import { OnboardingTour } from '../onboarding/OnboardingTour'
 
 import type { SubmitEvent } from 'react'
 import type {
@@ -51,6 +54,10 @@ type DashboardScreenProps = {
   timeRange: TimeRange
   isSyncing: boolean
   lastSyncedLabel: string
+  // undefined = todavía no se resolvió el usuario (no auto-abrir); null = resuelto
+  // y nunca vio el onboarding (auto-abrir); string = ya lo vio/saltó.
+  onboardingCompletedAt: string | null | undefined
+  onCompleteOnboarding: () => void
   onTimeRangeChange: (range: TimeRange) => void
   onTabChange: (tab: TabKey) => void
   onLogout: () => void
@@ -87,6 +94,8 @@ export function DashboardScreen({
   timeRange,
   isSyncing,
   lastSyncedLabel,
+  onboardingCompletedAt,
+  onCompleteOnboarding,
   onTimeRangeChange,
   onTabChange,
   onLogout,
@@ -100,6 +109,25 @@ export function DashboardScreen({
 }: DashboardScreenProps) {
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false)
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false)
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false)
+
+  // Se auto-abre una sola vez, apenas se confirma que el usuario nunca
+  // completó/saltó el onboarding. Comparar contra el último valor visto (en
+  // vez de un ref) para ajustar el estado durante el render, no en un efecto.
+  const [lastSeenOnboardingFlag, setLastSeenOnboardingFlag] = useState(onboardingCompletedAt)
+  if (onboardingCompletedAt !== lastSeenOnboardingFlag) {
+    setLastSeenOnboardingFlag(onboardingCompletedAt)
+    if (onboardingCompletedAt === null) setIsOnboardingOpen(true)
+  }
+
+  const handleCloseOnboarding = () => {
+    setIsOnboardingOpen(false)
+    onCompleteOnboarding()
+  }
+
+  const handleReplayOnboarding = () => {
+    setIsOnboardingOpen(true)
+  }
 
   const handleOpenAccountModal = () => {
     onTabChange('cuentas')
@@ -112,6 +140,14 @@ export function DashboardScreen({
     aprendizaje: lessons.length,
     objetivos: goalsByAccount.length,
   }
+
+  // Estado real, no el paso del tour — ver handoff_loc/04-onboarding.md.
+  const checklistCompleted = [
+    userAccounts.length > 0,
+    (statsSummary?.gamesPlayed ?? 0) > 0,
+    lessons.length > 0,
+    goalsByAccount.length > 0,
+  ]
 
   if (!isSignedIn) {
     return <CuentaTabPanel />
@@ -129,6 +165,7 @@ export function DashboardScreen({
         currentAccountId={currentAccountId}
         onSetCurrentAccountId={onSetCurrentAccountId}
         onOpenAccountModal={handleOpenAccountModal}
+        onReplayOnboarding={handleReplayOnboarding}
         navMeta={navMeta}
       />
 
@@ -138,6 +175,7 @@ export function DashboardScreen({
           currentAccountId={currentAccountId}
           activeAccount={activeAccount}
           onSetCurrentAccountId={onSetCurrentAccountId}
+          onOpenAccountModal={handleOpenAccountModal}
           onSyncMatches={onSyncMatches}
           isSyncing={isSyncing}
           lastSyncedLabel={lastSyncedLabel}
@@ -161,6 +199,7 @@ export function DashboardScreen({
             goalsByAccount={goalsByAccount}
             matches={matches}
             timeRange={timeRange}
+            checklistCompleted={checklistCompleted}
             onTimeRangeChange={onTimeRangeChange}
             onSetCurrentAccountId={onSetCurrentAccountId}
             onDeleteAccount={onDeleteAccount}
@@ -214,6 +253,20 @@ export function DashboardScreen({
         onClose={() => setIsGoalModalOpen(false)}
         onSubmit={onCreateGoal}
       />
+
+      <FirstStepsChecklist completed={checklistCompleted} />
+
+      {isOnboardingOpen && (
+        <OnboardingTour
+          onClose={handleCloseOnboarding}
+          onLoadMatches={() => {
+            onTabChange('cuentas')
+            onSyncMatches()
+          }}
+        />
+      )}
+
+      <MobileTabBar activeTab={activeTab} onTabChange={onTabChange} />
     </div>
   )
 }

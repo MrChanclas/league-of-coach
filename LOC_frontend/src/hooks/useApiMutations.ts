@@ -72,6 +72,16 @@ export function useSyncMatchesMutation() {
   })
 }
 
+export function useCompleteOnboardingMutation() {
+  const { getToken } = useAuth()
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const token = await getToken()
+      return apiFetch(`/users/${userId}/onboarding-complete`, { method: 'POST', token })
+    },
+  })
+}
+
 export function useSubmitFeedbackMutation() {
   return useMutation({
     mutationFn: async (input: { message: string; email: string }) => {
