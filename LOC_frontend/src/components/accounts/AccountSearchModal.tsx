@@ -1,5 +1,4 @@
-import type { FormEvent } from 'react'
-import type { AccountForm } from '../types/dashboard'
+import type { AccountForm } from '../../types/dashboard'
 
 type AccountSearchModalProps = {
   isOpen: boolean
@@ -7,7 +6,7 @@ type AccountSearchModalProps = {
   status: string
   onClose: () => void
   onAccountFieldChange: (event: React.ChangeEvent<HTMLInputElement>) => void
-  onCreateAccount: (event: FormEvent<HTMLFormElement>) => void
+  onCreateAccount: (event: React.SubmitEvent<HTMLFormElement>) => void
 }
 
 export function AccountSearchModal({

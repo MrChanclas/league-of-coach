@@ -1,5 +1,5 @@
-import { getTierColor } from '../lib/hexforge'
-import type { AccountCard, TabKey } from '../types/dashboard'
+import { getTierColor } from '../../lib/hexforge'
+import type { AccountCard, TabKey } from '../../types/dashboard'
 
 type DashboardSidebarProps = {
   userDisplayName: string

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
-import type { FormEvent } from 'react'
-import type { GoalCreateInput, GoalType } from '../types/dashboard'
-import { ROLE_LABELS } from '../lib/goalLabels'
-import { getChampionList, getDdragonVersion } from '../lib/riotAssets'
+import type { SubmitEvent } from 'react'
+import type { GoalCreateInput, GoalType } from '../../types/dashboard'
+import { ROLE_LABELS } from '../../lib/goalLabels'
+import { RANK_DIVISIONS, RANK_TIERS, ROLE_KEYS } from '../../lib/constants'
+import { getChampionList, getDdragonVersion } from '../../lib/riotAssets'
+import { RoleMetricsInfoModal } from './RoleMetricsInfoModal'
 
 type GoalFormModalProps = {
   isOpen: boolean
@@ -11,21 +13,6 @@ type GoalFormModalProps = {
   onClose: () => void
   onSubmit: (input: GoalCreateInput) => Promise<boolean>
 }
-
-const TIER_OPTIONS = [
-  'IRON',
-  'BRONZE',
-  'SILVER',
-  'GOLD',
-  'PLATINUM',
-  'EMERALD',
-  'DIAMOND',
-  'MASTER',
-  'GRANDMASTER',
-  'CHALLENGER',
-]
-const DIVISION_OPTIONS = ['IV', 'III', 'II', 'I']
-const ROLE_OPTIONS = ['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY']
 
 const TYPE_TABS: { key: GoalType; label: string }[] = [
   { key: 'rango', label: 'Rango' },
@@ -45,6 +32,7 @@ export function GoalFormModal({ isOpen, accountId, status, onClose, onSubmit }: 
   const [deadline, setDeadline] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [championList, setChampionList] = useState<string[]>([])
+  const [isRoleInfoOpen, setIsRoleInfoOpen] = useState(false)
 
   useEffect(() => {
     if (!isOpen || championList.length > 0) return
@@ -75,7 +63,7 @@ export function GoalFormModal({ isOpen, accountId, status, onClose, onSubmit }: 
 
   const isApexTier = targetTier === 'MASTER' || targetTier === 'GRANDMASTER' || targetTier === 'CHALLENGER'
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     const base = { accountId, deadline: deadline || undefined }
@@ -84,7 +72,7 @@ export function GoalFormModal({ isOpen, accountId, status, onClose, onSubmit }: 
     if (type === 'rango') {
       input = { type, ...base, queueType, targetTier, targetDivision: isApexTier ? undefined : targetDivision }
     } else if (type === 'rol') {
-      input = { type, ...base, targetRole, targetWinrate: Number(targetWinrate) / 100 }
+      input = { type, ...base, targetRole }
     } else {
       if (!targetChampion.trim()) return
       input = {
@@ -141,7 +129,7 @@ export function GoalFormModal({ isOpen, accountId, status, onClose, onSubmit }: 
               <label>
                 Tier objetivo
                 <select value={targetTier} onChange={(event) => setTargetTier(event.target.value)}>
-                  {TIER_OPTIONS.map((tier) => (
+                  {RANK_TIERS.map((tier) => (
                     <option key={tier} value={tier}>
                       {tier}
                     </option>
@@ -152,7 +140,7 @@ export function GoalFormModal({ isOpen, accountId, status, onClose, onSubmit }: 
                 <label>
                   División objetivo
                   <select value={targetDivision} onChange={(event) => setTargetDivision(event.target.value)}>
-                    {DIVISION_OPTIONS.map((division) => (
+                    {RANK_DIVISIONS.map((division) => (
                       <option key={division} value={division}>
                         {division}
                       </option>
@@ -168,24 +156,20 @@ export function GoalFormModal({ isOpen, accountId, status, onClose, onSubmit }: 
               <label>
                 Rol
                 <select value={targetRole} onChange={(event) => setTargetRole(event.target.value)}>
-                  {ROLE_OPTIONS.map((role) => (
+                  {ROLE_KEYS.map((role) => (
                     <option key={role} value={role}>
                       {ROLE_LABELS[role]}
                     </option>
                   ))}
                 </select>
               </label>
-              <label>
-                Winrate objetivo (%)
-                <input
-                  type="number"
-                  min={1}
-                  max={100}
-                  value={targetWinrate}
-                  onChange={(event) => setTargetWinrate(event.target.value)}
-                  required
-                />
-              </label>
+              <p className="form-hint">
+                El objetivo se mide con las métricas propias de este rol, comparadas contra el promedio de tu Elo
+                actual — no un winrate fijo.
+              </p>
+              <button type="button" className="link-btn" onClick={() => setIsRoleInfoOpen(true)}>
+                ¿Qué datos miden por rol?
+              </button>
             </>
           )}
 
@@ -245,6 +229,8 @@ export function GoalFormModal({ isOpen, accountId, status, onClose, onSubmit }: 
 
         {status && <p className="auth-status">{status}</p>}
       </div>
+
+      <RoleMetricsInfoModal isOpen={isRoleInfoOpen} onClose={() => setIsRoleInfoOpen(false)} />
     </div>
   )
 }

@@ -1,9 +1,7 @@
-import { useEffect, useState } from 'react'
-import { useAuth } from '@clerk/clerk-react'
-import { fetchJson } from '../lib/api'
-import { getTierColor } from '../lib/hexforge'
-import { getProfileIconUrl, getRankEmblemUrl } from '../lib/riotAssets'
-import type { AccountCard, AccountStatsSummary } from '../types/dashboard'
+import { useAccountsQueueStats } from '../../hooks/useApiQueries'
+import { getTierColor } from '../../lib/hexforge'
+import { getProfileIconUrl, getRankEmblemUrl } from '../../lib/riotAssets'
+import type { AccountCard, AccountStatsSummary, QueueStats } from '../../types/dashboard'
 
 type AccountsGridProps = {
   userAccounts: AccountCard[]
@@ -11,11 +9,6 @@ type AccountsGridProps = {
   ddragonVersion: string | null
   onSetCurrentAccountId: (id: string) => void
   onDeleteAccount: (accountId: string) => void
-}
-
-type QueueStats = {
-  solo: AccountStatsSummary | null
-  flex: AccountStatsSummary | null
 }
 
 type QueueInfo = {
@@ -26,9 +19,6 @@ type QueueInfo = {
   lp: number
   summary: AccountStatsSummary | null
 }
-
-const SOLO_QUEUE_ID = 420
-const FLEX_QUEUE_ID = 440
 
 function getOrderedQueues(account: AccountCard, stats?: QueueStats): QueueInfo[] {
   const solo: QueueInfo = {
@@ -63,37 +53,8 @@ export function AccountsGrid({
   onSetCurrentAccountId,
   onDeleteAccount,
 }: AccountsGridProps) {
-  const { getToken } = useAuth()
-  const [queueStatsByAccount, setQueueStatsByAccount] = useState<Record<string, QueueStats>>({})
-
-  useEffect(() => {
-    if (userAccounts.length === 0) return
-
-    let cancelled = false
-
-    const loadQueueStats = async () => {
-      const token = await getToken()
-      const entries = await Promise.all(
-        userAccounts.map(async (account) => {
-          const [solo, flex] = await Promise.all([
-            fetchJson<AccountStatsSummary>(`/stats/account/${account.id}/by-queue/${SOLO_QUEUE_ID}`, token),
-            fetchJson<AccountStatsSummary>(`/stats/account/${account.id}/by-queue/${FLEX_QUEUE_ID}`, token),
-          ])
-          return [account.id, { solo, flex }] as const
-        }),
-      )
-
-      if (!cancelled) {
-        setQueueStatsByAccount(Object.fromEntries(entries))
-      }
-    }
-
-    void loadQueueStats()
-
-    return () => {
-      cancelled = true
-    }
-  }, [userAccounts, getToken])
+  const queueStatsQuery = useAccountsQueueStats(userAccounts)
+  const queueStatsByAccount = queueStatsQuery.data ?? {}
 
   const handleDeleteClick = (event: React.MouseEvent, account: AccountCard) => {
     event.stopPropagation()

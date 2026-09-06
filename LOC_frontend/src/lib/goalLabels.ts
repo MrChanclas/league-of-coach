@@ -1,4 +1,4 @@
-import type { GoalItem, GoalType } from '../types/dashboard'
+import type { GoalGap, GoalItem, GoalPace, GoalType } from '../types/dashboard'
 
 export const ROLE_LABELS: Record<string, string> = {
   TOP: 'Top',
@@ -14,6 +14,12 @@ export const KIND_LABELS: Record<GoalType, string> = {
   campeon: 'CAMPEÓN',
 }
 
+export const RANK_BAND_LABELS: Record<string, string> = {
+  LOW: 'Hierro–Oro',
+  MID: 'Platino–Diamante',
+  HIGH: 'Master+',
+}
+
 function pct(value: number | undefined) {
   return Math.round((value ?? 0) * 100)
 }
@@ -26,15 +32,12 @@ export function formatGoalTitle(goal: GoalItem): string {
   }
 
   if (goal.type === 'rol') {
-    return `${ROLE_LABELS[goal.targetRole ?? ''] ?? goal.targetRole}: ${pct(goal.targetWinrate)}% WR`
+    return `${ROLE_LABELS[goal.targetRole ?? ''] ?? goal.targetRole}: rendimiento de rol`
   }
 
   const kda = goal.targetKda != null ? ` / ${goal.targetKda.toFixed(1)} KDA` : ''
   return `${goal.targetChampion}: ${pct(goal.targetWinrate)}% WR${kda}`
 }
-
-export type GoalGap = { value: string; label: string }
-export type GoalPace = { action: string; context: string }
 
 export function formatGoalGap(goal: GoalItem): GoalGap {
   if (goal.status === 'completed') {
@@ -68,7 +71,8 @@ export function formatGoalCurrent(goal: GoalItem): string {
 
   if (goal.type === 'rol') {
     if (!current.gamesPlayed) return 'Sin partidas registradas en este rol todavía'
-    return `Actual: ${pct(current.winrate)}% WR (${current.gamesPlayed} partidas)`
+    const band = RANK_BAND_LABELS[current.rankBand ?? ''] ?? ''
+    return `Actual: ${current.roleScore ?? 0}/100 vs. Elo ${band} (${current.gamesPlayed} partidas)`
   }
 
   if (!current.gamesPlayed) return 'Sin partidas registradas con este campeón todavía'

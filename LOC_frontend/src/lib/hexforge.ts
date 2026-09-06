@@ -1,3 +1,5 @@
+import { APEX_TIERS, RANK_DIVISIONS, RANK_TIERS } from './constants'
+
 export const TIER_COLORS: Record<string, string> = {
   IRON: '#8a8578',
   BRONZE: '#a9784f',
@@ -36,44 +38,23 @@ export function formatGameDuration(seconds: number): string {
   return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`
 }
 
-export function formatCompactNumber(value: number): string {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
-  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`
-  return String(value)
-}
-
-const TIER_ORDER = [
-  'IRON',
-  'BRONZE',
-  'SILVER',
-  'GOLD',
-  'PLATINUM',
-  'EMERALD',
-  'DIAMOND',
-  'MASTER',
-  'GRANDMASTER',
-  'CHALLENGER',
-]
-const APEX_TIERS = new Set(['MASTER', 'GRANDMASTER', 'CHALLENGER'])
-const DIVISION_ORDER = ['IV', 'III', 'II', 'I']
-
 export function getNextRank(tier: string, division: string): { tier: string; division: string } | null {
   const normalizedTier = tier.trim().toUpperCase()
   const normalizedDivision = division.trim().toUpperCase()
-  const tierIndex = TIER_ORDER.indexOf(normalizedTier)
+  const tierIndex = RANK_TIERS.indexOf(normalizedTier as (typeof RANK_TIERS)[number])
   if (tierIndex === -1) return null
 
   if (APEX_TIERS.has(normalizedTier)) {
-    const nextTier = TIER_ORDER[tierIndex + 1]
+    const nextTier = RANK_TIERS[tierIndex + 1]
     return nextTier ? { tier: nextTier, division: 'I' } : null
   }
 
-  const divisionIndex = DIVISION_ORDER.indexOf(normalizedDivision)
-  if (divisionIndex !== -1 && divisionIndex < DIVISION_ORDER.length - 1) {
-    return { tier: normalizedTier, division: DIVISION_ORDER[divisionIndex + 1] }
+  const divisionIndex = RANK_DIVISIONS.indexOf(normalizedDivision as (typeof RANK_DIVISIONS)[number])
+  if (divisionIndex !== -1 && divisionIndex < RANK_DIVISIONS.length - 1) {
+    return { tier: normalizedTier, division: RANK_DIVISIONS[divisionIndex + 1] }
   }
 
-  const nextTier = TIER_ORDER[tierIndex + 1]
+  const nextTier = RANK_TIERS[tierIndex + 1]
   if (!nextTier) return null
   return { tier: nextTier, division: APEX_TIERS.has(nextTier) ? 'I' : 'IV' }
 }

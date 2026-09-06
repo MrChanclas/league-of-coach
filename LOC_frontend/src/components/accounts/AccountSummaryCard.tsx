@@ -1,26 +1,24 @@
-import { formatCompactNumber, getLaneLabel, getNextRank, getTierColor } from '../lib/hexforge'
-import { getRankEmblemUrl } from '../lib/riotAssets'
-import type { AccountCard, AccountStatsSummary, LaneEntry, StreakInfo } from '../types/dashboard'
+import { getLaneLabel, getNextRank, getTierColor } from '../../lib/hexforge'
+import { getRankEmblemUrl } from '../../lib/riotAssets'
+import type { AccountCard, AccountStatsSummary, LaneEntry, StreakInfo } from '../../types/dashboard'
 
-type HeroCardProps = {
+type AccountSummaryCardProps = {
   account: AccountCard
   profileIconUrl: string | null
   primaryQueue: 'solo' | 'flex'
   statsSummary: AccountStatsSummary | null
   streak: StreakInfo | null
   lanes: LaneEntry[]
-  masteryTotalPoints: number
 }
 
-export function HeroCard({
+export function AccountSummaryCard({
   account,
   profileIconUrl,
   primaryQueue,
   statsSummary,
   streak,
   lanes,
-  masteryTotalPoints,
-}: HeroCardProps) {
+}: AccountSummaryCardProps) {
   const tier = primaryQueue === 'solo' ? account.soloTier : account.flexTier
   const division = primaryQueue === 'solo' ? account.soloDivision : account.flexDivision
   const lp = primaryQueue === 'solo' ? account.soloLp : account.flexLp
@@ -94,7 +92,7 @@ export function HeroCard({
                 <span className="hero-badge-active">ACTIVA</span>
               </div>
               <div className="hero-identity-level">
-                NIVEL {account.summonerLevel} · {account.server} · MAESTRÍA {formatCompactNumber(masteryTotalPoints)}
+                NIVEL {account.summonerLevel} · {account.server}
               </div>
             </div>
             <div className="hero-identity-wl">

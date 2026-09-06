@@ -1,6 +1,7 @@
-import { getChampionIconUrl, getItemIconUrl } from '../lib/riotAssets'
-import { formatGameDuration, formatRelativeTime } from '../lib/hexforge'
-import type { MatchParticipantEntry } from '../types/dashboard'
+import { getChampionIconUrl, getItemIconUrl } from '../../lib/riotAssets'
+import { formatGameDuration, formatRelativeTime } from '../../lib/hexforge'
+import { QUEUE_IDS } from '../../lib/constants'
+import type { MatchParticipantEntry } from '../../types/dashboard'
 
 type MatchRowProps = {
   entry: MatchParticipantEntry
@@ -9,8 +10,8 @@ type MatchRowProps = {
 }
 
 const QUEUE_LABELS: Record<number, string> = {
-  420: 'CLASIF. SOLO',
-  440: 'CLASIF. FLEXIBLE',
+  [QUEUE_IDS.SOLO]: 'CLASIF. SOLO',
+  [QUEUE_IDS.FLEX]: 'CLASIF. FLEXIBLE',
   400: 'NORMAL',
   430: 'NORMAL',
   450: 'ARAM',

@@ -38,6 +38,16 @@ export type GoalType = 'rango' | 'rol' | 'campeon'
 export type GoalStatus = 'completed' | 'in_progress' | 'behind'
 export type GoalQueue = 'solo' | 'flex'
 
+export type RoleMetric = {
+  key: string
+  label: string
+  unit: 'perMin' | 'pct' | 'count'
+  direction: 'higher' | 'lower'
+  value: number
+  benchmark: number
+  scorePct: number
+}
+
 export type GoalCurrent = {
   tier?: string
   division?: string
@@ -45,6 +55,10 @@ export type GoalCurrent = {
   winrate?: number
   avgKda?: number
   gamesPlayed?: number
+  // type = 'rol'
+  roleScore?: number
+  rankBand?: 'LOW' | 'MID' | 'HIGH'
+  roleMetrics?: RoleMetric[]
 }
 
 export type GoalItem = {
@@ -61,7 +75,7 @@ export type GoalItem = {
   targetDivision?: string | null
   // type = 'rol'
   targetRole?: string
-  // type = 'rol' y 'campeon'
+  // type = 'campeon'
   targetWinrate?: number
   // type = 'campeon'
   targetChampion?: string
@@ -86,7 +100,6 @@ export type GoalCreateInput =
       type: 'rol'
       accountId: string
       targetRole: string
-      targetWinrate: number
       deadline?: string
     }
   | {
@@ -148,14 +161,6 @@ export type MatchParticipantEntry = {
   }
 }
 
-export type MasteryEntry = {
-  championId: number
-  championName: string
-  championLevel: number
-  championPoints: number
-  lastPlayTime: string
-}
-
 export type AccountStatsSummary = {
   gamesPlayed: number
   wins: number
@@ -169,6 +174,11 @@ export type AccountStatsSummary = {
 
 export type ChampionSplitStat = AccountStatsSummary & {
   champion: string
+}
+
+export type QueueStats = {
+  solo: AccountStatsSummary | null
+  flex: AccountStatsSummary | null
 }
 
 export type RankSnapshotEntry = {
@@ -207,3 +217,6 @@ export type LessonCard = {
 }
 
 export type TimeRange = '7d' | 'split'
+
+export type GoalGap = { value: string; label: string }
+export type GoalPace = { action: string; context: string }

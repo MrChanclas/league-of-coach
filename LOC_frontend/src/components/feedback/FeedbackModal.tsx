@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import type { FormEvent } from 'react'
-import { API_URL } from '../lib/api'
+import type { SubmitEvent } from 'react'
+import { useSubmitFeedbackMutation } from '../../hooks/useApiMutations'
 
 type FeedbackModalProps = {
   isOpen: boolean
@@ -11,7 +11,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
   const [message, setMessage] = useState('')
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const submitFeedbackMutation = useSubmitFeedbackMutation()
 
   if (!isOpen) return null
 
@@ -22,29 +22,16 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
     onClose()
   }
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setIsSubmitting(true)
     setStatus('Enviando...')
 
     try {
-      const response = await fetch(`${API_URL}/feedback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, email }),
-      })
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => null)
-        throw new Error(data?.message ?? 'No se pudo enviar el feedback.')
-      }
-
+      await submitFeedbackMutation.mutateAsync({ message, email })
       setStatus('¡Gracias! Lo revisamos pronto.')
       setTimeout(handleClose, 1500)
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'No se pudo enviar el feedback.')
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -82,7 +69,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
             />
           </label>
 
-          <button type="submit" className="primary-btn auth-submit" disabled={isSubmitting}>
+          <button type="submit" className="primary-btn auth-submit" disabled={submitFeedbackMutation.isPending}>
             Enviar feedback
           </button>
         </form>
