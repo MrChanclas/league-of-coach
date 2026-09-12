@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Req } from '@nestjs/common';
 import { z } from 'zod';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { AuthzService } from '../auth/authz.service';
 import type { AuthenticatedRequest } from '../auth/clerk-auth.guard';
+import { BehaviorFlagsService } from './behavior-flags.service';
 import { LearningService } from './learning.service';
 import { LessonsService } from './lessons.service';
 
@@ -23,6 +24,7 @@ export class LearningController {
   constructor(
     private readonly learningService: LearningService,
     private readonly lessonsService: LessonsService,
+    private readonly behaviorFlagsService: BehaviorFlagsService,
     private readonly authz: AuthzService,
   ) {}
 
@@ -32,19 +34,38 @@ export class LearningController {
     @Body(new ZodValidationPipe(CreateLearningSchema))
     body: z.infer<typeof CreateLearningSchema>,
   ) {
-    await this.authz.assertAccountOwnership(body.accountId, request.clerkUserId);
+    await this.authz.assertAccountOwnership(
+      body.accountId,
+      request.clerkUserId,
+    );
     return this.learningService.create(body);
   }
 
   @Get('account/:accountId')
-  async listByAccount(@Req() request: AuthenticatedRequest, @Param('accountId') accountId: string) {
+  async listByAccount(
+    @Req() request: AuthenticatedRequest,
+    @Param('accountId') accountId: string,
+  ) {
     await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
     return this.learningService.listByAccount(accountId);
   }
 
   @Get('account/:accountId/lessons')
-  async getLessons(@Req() request: AuthenticatedRequest, @Param('accountId') accountId: string) {
+  async getLessons(
+    @Req() request: AuthenticatedRequest,
+    @Param('accountId') accountId: string,
+  ) {
     await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
     return this.lessonsService.generateForAccount(accountId);
+  }
+
+  @Get('account/:accountId/behavior-flags')
+  async getBehaviorFlags(
+    @Req() request: AuthenticatedRequest,
+    @Param('accountId') accountId: string,
+    @Query('champion') champion?: string,
+  ) {
+    await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
+    return this.behaviorFlagsService.getFlags(accountId, champion);
   }
 }

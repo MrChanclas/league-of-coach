@@ -273,9 +273,9 @@ export type RolePerformance = {
 
 // Caps a single metric's contribution to the composite so one standout stat
 // can't fully mask the others being below benchmark.
-const METRIC_SCORE_CAP = 130;
+export const METRIC_SCORE_CAP = 130;
 
-function scorePctFor(
+export function scorePctFor(
   direction: MetricDirection,
   value: number,
   benchmark: number,

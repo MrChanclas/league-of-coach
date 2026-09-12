@@ -4,28 +4,41 @@ import { AuthenticateWithRedirectCallback, useAuth, useClerk, useUser } from '@c
 import { useQueryClient } from '@tanstack/react-query'
 import { DashboardScreen } from './components/layout/DashboardScreen'
 import {
+  useAddPoolEntryMutation,
   useCompleteOnboardingMutation,
   useCreateGoalMutation,
   useDeleteAccountMutation,
   useDeleteGoalMutation,
   useResolveAccountMutation,
+  useSavePoolMutation,
   useSyncMatchesMutation,
 } from './hooks/useApiMutations'
 import {
   queryKeys,
   useAccountActivity,
-  useAccountChampions,
   useAccountLanes,
   useAccountLessons,
   useAccountMatches,
+  useAccountPool,
+  useAccountPoolRecommendation,
   useAccountRankHistory,
   useAccountStats,
   useAccountStreak,
+  useChampionRoster,
   useDashboard,
   useInternalUser,
 } from './hooks/useApiQueries'
 import { getDdragonVersion } from './lib/riotAssets'
-import type { AccountForm, GoalCreateInput, TabKey, TimeRange } from './types/dashboard'
+import type { AccountForm, GoalCreateInput, ReplacePoolEntryInput, TabKey, TimeRange } from './types/dashboard'
+
+// Mirrors the tab in the URL hash so browser back/forward moves between
+// tabs instead of leaving the app — see readTabFromLocation below.
+const TAB_KEYS: TabKey[] = ['cuentas', 'aprendizaje', 'objetivos', 'partidas', 'pool-champ']
+
+function readTabFromLocation(): TabKey | null {
+  const hash = window.location.hash.replace('#', '')
+  return (TAB_KEYS as string[]).includes(hash) ? (hash as TabKey) : null
+}
 
 function formatLastSyncedLabel(lastSyncedAt: Date | null): string {
   if (!lastSyncedAt) return 'Sin sincronizar en esta sesión'
@@ -46,7 +59,7 @@ function App() {
   const { signOut } = useClerk()
   const queryClient = useQueryClient()
 
-  const [activeTab, setActiveTab] = useState<TabKey>('cuentas')
+  const [activeTab, setActiveTab] = useState<TabKey>(() => readTabFromLocation() ?? 'cuentas')
   const [currentAccountId, setCurrentAccountId] = useState('')
   const [accountForm, setAccountForm] = useState<AccountForm>(blankAccountForm)
   const [status, setStatus] = useState('')
@@ -57,6 +70,35 @@ function App() {
   useEffect(() => {
     void getDdragonVersion().then(setDdragonVersion)
   }, [])
+
+  // Back/forward moves between tabs (popstate) instead of leaving the app.
+  useEffect(() => {
+    function handlePopState() {
+      setActiveTab(readTabFromLocation() ?? 'cuentas')
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
+  // Right when the dashboard first mounts for a signed-in user — whether
+  // from an existing session or straight off the Google OAuth redirect back
+  // to '/' — replace (not push) the current history entry with the active
+  // tab's URL. That overwrites whatever entry was showing the login screen,
+  // so "back" from inside the app lands on a previous tab or the app's own
+  // starting point instead of a stale pre-login render.
+  useEffect(() => {
+    if (isSignedIn) {
+      window.history.replaceState(null, '', `#${activeTab}`)
+    }
+    // Only the transition into a signed-in session should reset the history
+    // baseline — not every tab change, which is handled by handleTabChange.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSignedIn])
+
+  const handleTabChange = (tab: TabKey) => {
+    setActiveTab(tab)
+    if (tab !== activeTab) window.history.pushState(null, '', `#${tab}`)
+  }
 
   useEffect(() => {
     if (!status) return
@@ -107,7 +149,6 @@ function App() {
     [currentAccountId, userAccounts],
   )
 
-  const splitDays = timeRange === '7d' ? 7 : 30
   const primaryQueue = activeAccount && activeAccount.soloTier !== 'Unranked' ? 'solo' : 'flex'
 
   const matchesQuery = useAccountMatches(currentAccountId)
@@ -115,18 +156,20 @@ function App() {
   const streakQuery = useAccountStreak(currentAccountId)
   const lanesQuery = useAccountLanes(currentAccountId)
   const activityQuery = useAccountActivity(currentAccountId)
-  const championsQuery = useAccountChampions(currentAccountId, splitDays)
   const rankHistoryQuery = useAccountRankHistory(currentAccountId, primaryQueue)
   const lessonsQuery = useAccountLessons(currentAccountId)
+  const championRosterQuery = useChampionRoster()
+  const poolQuery = useAccountPool(currentAccountId)
+  const poolRecommendationQuery = useAccountPoolRecommendation(currentAccountId)
 
   const matches = matchesQuery.data?.items ?? []
   const statsSummary = statsQuery.data ?? null
   const streak = streakQuery.data ?? null
   const lanes = lanesQuery.data ?? []
   const weeklyActivity = activityQuery.data ?? []
-  const championsSplit = championsQuery.data ?? []
   const rankHistory = rankHistoryQuery.data ?? []
   const lessons = lessonsQuery.data ?? []
+  const championRoster = championRosterQuery.data ?? []
 
   const goalsByAccount = useMemo(
     () => (dashboard?.goals ?? []).filter((goal) => goal.accountId === (activeAccount?.id ?? '')),
@@ -139,6 +182,8 @@ function App() {
   const deleteGoalMutation = useDeleteGoalMutation()
   const syncMatchesMutation = useSyncMatchesMutation()
   const completeOnboardingMutation = useCompleteOnboardingMutation()
+  const savePoolMutation = useSavePoolMutation()
+  const addPoolEntryMutation = useAddPoolEntryMutation()
 
   const handleCompleteOnboarding = () => {
     if (!internalUser) return
@@ -232,6 +277,36 @@ function App() {
     }
   }
 
+  const handleSavePool = async (entries: ReplacePoolEntryInput[]): Promise<boolean> => {
+    if (!currentAccountId) return false
+
+    try {
+      // Origin reflects how this save was built: as soon as the coach's
+      // suggestion contributed any slot, the pool counts as coach-sourced —
+      // matches the "armada con la recomendación del coach" provenance line.
+      const source = entries.some((entry) => entry.addedBy === 'coach') ? 'coach' : 'manual'
+      await savePoolMutation.mutateAsync({ accountId: currentAccountId, input: { source, entries } })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.account(currentAccountId) })
+      setStatus('Pool guardado correctamente.')
+      return true
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'No se pudo guardar el pool.')
+      return false
+    }
+  }
+
+  const handleAddPoolOutsider = async (championKey: string) => {
+    if (!currentAccountId) return
+
+    try {
+      await addPoolEntryMutation.mutateAsync({ accountId: currentAccountId, championKey })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.account(currentAccountId) })
+      setStatus('Campeón sumado al pool.')
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'No se pudo sumar el campeón al pool.')
+    }
+  }
+
   const handleLogout = () => {
     setStatus('Sesión cerrada.')
     void signOut()
@@ -264,17 +339,23 @@ function App() {
       streak={streak}
       lanes={lanes}
       weeklyActivity={weeklyActivity}
-      championsSplit={championsSplit}
       rankHistory={rankHistory}
       lessons={lessons}
       ddragonVersion={ddragonVersion}
       timeRange={timeRange}
       isSyncing={syncMatchesMutation.isPending}
       lastSyncedLabel={lastSyncedLabel}
+      championRoster={championRoster}
+      poolView={poolQuery.data}
+      poolRecommendation={poolRecommendationQuery.data}
+      isPoolRecommendationLoading={poolRecommendationQuery.isLoading}
+      isSavingPool={savePoolMutation.isPending}
+      onSavePool={handleSavePool}
+      onAddPoolOutsider={handleAddPoolOutsider}
       onboardingCompletedAt={internalUser?.onboardingCompletedAt}
       onCompleteOnboarding={handleCompleteOnboarding}
       onTimeRangeChange={setTimeRange}
-      onTabChange={setActiveTab}
+      onTabChange={handleTabChange}
       onLogout={handleLogout}
       onSetCurrentAccountId={setCurrentAccountId}
       onAccountFieldChange={handleAccountFieldChange}

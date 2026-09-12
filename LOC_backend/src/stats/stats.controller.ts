@@ -40,7 +40,10 @@ export class StatsController {
   }
 
   @Get('account/:accountId')
-  async getAccountSummary(@Req() request: AuthenticatedRequest, @Param('accountId') accountId: string) {
+  async getAccountSummary(
+    @Req() request: AuthenticatedRequest,
+    @Param('accountId') accountId: string,
+  ) {
     await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
     return this.statsService.getAccountSummary(accountId);
   }
@@ -59,7 +62,10 @@ export class StatsController {
   }
 
   @Get('account/:accountId/by-champion')
-  async getByChampion(@Req() request: AuthenticatedRequest, @Param('accountId') accountId: string) {
+  async getByChampion(
+    @Req() request: AuthenticatedRequest,
+    @Param('accountId') accountId: string,
+  ) {
     await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
     return this.statsService.getByChampion(accountId);
   }
@@ -87,13 +93,29 @@ export class StatsController {
   }
 
   @Get('account/:accountId/streak')
-  async getStreak(@Req() request: AuthenticatedRequest, @Param('accountId') accountId: string) {
+  async getStreak(
+    @Req() request: AuthenticatedRequest,
+    @Param('accountId') accountId: string,
+  ) {
     await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
     return this.statsService.getStreak(accountId);
   }
 
+  @Get('account/:accountId/streak/by-queue/:queueId')
+  async getStreakByQueue(
+    @Req() request: AuthenticatedRequest,
+    @Param('accountId') accountId: string,
+    @Param('queueId') queueId: string,
+  ) {
+    await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
+    return this.statsService.getStreakByQueue(accountId, Number(queueId));
+  }
+
   @Get('account/:accountId/lanes')
-  async getLaneDistribution(@Req() request: AuthenticatedRequest, @Param('accountId') accountId: string) {
+  async getLaneDistribution(
+    @Req() request: AuthenticatedRequest,
+    @Param('accountId') accountId: string,
+  ) {
     await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
     return this.statsService.getLaneDistribution(accountId);
   }
@@ -104,7 +126,10 @@ export class StatsController {
     @Query(new ZodValidationPipe(CompareQuerySchema))
     query: z.infer<typeof CompareQuerySchema>,
   ) {
-    await this.authz.assertAccountOwnership(query.accountId, request.clerkUserId);
+    await this.authz.assertAccountOwnership(
+      query.accountId,
+      request.clerkUserId,
+    );
     return this.statsService.compareMatches(
       query.accountId,
       query.matchIdA,
@@ -118,7 +143,10 @@ export class StatsController {
     @Query(new ZodValidationPipe(CompareRollingQuerySchema))
     query: z.infer<typeof CompareRollingQuerySchema>,
   ) {
-    await this.authz.assertAccountOwnership(query.accountId, request.clerkUserId);
+    await this.authz.assertAccountOwnership(
+      query.accountId,
+      request.clerkUserId,
+    );
     return this.statsService.compareToRollingAverage(
       query.accountId,
       query.matchId,

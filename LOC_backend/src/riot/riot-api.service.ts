@@ -37,6 +37,7 @@ export type RiotLeagueListDto = {
 
 export type RiotMatchParticipantDto = {
   puuid: string;
+  participantId: number;
   championName: string;
   championId: number;
   teamPosition: string;
@@ -50,6 +51,10 @@ export type RiotMatchParticipantDto = {
   goldEarned: number;
   visionScore: number;
   totalDamageDealtToChampions: number;
+  summoner1Id: number;
+  summoner1Casts: number;
+  summoner2Id: number;
+  summoner2Casts: number;
   challenges?: {
     killParticipation?: number;
     teamDamagePercentage?: number;
@@ -90,6 +95,25 @@ export type RiotMatchDto = {
         baron: { kills: number };
         riftHerald: { kills: number };
       };
+    }>;
+  };
+};
+
+export type RiotMatchTimelineDto = {
+  info: {
+    frames: Array<{
+      timestamp: number;
+      participantFrames: Record<
+        string,
+        { participantId: number; position: { x: number; y: number } }
+      >;
+      events: Array<{
+        type: string;
+        timestamp: number;
+        victimId?: number;
+        killerId?: number;
+        position?: { x: number; y: number };
+      }>;
     }>;
   };
 };
@@ -368,6 +392,16 @@ export class RiotApiService {
     const host = this.getRegionalHost(server);
     return this.request<RiotMatchDto>(
       `${host}/lol/match/v5/matches/${encodeURIComponent(matchId)}`,
+    );
+  }
+
+  async getMatchTimeline(
+    server: string,
+    matchId: string,
+  ): Promise<RiotMatchTimelineDto> {
+    const host = this.getRegionalHost(server);
+    return this.request<RiotMatchTimelineDto>(
+      `${host}/lol/match/v5/matches/${encodeURIComponent(matchId)}/timeline`,
     );
   }
 }

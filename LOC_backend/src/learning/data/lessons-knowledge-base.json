@@ -5,13 +5,21 @@
       "id": "macro-low-csmin",
       "tag": "MACRO",
       "metric": "avgCsPerMin",
-      "roleScope": ["TOP", "MIDDLE", "BOTTOM"],
+      "roleScope": ["TOP", "MIDDLE"],
       "condition": { "operator": "lt", "value": 6.5 },
-      "title": "Tu CS/min está frenando tu progreso",
+      "title": "Alérgico al farming",
       "body": "Promedias {{avgCsPerMin}} CS/min en tus últimas partidas, por debajo del {{benchmark}} recomendado para seguir escalando. Cada minuto de farmeo perdido es oro que tu rival sí está tomando.",
-      "mediaType": "GOLD_GRAPH",
-      "metaTemplate": "GRÁFICO DE ORO",
-      "priority": 80
+      "mediaType": "GOLD_GRAPH"
+    },
+    {
+      "id": "macro-low-csmin-bottom",
+      "tag": "MACRO",
+      "metric": "avgCsPerMin",
+      "roleScope": ["BOTTOM"],
+      "condition": { "operator": "lt", "benchmarkMetric": "csPerMin" },
+      "title": "Alérgico al farming",
+      "body": "Promedias {{avgCsPerMin}} CS/min en tus últimas partidas, por debajo del {{benchmark}} recomendado para tu elo actual. Cada minuto de farmeo perdido es oro que tu rival sí está tomando.",
+      "mediaType": "GOLD_GRAPH"
     },
     {
       "id": "macro-kills-without-gold",
@@ -21,9 +29,7 @@
       "condition": { "operator": "gt", "value": 1.4 },
       "title": "Kills sin oro: tu macro necesita foco",
       "body": "Estás priorizando peleas por encima del farmeo ({{avgKills}} kills prom. vs {{avgCsPerMin}} CS/min). Ganar la pelea y perder el minuto de mapa te deja sin ítems para cerrar la partida.",
-      "mediaType": "GOLD_GRAPH",
-      "metaTemplate": "GRÁFICO DE ORO",
-      "priority": 60
+      "mediaType": "GOLD_GRAPH"
     },
     {
       "id": "vision-low-non-support",
@@ -31,45 +37,67 @@
       "metric": "avgVisionScorePerMin",
       "roleScope": ["TOP", "MIDDLE", "BOTTOM", "JUNGLE"],
       "condition": { "operator": "lt", "value": 0.8 },
-      "title": "Tu mapa está a oscuras",
+      "title": "Soy un topo!",
       "body": "Tu vision score promedio es de {{avgVisionScore}} ({{avgVisionScorePerMin}}/min). Comprar un par de wards de más por vuelta a base te da tiempo para reaccionar antes de las jugadas del rival.",
-      "mediaType": "HEATMAP",
-      "metaTemplate": "MAPA DE CALOR",
-      "priority": 70
+      "mediaType": "HEATMAP"
     },
     {
       "id": "vision-low-support",
       "tag": "VISIÓN",
       "metric": "avgVisionScorePerMin",
       "roleScope": ["UTILITY"],
-      "condition": { "operator": "lt", "value": 1.8 },
-      "title": "Como soporte, tu visión es tu arma principal",
+      "condition": { "operator": "lt", "benchmarkMetric": "visionScorePerMin" },
+      "title": "Hay que prender la luz en la grieta!",
       "body": "Tu vision score de {{avgVisionScore}} ({{avgVisionScorePerMin}}/min) está por debajo de lo esperado para tu rol. Priorizar control wards en objetivos puede cambiar el resultado de tus peleas de mid-late game.",
-      "mediaType": "HEATMAP",
-      "metaTemplate": "MAPA DE CALOR",
-      "priority": 75
+      "mediaType": "HEATMAP"
     },
     {
       "id": "duelos-low-kda",
       "tag": "DUELOS",
       "metric": "avgKda",
       "condition": { "operator": "lt", "value": 2.0 },
-      "title": "Estás perdiendo demasiados 1v1",
+      "title": "Pegarte contra la pared no es divertido",
       "body": "Tu KDA promedio de {{avgKda}} en las últimas partidas indica que las peleas individuales te están costando caro. Repasar tus últimas muertes ayuda a identificar el patrón.",
-      "mediaType": "CLIP",
-      "metaTemplate": "CLIP DE REPETICIÓN",
-      "priority": 65
+      "mediaType": "CLIP"
+    },
+    {
+      "id": "duelos-adc-no-wait",
+      "tag": "DUELOS",
+      "metric": "peelUnguardedRatio",
+      "roleScope": ["BOTTOM"],
+      "condition": { "operator": "gt", "value": 0.5, "minGames": 3 },
+      "title": "¡Espera a tu compañero!",
+      "body": "Moriste sin tu support cerca en el {{peelUnguardedPct}}% de tus muertes tempranas ({{peelDeathsUnguarded}} de {{peelDeathsTracked}}). Pelear antes de que tu compañero vuelva de wardear o rotar te deja sin escudos, curas ni peel en el momento en que más los necesitás: esperar unos segundos de más suele valer más que la pelea que ibas a ganar solo.",
+      "mediaType": "CLIP"
+    },
+    {
+      "id": "duelos-support-no-peel",
+      "tag": "DUELOS",
+      "metric": "peelUnguardedRatio",
+      "roleScope": ["UTILITY"],
+      "condition": { "operator": "gt", "value": 0.5, "minGames": 3 },
+      "title": "¡No más escudos!",
+      "body": "Tu ADC murió sin tu protección en el {{peelUnguardedPct}}% de sus muertes tempranas ({{peelDeathsUnguarded}} de {{peelDeathsTracked}}). Tu kit existe para blindar a tu tirador: quedarte cerca en la fase de líneas y guardar tus herramientas defensivas para el momento justo, en vez de irte a wardear o rotar solo, puede ser la diferencia entre ganar o perder la pelea.",
+      "mediaType": "CLIP"
     },
     {
       "id": "draft-champion-underperforming",
       "tag": "DRAFT",
+      "kind": "champion",
       "metric": "championWinrateWithMinGames",
-      "condition": { "operator": "lt", "value": 0.45, "minGames": 5 },
-      "title": "Este campeón no te está funcionando",
+      "condition": { "operator": "lt", "value": 0.45, "minGames": 8 },
+      "title": "{{champion}} no te está funcionando",
       "body": "Con {{champion}} tienes {{championWinrate}}% de winrate en {{championGames}} partidas. Puede ser un tema de matchups: revisar la tabla antes de lockear te ahorra partidas cuesta arriba.",
-      "mediaType": "MATCHUP_TABLE",
-      "metaTemplate": "TABLA DE MATCHUPS",
-      "priority": 55
+      "mediaType": "MATCHUP_TABLE"
+    },
+    {
+      "id": "mentalidad-death-spiral",
+      "tag": "MENTALIDAD",
+      "metric": "highDeathRateGames",
+      "condition": { "operator": "gte", "value": 1, "perMinuteThreshold": 1 },
+      "title": "No sigas feedeando",
+      "body": "En al menos {{qualifyingGames}} de tus últimas {{recentGamesWindow}} partidas moriste en promedio más de una vez por minuto. Ese ritmo de muertes es la señal más clara de que ya estás tildeado: en vez de forzar la próxima pelea, jugá conservador (evitá 1v1 innecesarios, priorizá CS y esperá a que tu equipo se agrupe) hasta recuperar el control de la partida.",
+      "mediaType": "SESSION_REPORT"
     },
     {
       "id": "mentalidad-losing-streak",
@@ -78,20 +106,66 @@
       "condition": { "operator": "eq", "streakType": "loss", "minCount": 3 },
       "title": "Corta la racha antes de que te corte",
       "body": "Llevas {{streakCount}} derrotas seguidas. El tilt es acumulativo: un descanso corto entre partidas suele rendir más que la revancha inmediata.",
-      "mediaType": "SESSION_REPORT",
-      "metaTemplate": "GRÁFICO DE SESIÓN",
-      "priority": 90
+      "mediaType": "SESSION_REPORT"
     },
     {
-      "id": "prioridad-alta-improving-trend",
-      "tag": "PRIORIDAD ALTA",
-      "metric": "kdaTrendVsRolling",
-      "condition": { "operator": "gt", "value": 0.2 },
-      "title": "Vas en la dirección correcta",
-      "body": "Tu KDA de las últimas partidas ({{recentKda}}) mejora tu promedio anterior ({{rollingKda}}). Mantén la misma rutina de pre-partida que has usado esta semana.",
-      "mediaType": "SESSION_REPORT",
-      "metaTemplate": "GRÁFICO DE SESIÓN",
-      "priority": 50
+      "id": "macro-top-unused-teleport",
+      "tag": "MACRO",
+      "metric": "unusedTeleportRatio",
+      "roleScope": ["TOP"],
+      "condition": { "operator": "gt", "value": 0.3, "minGames": 3 },
+      "title": "¡El Teleport es gratis!",
+      "body": "En {{teleportUnusedGames}} de {{teleportGamesTracked}} partidas llevaste Teleport y no lo usaste ni una sola vez. Es el único hechizo que te deja aparecer gratis en una pelea de equipo, defender una torre lejana o llegar a tiempo a un objetivo sin perder el viaje: usalo de forma proactiva después de tu primera vuelta a base o en cuanto veas una pelea armándose en otro lado del mapa, no lo guardes toda la partida para un momento perfecto que nunca llega.",
+      "mediaType": "GOLD_GRAPH"
+    },
+    {
+      "id": "macro-mid-no-rotations",
+      "tag": "MACRO",
+      "metric": "midRoamAwayRatio",
+      "roleScope": ["MIDDLE"],
+      "condition": { "operator": "lt", "value": 0.1, "minGames": 15 },
+      "title": "¡Soy una torre!",
+      "body": "Pasaste el {{midRoamAwayPct}}% del early game fuera de tu línea, contando cualquier movimiento (peleas, wardeos, contestar un gank) y no solo las que terminan en kill. Como mid tenés el camino más corto a top, bot y jungla — después de empujar tu ola, salí a ayudar en una pelea, poner visión en el río o contestar un gank rival, en vez de quedarte plantado esperando que la partida pase por vos.",
+      "mediaType": "HEATMAP"
+    },
+    {
+      "id": "macro-low-turret-takedowns",
+      "tag": "MACRO",
+      "metric": "avgTurretTakedowns",
+      "roleScope": ["MIDDLE"],
+      "condition": { "operator": "lt", "value": 0.4 },
+      "title": "Destructor de torretas",
+      "body": "Promedias apenas {{avgTurretTakedowns}} torres bajadas por partida, a pesar del apodo. Presionar tu línea para forzar el 1v1 en la torre abre el mapa para tu equipo y frena el push rival.",
+      "mediaType": "GOLD_GRAPH"
+    },
+    {
+      "id": "macro-low-turret-takedowns-top",
+      "tag": "MACRO",
+      "metric": "avgTurretTakedowns",
+      "roleScope": ["TOP"],
+      "condition": { "operator": "lt", "benchmarkMetric": "turretTakedowns" },
+      "title": "Destructor de torretas",
+      "body": "Promedias apenas {{avgTurretTakedowns}} torres bajadas por partida, por debajo de lo esperado para tu elo actual. Presionar tu línea para forzar el 1v1 en la torre abre el mapa para tu equipo y frena el push rival.",
+      "mediaType": "GOLD_GRAPH"
+    },
+    {
+      "id": "macro-jungle-no-objectives",
+      "tag": "MACRO",
+      "metric": "avgObjectiveParticipation",
+      "roleScope": ["JUNGLE"],
+      "condition": { "operator": "lt", "benchmarkMetric": "objectiveParticipation" },
+      "title": "Tarzán Vegano",
+      "body": "Tu participación en objetivos es de solo {{avgObjectiveParticipation}}%. Como jungla, dragones, heraldo y barón son tu verdadero terreno: priorizarlos sobre el farmeo puro le da a tu equipo ventajas que se sienten en toda la partida.",
+      "mediaType": "GOLD_GRAPH"
+    },
+    {
+      "id": "mentalidad-polirol",
+      "tag": "MENTALIDAD",
+      "metric": "rolesPlayedCount",
+      "condition": { "operator": "gt", "value": 2, "minGames": 5 },
+      "title": "Polirol",
+      "body": "El que mucho abarca poco aprieta, intenta enfocarte en 2 roles main, esto te ayudará a masterizar mejor tanto tus campeones como playstyle en general (a excepción que toque fill).",
+      "mediaType": "SESSION_REPORT"
     }
   ]
 }

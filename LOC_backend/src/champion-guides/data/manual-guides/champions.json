@@ -1,0 +1,3639 @@
+[
+  {
+    "championKey": "Aatrox",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchador / Iniciador",
+      "difficulty": "Media",
+      "body": "Aatrox vive de encadenar golpes con su espada demoníaca para sanar y quedarse en peleas extendidas más tiempo que el rival. Escala bien si se descontrola, pero un rango que lo esquiva o lo controla lo deja sin nada que hacer.",
+      "tips": [
+        {
+          "text": "Encadena tu Q en sus tres golpes para maximizar el sangrado y el healing."
+        },
+        {
+          "text": "Busca peleas extendidas después del nivel 6, tu ultimate te da sustain extra."
+        },
+        {
+          "text": "No todo-inicies sin haber conectado al menos un golpe de Q antes,",
+          "warning": "sin eso pierdes la mayoría de los duelos parejos."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Ahri",
+    "content": {
+      "role": "Medio",
+      "championClass": "Mago / Asesino",
+      "difficulty": "Media",
+      "body": "Ahri combina movilidad y control para entrar y salir de peleas con seguridad, rematando con verdadero daño en su ultimate. Es fuerte generando picks aislados, pero queda muy expuesta si gasta su dash sin un plan de salida.",
+      "tips": [
+        {
+          "text": "Usa tu encanto para confirmar kills, no solo para iniciar."
+        },
+        {
+          "text": "Guarda tu dash para reposicionarte, no lo gastes solo para hacer daño."
+        },
+        {
+          "text": "No definas tu ultimate contra objetivos con mucha vida,",
+          "warning": "rinde mucho más como remate que como apertura."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Akali",
+    "content": {
+      "role": "Medio",
+      "championClass": "Asesina",
+      "difficulty": "Difícil",
+      "body": "Akali depende de su humo para volverse invisible y ejecutar combos letales, pero antes del nivel 6 es frágil y consume mucho maná. Su techo es altísimo si conecta sus combos, pero castiga mucho el error.",
+      "tips": [
+        {
+          "text": "Juega con cautela del nivel 1 al 5, tu poder real llega con el ultimate."
+        },
+        {
+          "text": "Aprovecha el humo tanto para escapar como para reposicionarte en peleas."
+        },
+        {
+          "text": "No te sobreextiendas sin humo disponible,",
+          "warning": "sin esa salida mueres a cualquier gank."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Akshan",
+    "content": {
+      "role": "Medio",
+      "championClass": "Tirador / Asesino",
+      "difficulty": "Media",
+      "body": "Akshan pokea seguro a distancia y usa su camuflaje tras eliminar enemigos para reposicionarse sin ser visto. Su kit también revive aliados caídos, lo que lo hace valioso incluso sin conseguir la kill.",
+      "tips": [
+        {
+          "text": "Usa el camuflaje después de una kill para flanquear, no solo para escapar."
+        },
+        {
+          "text": "Guarda tu ultimate para revivir a un aliado clave, no solo para rematar."
+        },
+        {
+          "text": "No revises arbustos sin prioridad de línea,",
+          "warning": "tu kit depende de posicionarte con ventaja de información."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Alistar",
+    "content": {
+      "role": "Support",
+      "championClass": "Tanque / Iniciador",
+      "difficulty": "Media",
+      "body": "Alistar existe para meter a su equipo en peleas: su combo de golpe y cabezazo puede lanzar a un rival contra una pared para duplicar el control. Su ultimate lo vuelve casi imposible de matar en el momento justo.",
+      "tips": [
+        {
+          "text": "Practica el combo golpe-cabezazo contra muros para un stun más largo."
+        },
+        {
+          "text": "Guarda tu ultimate para iniciativas o dives, no solo para sobrevivir."
+        },
+        {
+          "text": "No entres a pelear solo sin apoyo,",
+          "warning": "tu kit no tiene daño sostenido para ganar un 1v1."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Ambessa",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchadora / Asesina",
+      "difficulty": "Media",
+      "body": "Ambessa construye momentum con sus golpes para desbloquear combos cada vez más agresivos, y su pasiva ejecuta objetivos con poca vida. Es una campeona de comprometerse: una vez inicia el combo, es difícil frenarla.",
+      "tips": [
+        {
+          "text": "Construye stacks de momentum contra la línea antes de ir por el all-in."
+        },
+        {
+          "text": "Persigue objetivos marcados por tu pasiva, ahí es donde más rinde tu daño."
+        },
+        {
+          "text": "No gastes todos tus dashes de entrada,",
+          "warning": "sin movilidad de vuelta quedas expuesta si la pelea se alarga."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Amumu",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Tanque / Iniciador de área",
+      "difficulty": "Fácil",
+      "body": "Amumu es de los tanques más simples de la jungla: su vendaje stunea a distancia y su ultimate controla a todo un grupo enemigo. Es un campeón ideal para aprender a iniciar peleas en equipo.",
+      "tips": [
+        {
+          "text": "Conecta tu vendaje antes de entrar a la línea para asegurar el gank."
+        },
+        {
+          "text": "Usa tu ultimate para iniciar la pelea, no como respuesta cuando ya empezó."
+        },
+        {
+          "text": "No actives tu ultimate antes de que el equipo rival esté agrupado,",
+          "warning": "el radio es tu única ventana de control masivo."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Anivia",
+    "content": {
+      "role": "Medio",
+      "championClass": "Maga de control de zona",
+      "difficulty": "Difícil",
+      "body": "Anivia controla el mapa con su muro de hielo y castiga con un combo de congelamiento que duplica daño. Su huevo la revive una vez, pero su falta total de movilidad la hace vulnerable si se equivoca de posición.",
+      "tips": [
+        {
+          "text": "Usa tu muro para cortar rutas de escape o de gank en momentos clave."
+        },
+        {
+          "text": "Combina tu Q con la marca de escarcha para duplicar el daño mágico."
+        },
+        {
+          "text": "No juegues agresiva cerca de arbustos sin visión,",
+          "warning": "tu huevo solo te salva una vez por vida."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Annie",
+    "content": {
+      "role": "Medio",
+      "championClass": "Maga",
+      "difficulty": "Fácil",
+      "body": "Annie acumula su pasiva cada cuatro hechizos para stunear con el siguiente golpe, y remata con Tibbers para un combo de burst brutal. Es de las magas más directas de aprender, pero pierde fuerza si se queda atrás en creeps.",
+      "tips": [
+        {
+          "text": "Llevá la cuenta de tu stack de pasiva antes de decidir cuándo pelear."
+        },
+        {
+          "text": "Combiná el stun con la invocación de Tibbers para maximizar el daño."
+        },
+        {
+          "text": "No gastes el stun solo para pokear la línea,",
+          "warning": "guardalo para iniciar o defenderte de un all-in."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Aphelios",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tirador",
+      "difficulty": "Difícil",
+      "body": "Aphelios rota entre cinco armas con efectos únicos, lo que le da una versatilidad enorme en el late game a costa de la curva de aprendizaje más alta del juego. Dominar las combinaciones de armas es la diferencia entre carry y muerto en dos segundos.",
+      "tips": [
+        {
+          "text": "Aprendé las combinaciones básicas de armas (marcar con Calibrum, enraizar con Gravitum) antes de jugarlo en partida real."
+        },
+        {
+          "text": "Revisá siempre qué arma tenés en la mano secundaria antes de entrar a una pelea."
+        },
+        {
+          "text": "No cambies de arma en pánico en medio de un combate,",
+          "warning": "planificá la rotación antes de comprometerte a pelear."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Ashe",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tiradora de control",
+      "difficulty": "Fácil",
+      "body": "Ashe ralentiza con cada golpe básico y tiene el único ultimate verdaderamente global del juego: una flecha que stunea a cualquier distancia. Es de las tiradoras más fáciles de aprender y una gran puerta de entrada al rol.",
+      "tips": [
+        {
+          "text": "Usá tu ráfaga de flechas para revelar arbustos y pokear a la vez."
+        },
+        {
+          "text": "Buscá picks con tu ultimate en cualquier parte del mapa, no solo para rematar."
+        },
+        {
+          "text": "No tires tu ultimate a ciegas sin visión del objetivo,",
+          "warning": "el tiempo de viaje es largo y se puede esquivar fácil."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "AurelionSol",
+    "content": {
+      "role": "Medio",
+      "championClass": "Mago",
+      "difficulty": "Difícil",
+      "body": "Aurelion Sol orbita estrellas alrededor suyo que crecen en tamaño y daño con el tiempo, y su ultimate le da una movilidad única para reposicionarse en el mapa. Necesita tiempo para armar su combo, así que es vulnerable si lo presionan antes de escalar.",
+      "tips": [
+        {
+          "text": "Cargá tu Q para un solo objetivo cuando necesites más daño concentrado."
+        },
+        {
+          "text": "Usá tu ultimate para moverte rápido entre objetivos del mapa, no solo para pelear."
+        },
+        {
+          "text": "No inicies peleas con una estrella chica,",
+          "warning": "tu combo depende de tener masa acumulada."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Aurora",
+    "content": {
+      "role": "Medio",
+      "championClass": "Maga / Asesina",
+      "difficulty": "Media",
+      "body": "Aurora combina un enraizamiento con un dash para conectar combos de poke y all-in muy seguidos, y su ultimate crea una zona que oculta y potencia a su equipo. Es frágil y depende de conectar su control antes de comprometerse.",
+      "tips": [
+        {
+          "text": "Conectá tu ralentización antes de saltar encima del rival para el combo completo."
+        },
+        {
+          "text": "Usá tu ultimate también en defensa, para desaparecer de un gank, no solo para atacar."
+        },
+        {
+          "text": "No te sobreextiendas sin tu dash disponible,",
+          "warning": "es tu única herramienta real de escape."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Azir",
+    "content": {
+      "role": "Medio",
+      "championClass": "Mago de control",
+      "difficulty": "Difícil",
+      "body": "Azir invoca soldados para pokear y desplazarse con un dash hacia ellos, y su ultimate levanta una muralla que puede separar o encerrar a un equipo entero. Es de los magos más seguros en línea, pero extremadamente frágil sin sus soldados cerca.",
+      "tips": [
+        {
+          "text": "Mantené siempre un soldado cerca tuyo como escape garantizado."
+        },
+        {
+          "text": "Usá tu ultimate para iniciar o separar al equipo rival en peleas grupales."
+        },
+        {
+          "text": "No empujes la línea sin un ítem de escudo o soldados de respaldo,",
+          "warning": "morís a cualquier dive sin esa red de seguridad."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Bard",
+    "content": {
+      "role": "Support",
+      "championClass": "Mago de utilidad",
+      "difficulty": "Difícil",
+      "body": "Bard cura a sus aliados juntando campanillas repartidas por el mapa y puede recorrerlo con libertad, mientras su ultimate congela a todos los que atrapa en su radio. Es impredecible: su valor depende de leer bien cuándo rotar y cuándo quedarse.",
+      "tips": [
+        {
+          "text": "Equilibrá juntar campanillas con estar presente para tu línea en momentos clave."
+        },
+        {
+          "text": "Usá tu ultimate para salvar a un aliado a punto de morir o asegurar un pick, el timing lo es todo."
+        },
+        {
+          "text": "No rotes tanto que tu ADC quede solo en línea,",
+          "warning": "el valor de tus roams se pierde si perdés la línea por ausencia."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Belveth",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Luchadora",
+      "difficulty": "Difícil",
+      "body": "Bel'Veth hace verdadero daño con sus golpes en su forma del vacío y su ultimate le da estadísticas permanentes al consumir monstruos grandes. Escala muy rápido si tiene camps disponibles, pero es débil si la cierran fuera de la jungla temprano.",
+      "tips": [
+        {
+          "text": "Priorizá limpiar campamentos de forma eficiente para acumular tu pasiva."
+        },
+        {
+          "text": "Usá tu ultimate en monstruos grandes para ganar una mejora permanente de estadísticas."
+        },
+        {
+          "text": "No busques peleas parejas en el early,",
+          "warning": "necesitás más el farmeo que las kills tempranas."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Blitzcrank",
+    "content": {
+      "role": "Support",
+      "championClass": "Tanque / Iniciador de picks",
+      "difficulty": "Fácil",
+      "body": "Blitzcrank gana partidas con un solo gancho bien puesto: atrae, silencia y su ultimate remata con un golpe que lanza por el aire. Es sencillo de aprender, pero un gancho fallido lo deja completamente indefenso.",
+      "tips": [
+        {
+          "text": "Enganchá desde arbustos o niebla de guerra para sorprender al rival."
+        },
+        {
+          "text": "Combiná el gancho con tu ultimate para una kill casi garantizada."
+        },
+        {
+          "text": "No engancha hacia una oleada de minions sin apoyo cercano,",
+          "warning": "si falla el follow-up morís solo detrás de la línea enemiga."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Brand",
+    "content": {
+      "role": "Support",
+      "championClass": "Mago de área",
+      "difficulty": "Fácil",
+      "body": "Brand propaga quemaduras entre enemigos cercanos, así que un solo golpe bien puesto puede encadenar daño a todo el equipo rival. Es directo de aprender, pero no tiene ninguna herramienta de escape si lo atrapan.",
+      "tips": [
+        {
+          "text": "Conectá tu stun antes de ir por el combo completo de all-in."
+        },
+        {
+          "text": "Pokeá con tu Q en línea para ir acumulando el efecto de tu pasiva."
+        },
+        {
+          "text": "No te pares en primera línea en las peleas,",
+          "warning": "no tenés ninguna forma de escapar si te atrapan."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Braum",
+    "content": {
+      "role": "Support",
+      "championClass": "Tanque / Peel",
+      "difficulty": "Fácil",
+      "body": "Braum acumula stuns cada vez que su equipo golpea a un enemigo marcado, y su escudo puede bloquear proyectiles clave para salvar a un aliado. Es de los soportes más fáciles de aprender, aunque no aporta casi nada de daño propio.",
+      "tips": [
+        {
+          "text": "Acumulá tu pasiva con los autoataques de tu tirador antes de buscar el stun."
+        },
+        {
+          "text": "Usá tu escudo para bloquear habilidades clave dirigidas a tus aliados."
+        },
+        {
+          "text": "No gastes tus stacks de pasiva en minions cuando se viene un intercambio de campeones,",
+          "warning": "necesitás esas marcas listas para el momento real."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Briar",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Luchadora / Asesina",
+      "difficulty": "Media",
+      "body": "Briar se cura con cada golpe gracias a su ansia de sangre y encadena dashes en su frenesí de sangre, pero una vez activa su ultimate no puede detenerse por su cuenta. Es implacable persiguiendo objetivos, pero vulnerable a cadenas de control.",
+      "tips": [
+        {
+          "text": "Acumulá ansia de sangre en los campamentos de jungla antes de invadir al rival."
+        },
+        {
+          "text": "Reservá tu ultimate solo para peleas donde puedas asegurar la kill."
+        },
+        {
+          "text": "No actives tu frenesí contra un equipo completo,",
+          "warning": "no podés desactivarlo ni escapar una vez que empieza."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Caitlyn",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tiradora de rango largo",
+      "difficulty": "Fácil",
+      "body": "Caitlyn tiene el auto-ataque de mayor alcance del juego y remata con un golpe crítico a cualquier objetivo atrapado en su red o sus trampas. Domina la línea a distancia, pero se vuelve frágil apenas alguien cierra el espacio.",
+      "tips": [
+        {
+          "text": "Colocá trampas en arbustos y cruces de camino para controlar el mapa."
+        },
+        {
+          "text": "Usá tu red para frenar a quien te está iniciando, no solo para pokear."
+        },
+        {
+          "text": "No pelees de cerca contra duelistas,",
+          "warning": "todo tu kit está diseñado para pelear a distancia, no en corto alcance."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Camille",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchadora / Asesina de duelos",
+      "difficulty": "Difícil",
+      "body": "Camille se engancha a muros para moverse por el mapa y su daño verdadero castiga con fuerza a objetivos aislados; su ultimate encierra a un rival para un 1v1 sin ayuda externa. Es una de las mejores duelistas del juego, pero depende de la geografía del mapa para brillar.",
+      "tips": [
+        {
+          "text": "Usá tu gancho hacia muros también como herramienta de movilidad, no solo de escape."
+        },
+        {
+          "text": "Guardá tu ultimate para aislar al objetivo prioritario en peleas de equipo."
+        },
+        {
+          "text": "No actives tu E lejos de un muro,",
+          "warning": "perdés tu mejor herramienta de iniciación y escape."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Cassiopeia",
+    "content": {
+      "role": "Medio",
+      "championClass": "Maga de veneno",
+      "difficulty": "Difícil",
+      "body": "Cassiopeia no usa botas y en cambio escala movilidad con objetos, apilando veneno constante y rematando con una habilidad que solo inmoviliza si el rival la mira de frente. Su daño sostenido es devastador una vez armada, pero no tiene ninguna forma de escapar de un gank.",
+      "tips": [
+        {
+          "text": "Girá al rival hacia vos antes de usar tu inmovilización, solo funciona de frente."
+        },
+        {
+          "text": "Acumulá veneno en el objetivo antes de ir por el combo completo."
+        },
+        {
+          "text": "No juegues agresiva antes del nivel 6,",
+          "warning": "no tenés ninguna forma de escapar si te ganquean."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Chogath",
+    "content": {
+      "role": "Top",
+      "championClass": "Tanque / Mago",
+      "difficulty": "Fácil",
+      "body": "Cho'Gath acumula vida máxima de forma permanente cada vez que consigue una eliminación o asistencia, y su ultimate ejecuta con daño verdadero. Es lento para arrancar, pero se vuelve un muro casi imparable si consigue suficientes stacks.",
+      "tips": [
+        {
+          "text": "Priorizá last-hitear minions con tu Q para conseguir stacks, no solo para pelear."
+        },
+        {
+          "text": "Guardá tu combo de silencio y knock-up para proteger a tus aliados en peleas."
+        },
+        {
+          "text": "No uses tu ultimate demasiado pronto,",
+          "warning": "rinde mucho más como remate a un objetivo con poca vida."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Corki",
+    "content": {
+      "role": "Medio",
+      "championClass": "Tirador / Mago híbrido",
+      "difficulty": "Media",
+      "body": "Corki combina autoataques a distancia con un misil de daño verdadero, y su Valkyrie le da movilidad tanto para atacar como para escapar. Es versátil y seguro en línea, pero pierde fuerza si no logra conectar sus combos de forma consistente.",
+      "tips": [
+        {
+          "text": "Usá tu Valkyrie tanto para reposicionarte en pelea como para escapar de un gank."
+        },
+        {
+          "text": "Conectá tu paquete especial para combos de burst, no solo como poke."
+        },
+        {
+          "text": "No gastes tu Valkyrie como único recurso ofensivo,",
+          "warning": "es también tu principal forma de escape, cuidá el cooldown."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Darius",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchador",
+      "difficulty": "Fácil",
+      "body": "Darius acumula sangrado con cada golpe y su ultimate ejecuta con más daño cuanto más apilado esté el sangrado en el objetivo. Domina la línea si consigue trades favorables temprano, pero es lento y fácil de kitear si se queda atrás.",
+      "tips": [
+        {
+          "text": "Golpeá con el filo de tu hacha, no el mango, para apilar más sangrado."
+        },
+        {
+          "text": "Usá tu tirón para acercar objetivos antes de que puedan escapar."
+        },
+        {
+          "text": "No pelees contra campeones de rango sin ventaja de nivel,",
+          "warning": "tu kit no tiene forma de cerrar distancia si te kitean bien."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Diana",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Luchadora / Asesina",
+      "difficulty": "Fácil",
+      "body": "Diana ataca en área con toda su kit y su ultimate arrastra a los enemigos cercanos hacia ella para un combo en cadena. Es agresiva y directa, ideal para jugadores que buscan peleas constantes.",
+      "tips": [
+        {
+          "text": "Usá tu escudo antes de recibir el golpe más grande, no después."
+        },
+        {
+          "text": "Buscá agrupar enemigos con tu ultimate antes de que puedan dispersarse."
+        },
+        {
+          "text": "No inicies peleas 1 contra varios sin tu escudo activo,",
+          "warning": "tu kit depende de ese escudo para sobrevivir al primer intercambio."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Draven",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tirador",
+      "difficulty": "Difícil",
+      "body": "Draven necesita atrapar sus hachas giratorias en el aire para mantener su daño altísimo, lo que exige un manejo constante de posicionamiento y timing. Es devastador si se mantiene la racha de hachas, pero muy débil apenas la pierde.",
+      "tips": [
+        {
+          "text": "Practicá atrapar las hachas antes de jugarlo en partidas competitivas."
+        },
+        {
+          "text": "Usá tu ultimate para rematar objetivos que intentan huir con poca vida."
+        },
+        {
+          "text": "No pelees sin hachas activas,",
+          "warning": "gran parte de tu daño de línea depende de mantener esa racha."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "DrMundo",
+    "content": {
+      "role": "Top",
+      "championClass": "Tanque / Luchador",
+      "difficulty": "Fácil",
+      "body": "Dr. Mundo se cura con vida máxima al recibir daño y su ultimate le da un colchón extra de vida temporal. Es casi imposible de matar en peleas extendidas, pero depende de la vida máxima para todo su kit.",
+      "tips": [
+        {
+          "text": "Priorizá objetos de vida máxima, potencian tu daño y tu sustain a la vez."
+        },
+        {
+          "text": "Usá tu ultimate antes de recibir el golpe grande, no después de quedarte sin vida."
+        },
+        {
+          "text": "No pelees con poca vida sin tu ultimate disponible,",
+          "warning": "sin ese colchón sos mucho más fácil de rematar."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Ekko",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Asesino / Mago",
+      "difficulty": "Media",
+      "body": "Ekko puede rebobinar el tiempo con su ultimate para volver al punto donde estaba hace unos segundos, curándose y sorprendiendo al rival. Su combo de zona hace mucho daño si logra encerrar a alguien dentro.",
+      "tips": [
+        {
+          "text": "Encerrá al objetivo dentro de tu zona antes de detonarla para el daño completo."
+        },
+        {
+          "text": "Usá tu ultimate tanto para escapar de una mala pelea como para sorprender con daño."
+        },
+        {
+          "text": "No definas tu ultimate solo como ataque,",
+          "warning": "guardarlo como red de seguridad muchas veces gana más partidas."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Elise",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Asesina / Maga",
+      "difficulty": "Media",
+      "body": "Elise cambia entre forma humana y forma araña según lo que necesite la pelea: control a distancia o daño verdadero de cerca. Es una de las junglas más rápidas para invadir y presionar temprano.",
+      "tips": [
+        {
+          "text": "Usá tu forma araña para el daño verdadero final y la humana para iniciar a distancia."
+        },
+        {
+          "text": "Colocá tu telaraña en paredes clave para rutas de escape o persecución."
+        },
+        {
+          "text": "No te quedes en forma araña contra grupos,",
+          "warning": "en esa forma sos mucho más frágil que en la humana."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Evelynn",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Asesina / Maga",
+      "difficulty": "Media",
+      "body": "Evelynn es invisible casi toda la partida hasta el nivel 6, cuando empieza a buscar picks letales sobre objetivos aislados y con poca vida. Antes de eso es débil y depende completamente de esconderse para no perder camps.",
+      "tips": [
+        {
+          "text": "Evitá peleas visibles antes del nivel 6, tu poder real llega con la invisibilidad."
+        },
+        {
+          "text": "Buscá objetivos aislados y con poca vida, tu pasiva te da más daño ahí."
+        },
+        {
+          "text": "No reveles tu posición atacando en grupo,",
+          "warning": "perdés tu mayor ventaja, que es no ser vista."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Ezreal",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tirador / Mago",
+      "difficulty": "Media",
+      "body": "Ezreal pokea con skillshots a distancia y tiene un dash que esquiva prácticamente cualquier habilidad enemiga sin gastar tiempo de reacción. Es seguro y flexible, pero depende de acertar sus habilidades para hacer daño real.",
+      "tips": [
+        {
+          "text": "Usá tu dash de forma proactiva para esquivar combos, no reactiva cuando ya te pegaron."
+        },
+        {
+          "text": "Pokeá con tu Q constantemente en línea para acumular tu pasiva de daño extra."
+        },
+        {
+          "text": "No gastes tu maná pokeando sin necesidad,",
+          "warning": "te quedás sin dash de escape justo cuando más lo necesitás."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Fiddlesticks",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Mago de miedo",
+      "difficulty": "Media",
+      "body": "Fiddlesticks se teletransporta hacia cualquier punto del mapa con su ultimate para emboscar a un equipo desprevenido, generando terror en área. Es devastador en el momento justo, pero predecible si se usa sin sorpresa.",
+      "tips": [
+        {
+          "text": "Usá tu ultimate desde fuera de la visión enemiga para maximizar la sorpresa."
+        },
+        {
+          "text": "Combiná el miedo con tu daño en área para peleas grupales, no duelos 1v1."
+        },
+        {
+          "text": "No actives tu ultimate a la vista del rival,",
+          "warning": "pierde casi todo su valor si el enemigo puede reaccionar a tiempo."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Fiora",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchadora / Asesina",
+      "difficulty": "Difícil",
+      "body": "Fiora busca puntos de vitalidad en el rival para golpear y ganar duelos con precisión quirúrgica, ejecutando con su ultimate cuando conecta los cuatro. Es la mejor duelista 1v1 del juego, pero muy débil en peleas de equipo desorganizadas.",
+      "tips": [
+        {
+          "text": "Priorizá golpear los puntos de vitalidad en orden de utilidad, no solo el más cercano."
+        },
+        {
+          "text": "Usá tu parry para anular la habilidad más peligrosa del rival, no cualquiera."
+        },
+        {
+          "text": "No busques peleas de equipo desordenadas,",
+          "warning": "tu kit está pensado para duelos, no para peleas de varios contra varios."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Fizz",
+    "content": {
+      "role": "Medio",
+      "championClass": "Asesino / Luchador",
+      "difficulty": "Media",
+      "body": "Fizz salta sobre su lanza para esquivar ataques mientras se acerca al rival, rematando con un golpe de pez que también sirve para escapar. Es muy fuerte en 1v1 cercanos, pero frágil si lo atrapan con control a distancia.",
+      "tips": [
+        {
+          "text": "Usá tu salto tanto para esquivar habilidades como para iniciar el combo."
+        },
+        {
+          "text": "Guardá tu golpe de pez para escapar si la pelea se pone en tu contra."
+        },
+        {
+          "text": "No inicies contra campeones con mucho control a distancia sin plan,",
+          "warning": "tu única esquiva real es el salto, y tiene cooldown."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Galio",
+    "content": {
+      "role": "Medio",
+      "championClass": "Tanque / Mago",
+      "difficulty": "Fácil",
+      "body": "Galio se vuelve inmune a la magia por un momento y su ultimate lo teletransporta hacia un aliado lejano para iniciar peleas grupales por sorpresa. Es un gran contador de magos, pero flojo contra campeones de daño físico.",
+      "tips": [
+        {
+          "text": "Usá tu inmunidad mágica justo antes del combo de burst del mago rival."
+        },
+        {
+          "text": "Guardá tu ultimate para iniciar peleas de equipo lejos de tu línea."
+        },
+        {
+          "text": "No definas tu ultimate ofensivo sin avisar a tu equipo,",
+          "warning": "necesitás que estén listos para seguir el engage."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Gangplank",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchador",
+      "difficulty": "Difícil",
+      "body": "Gangplank pokea con barriles explosivos que puede detonar a distancia y cura veneno o control con su pasiva de limón. Escala muy fuerte hacia el late game si consigue farmear con libertad en la línea.",
+      "tips": [
+        {
+          "text": "Colocá barriles en la línea de minions para combos de daño más grandes."
+        },
+        {
+          "text": "Comé una lima para limpiar efectos de control en momentos críticos."
+        },
+        {
+          "text": "No ignores tu farmeo de línea por pelear de más,",
+          "warning": "tu poder real llega con los objetos, no con las peleas tempranas."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Garen",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchador / Tanque",
+      "difficulty": "Fácil",
+      "body": "Garen se cura solo si no recibe daño por unos segundos y su ultimate hace daño verdadero según la vida faltante del rival. Es de los campeones más simples de aprender y tolera bien los errores de posicionamiento.",
+      "tips": [
+        {
+          "text": "Alejate de la pelea unos segundos si necesitás regenerar vida con tu pasiva."
+        },
+        {
+          "text": "Usá tu silencio para cancelar el hechizo clave de un mago antes de que actúe."
+        },
+        {
+          "text": "No definas tu ultimate contra objetivos con mucha vida,",
+          "warning": "rinde mucho más como remate a rivales ya heridos."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Gnar",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchador / Tanque",
+      "difficulty": "Media",
+      "body": "Gnar cambia de forma pequeña y ágil a una forma gigante y controladora una vez que llena su barra de furia, cada una con un estilo de pelea distinto. Manejar esa transformación en el momento correcto es la clave de jugarlo bien.",
+      "tips": [
+        {
+          "text": "Guardá tu transformación gigante para el momento clave de la pelea, no la gastes pokeando."
+        },
+        {
+          "text": "Usá tu salto en forma pequeña para escapar de situaciones peligrosas."
+        },
+        {
+          "text": "No pelees de cerca en forma pequeña contra duelistas,",
+          "warning": "tu forma chica es frágil, tu daño real de tanque llega en la forma grande."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Gragas",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Luchador / Mago",
+      "difficulty": "Media",
+      "body": "Gragas golpea con su barril tanto para hacer daño como para empujar enemigos hacia sus aliados, y su ultimate puede separar equipos enteros de un golpe. Es versátil entre jungla, línea y soporte.",
+      "tips": [
+        {
+          "text": "Usá tu barril para empujar enemigos hacia tu equipo, no solo lejos de vos."
+        },
+        {
+          "text": "Guardá tu ultimate para separar a un objetivo prioritario del resto del equipo."
+        },
+        {
+          "text": "No falles el timing de tu barrilazo en peleas clave,",
+          "warning": "es tu única herramienta real de control de zona."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Graves",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Tirador",
+      "difficulty": "Media",
+      "body": "Graves dispara perdigones en cono que hacen más daño de cerca, y su cortina de humo bloquea la visión y ataques del rival mientras se recarga. Es agresivo invadiendo la jungla rival y fuerte en peleas cortas.",
+      "tips": [
+        {
+          "text": "Pelea de cerca cuando puedas, tu cono de perdigones hace más daño a corta distancia."
+        },
+        {
+          "text": "Usá tu cortina de humo tanto para escapar como para esconder una iniciación."
+        },
+        {
+          "text": "No dispares tus cargas sin necesidad,",
+          "warning": "tu recarga es lenta y te deja indefenso en el peor momento."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Gwen",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchadora / Asesina",
+      "difficulty": "Media",
+      "body": "Gwen crea una zona de tijeras donde su daño mágico se potencia y se vuelve más difícil de alcanzar, ejecutando con su ultimate sobre objetivos ya heridos. Escala muy bien contra tanques gracias a su daño porcentual.",
+      "tips": [
+        {
+          "text": "Pelea siempre dentro de tu zona de tijeras, ahí tu daño y tu defensa mejoran mucho."
+        },
+        {
+          "text": "Usá tu ultimate contra objetivos prioritarios con poca vida, no como apertura."
+        },
+        {
+          "text": "No pelees fuera de tu zona contra varios enemigos,",
+          "warning": "perdés la reducción de daño que te hace sobrevivir esos intercambios."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Hecarim",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Luchador / Tanque",
+      "difficulty": "Media",
+      "body": "Hecarim gana velocidad de movimiento con cada habilidad que usa y se cura según el daño que reparte en área con su ultimate. Es de los mejores campeones para iniciar peleas grupales gracias a su movilidad.",
+      "tips": [
+        {
+          "text": "Encadená habilidades para acumular velocidad antes de comprometerte a una pelea."
+        },
+        {
+          "text": "Usá tu ultimate para iniciar sobre varios enemigos agrupados, maximiza el sustain."
+        },
+        {
+          "text": "No inicies sin espacio para generar velocidad primero,",
+          "warning": "sin el impulso previo tu iniciación pierde la mitad de su impacto."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Heimerdinger",
+    "content": {
+      "role": "Medio",
+      "championClass": "Mago de torretas",
+      "difficulty": "Media",
+      "body": "Heimerdinger coloca torretas que atacan solas y controlan el espacio de la línea, además de un cohete que aturde y una granada de electrificación de área. Es muy fuerte defendiendo posiciones fijas, pero débil si lo obligan a moverse.",
+      "tips": [
+        {
+          "text": "Colocá tus torretas en ángulos donde cubran arbustos y rutas de gank."
+        },
+        {
+          "text": "Usá tu cohete para confirmar el control antes de que el rival reaccione."
+        },
+        {
+          "text": "No abandones tus torretas para perseguir kills lejos de tu zona,",
+          "warning": "sin ellas perdés casi todo tu control de espacio."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Hwei",
+    "content": {
+      "role": "Medio",
+      "championClass": "Mago de control",
+      "difficulty": "Difícil",
+      "body": "Hwei combina tres pinceladas distintas (miedo, daño y control) que puede mezclar en combinaciones distintas según la situación, dándole una versatilidad enorme pero exigiendo mucha práctica para dominarla. Es fuerte a distancia, pero muy frágil si lo cierran.",
+      "tips": [
+        {
+          "text": "Practicá las combinaciones de pinceladas en partidas normales antes de usarlo en ranked."
+        },
+        {
+          "text": "Usá la pincelada de miedo para frenar iniciaciones antes de que lleguen a vos."
+        },
+        {
+          "text": "No te quedes sin opciones de control a mano,",
+          "warning": "sos extremadamente frágil si te alcanzan cuerpo a cuerpo."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Illaoi",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchadora / Tanque",
+      "difficulty": "Media",
+      "body": "Illaoi invoca tentáculos de su ídolo para golpear en área y arrastra rivales hacia ellos, dominando peleas donde hay espacio para colocar sus tótems. Es abrumadora en línea si logra golpear con tentáculos, pero pierde fuerza en espacios reducidos.",
+      "tips": [
+        {
+          "text": "Colocá tótems en ángulos que cubran varias rutas de escape del rival."
+        },
+        {
+          "text": "Golpeá la sombra del enemigo para dañar directamente su vida real."
+        },
+        {
+          "text": "No pelees en espacios muy cerrados sin tótems cerca,",
+          "warning": "sin ellos perdés gran parte de tu daño y control."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Irelia",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchadora / Asesina",
+      "difficulty": "Difícil",
+      "body": "Irelia salta entre sus cuchillas clavadas en el suelo y en los enemigos, encadenando movilidad y daño en combos muy técnicos. Es una de las campeonas de mayor techo en el top lane, pero también de las más difíciles de ejecutar bien.",
+      "tips": [
+        {
+          "text": "Clavá tus cuchillas antes de saltar, tu movilidad depende de tener dónde apoyarte."
+        },
+        {
+          "text": "Usá tu stun en el momento justo del combo, no como apertura desperdiciada."
+        },
+        {
+          "text": "No definas peleas sin cuchillas colocadas cerca,",
+          "warning": "sin ellas perdés casi toda tu movilidad y tu mejor daño."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Ivern",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Soporte / Mago",
+      "difficulty": "Media",
+      "body": "Ivern no puede atacar monstruos normales de la jungla (los libera en su lugar) y en cambio potencia a su equipo con escudos y una montura para su tirador. Es un jungla de utilidad pura, no de daño ni de peleas 1v1.",
+      "tips": [
+        {
+          "text": "Liberá monstruos para ganar bonificaciones en vez de intentar farmearlos como jungla normal."
+        },
+        {
+          "text": "Dale tu montura a tu tirador para ganks o peleas de objetivo importantes."
+        },
+        {
+          "text": "No busques peleas 1v1 directas,",
+          "warning": "tu kit está pensado para apoyar, no para ganar duelos por tu cuenta."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Janna",
+    "content": {
+      "role": "Support",
+      "championClass": "Maga de utilidad / Peel",
+      "difficulty": "Fácil",
+      "body": "Janna aleja a los enemigos con su viento y puede acelerar o escudar a sus aliados en el momento justo, siendo una de las mejores protectoras del juego. Su ultimate cura y acelera a todo el equipo mientras empuja atrás a los rivales.",
+      "tips": [
+        {
+          "text": "Usá tu viento para interrumpir dives antes de que lleguen a tu ADC."
+        },
+        {
+          "text": "Guardá tu ultimate para peleas grupales, cura y acelera a todo tu equipo."
+        },
+        {
+          "text": "No gastes tu escudo de forma preventiva sin necesidad,",
+          "warning": "el cooldown es largo y lo vas a necesitar en el momento crítico."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "JarvanIV",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Luchador / Tanque",
+      "difficulty": "Media",
+      "body": "Jarvan IV combina su bandera con su embestida para crear una muralla que encierra rivales dentro, siendo una de las mejores iniciaciones de área del juego. Es fuerte tanto invadiendo la jungla rival como liderando peleas de equipo.",
+      "tips": [
+        {
+          "text": "Combiná bandera y embestida para encerrar al objetivo dentro de la muralla."
+        },
+        {
+          "text": "Usá tu ultimate para aislar a un objetivo prioritario del resto del equipo."
+        },
+        {
+          "text": "No definas tu combo de encierro sin apoyo cerca,",
+          "warning": "encerrás también a tu propio equipo si no coordinás la iniciación."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Jax",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchador / Asesino",
+      "difficulty": "Media",
+      "body": "Jax se vuelve más fuerte cuanto más dura la pelea, esquivando el próximo golpe con su salto y rematando con un contraataque que castiga las habilidades enemigas. Escala muy bien hacia el late game en duelos.",
+      "tips": [
+        {
+          "text": "Usá tu salto justo antes de recibir el golpe más fuerte del rival, no antes."
+        },
+        {
+          "text": "Buscá extender las peleas, tu pasiva te hace más fuerte con cada golpe recibido."
+        },
+        {
+          "text": "No inicies peleas cortas donde no puedas estirar el intercambio,",
+          "warning": "tu ventaja crece con la duración de la pelea, no al principio."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Jayce",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchador / Tirador",
+      "difficulty": "Difícil",
+      "body": "Jayce cambia entre un martillo cuerpo a cuerpo y un cañón de rango medio según lo que necesite la situación, dominando la línea si rota bien entre ambas formas. Es muy fuerte en el early game pero pierde relevancia relativa en el late.",
+      "tips": [
+        {
+          "text": "Usá tu forma de cañón para pokear y la de martillo para cerrar el combo final."
+        },
+        {
+          "text": "Aprovechá tu empuje aéreo con el martillo para combos de daño extra."
+        },
+        {
+          "text": "No te quedes en una sola forma toda la pelea,",
+          "warning": "tu kit depende de alternar entre ambas para maximizar el daño."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Jhin",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tirador",
+      "difficulty": "Media",
+      "body": "Jhin dispara solo cuatro balas por carga, la cuarta siempre crítica, y coloca trampas que ralentizan y revelan al pisarlas. Es un tirador atípico que premia la precisión y el posicionamiento por sobre el volumen de ataques.",
+      "tips": [
+        {
+          "text": "Guardá tu cuarta bala para el golpe crítico decisivo en la pelea."
+        },
+        {
+          "text": "Colocá trampas en rutas de escape antes de que la pelea empiece."
+        },
+        {
+          "text": "No dispares tus cuatro balas sin plan,",
+          "warning": "tu recarga es lenta y te deja vulnerable en el peor momento."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Jinx",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tiradora",
+      "difficulty": "Media",
+      "body": "Jinx cambia entre una minigun de ataque rápido y un lanzacohetes de mayor alcance, y su pasiva la acelera cada vez que consigue una eliminación. Escala muchísimo hacia el late game si logra sobrevivir hasta ahí.",
+      "tips": [
+        {
+          "text": "Cambiá a cohetes para pelear a distancia y a minigun para el DPS sostenido cercano."
+        },
+        {
+          "text": "Aprovechá tu aceleración tras una kill para reposicionarte o perseguir la siguiente."
+        },
+        {
+          "text": "No te adelantes en peleas tempranas,",
+          "warning": "tu poder real llega con objetos, protegé tu vida hasta ese punto."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Kaisa",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tiradora / Maga",
+      "difficulty": "Media",
+      "body": "Kai'Sa marca enemigos con sus habilidades para hacer más daño con autoataques y puede saltar hacia aliados marcados con su ultimate para entrar o salir de peleas. Es flexible en itemización, pudiendo ir más de ataque o más de habilidades.",
+      "tips": [
+        {
+          "text": "Marcá al objetivo antes de rematar con autoataques para maximizar el daño."
+        },
+        {
+          "text": "Usá tu salto tanto para entrar a rematar como para escapar de una mala pelea."
+        },
+        {
+          "text": "No definas tu ultimate solo como escape,",
+          "warning": "también sirve para entrar y rematar objetivos marcados con poca vida."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Kalista",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tiradora",
+      "difficulty": "Difícil",
+      "body": "Kalista nunca deja de moverse mientras ataca gracias a su salto tras cada golpe, y puede empalar a los enemigos para luego arrancarles las lanzas causando daño extra. Su vínculo con el soporte es central: puede tirar de él hacia posiciones seguras.",
+      "tips": [
+        {
+          "text": "Practicá el movimiento de salto tras cada ataque, es la base de todo su potencial."
+        },
+        {
+          "text": "Coordiná con tu soporte cuándo usar el vínculo para reposicionar a ambos."
+        },
+        {
+          "text": "No pelees de cerca sin espacio para saltar,",
+          "warning": "tu kit depende del movimiento constante para no recibir daño."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Karma",
+    "content": {
+      "role": "Support",
+      "championClass": "Maga de utilidad",
+      "difficulty": "Media",
+      "body": "Karma puede potenciar cualquiera de sus habilidades con su mantra, dándole flexibilidad entre curar, pokear o controlar según lo que necesite el momento. Es una de las soportes más versátiles del juego.",
+      "tips": [
+        {
+          "text": "Potenciá tu escudo para peleas defensivas y tu Q para poke ofensivo."
+        },
+        {
+          "text": "Usá tu mantra para curar a un aliado justo antes de que caiga en pelea."
+        },
+        {
+          "text": "No gastes tu mantra sin pensar el contexto,",
+          "warning": "el cooldown es largo y cada uso debe tener un propósito claro."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Karthus",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Mago",
+      "difficulty": "Media",
+      "body": "Karthus sigue haciendo daño incluso después de morir, y su ultimate puede ejecutar a cualquier campeón del mapa con poca vida sin importar la distancia. Es débil en peleas directas, pero devastador en el momento justo.",
+      "tips": [
+        {
+          "text": "Guardá tu ultimate para rematar objetivos con poca vida en cualquier parte del mapa."
+        },
+        {
+          "text": "Aprovechá tu pasiva post-mortem para seguir haciendo daño en la pelea."
+        },
+        {
+          "text": "No definas tu ultimate como abridor de peleas,",
+          "warning": "rinde mucho más como remate cuando el rival ya está herido."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Kassadin",
+    "content": {
+      "role": "Medio",
+      "championClass": "Asesino / Mago",
+      "difficulty": "Difícil",
+      "body": "Kassadin es débil en el early game pero escala hasta volverse casi imparable en el late, con un parpadeo que puede usar en cadena para entrar y salir de peleas. Es un campeón de esperar y sobrevivir a la primera mitad de la partida.",
+      "tips": [
+        {
+          "text": "Jugá con extrema cautela antes del nivel 9, tu poder real llega mucho después."
+        },
+        {
+          "text": "Usá tu parpadeo tanto para escapar como para reposicionarte en el combo."
+        },
+        {
+          "text": "No busques peleas tempranas para lucirte,",
+          "warning": "tu curva de poder está pensada para el late, no para el early."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Katarina",
+    "content": {
+      "role": "Medio",
+      "championClass": "Asesina / Maga",
+      "difficulty": "Difícil",
+      "body": "Katarina resetea el cooldown de su parpadeo cada vez que consigue una eliminación, permitiéndole encadenar kills en cascada en peleas de equipo. Es devastadora si logra el primer pick, pero muy frágil si la atrapan antes.",
+      "tips": [
+        {
+          "text": "Buscá tu primera kill sobre objetivos con poca vida para empezar la cadena de resets."
+        },
+        {
+          "text": "Usá tu daño en área antes de saltar, maximiza el potencial de cada reset."
+        },
+        {
+          "text": "No te adelantes sola a peleas grupales,",
+          "warning": "sin un objetivo débil para arrancar, sos extremadamente fácil de matar."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Kayle",
+    "content": {
+      "role": "Top",
+      "championClass": "Tiradora / Maga",
+      "difficulty": "Media",
+      "body": "Kayle es débil en las primeras fases pero se transforma en una de las mejores carrys del juego al llegar al máximo nivel, ganando alcance de tirador y ataques que queman en área. Sobrevivir a la línea temprana es la clave de jugarla.",
+      "tips": [
+        {
+          "text": "Jugá defensiva y prioriza el farmeo seguro antes del nivel 11."
+        },
+        {
+          "text": "Usá tu ultimate para proteger a un aliado clave, no solo para vos misma."
+        },
+        {
+          "text": "No busques peleas agresivas antes de transformarte,",
+          "warning": "tu poder real llega recién con los niveles altos."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Kayn",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Luchador / Asesino",
+      "difficulty": "Difícil",
+      "body": "Kayn elige entre dos transformaciones al completar su arma oscura: una forma de asesino invisible o una forma de luchador imparable contra un solo objetivo. La elección depende del equipo rival y define todo su estilo de juego después.",
+      "tips": [
+        {
+          "text": "Elegí la transformación de asesino contra equipos con mucho tanque, y la de luchador contra equipos con poco control."
+        },
+        {
+          "text": "Usá tu movilidad a través de paredes para flanquear antes de comprometerte."
+        },
+        {
+          "text": "No definas tu forma final sin mirar la composición rival,",
+          "warning": "una vez elegida, no podés cambiar en esa partida."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Kennen",
+    "content": {
+      "role": "Top",
+      "championClass": "Mago",
+      "difficulty": "Media",
+      "body": "Kennen acumula marcas de tormenta en los rivales que, al llenarse, los aturden, y su ultimate golpea en área a todos los que estén cerca. Es un mago atípico de top lane con fuerte presencia en peleas grupales.",
+      "tips": [
+        {
+          "text": "Acumulá tus marcas de tormenta antes de comprometerte al combo completo."
+        },
+        {
+          "text": "Usá tu ultimate en peleas grupales, tu daño en área ahí vale mucho más que en un duelo."
+        },
+        {
+          "text": "No pelees 1v1 contra duelistas de línea fuertes,",
+          "warning": "tu kit rinde mucho más en grupo que en un mano a mano."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Khazix",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Asesino",
+      "difficulty": "Media",
+      "body": "Kha'Zix hace más daño a objetivos aislados sin aliados cerca, y evoluciona sus habilidades a medida que sube de nivel según lo que elija potenciar. Es un cazador de picks solitarios más que un peleador de equipo.",
+      "tips": [
+        {
+          "text": "Buscá objetivos alejados de su equipo, tu pasiva premia el aislamiento."
+        },
+        {
+          "text": "Elegí tus evoluciones según el objetivo: invisibilidad para picks, salto extra para movilidad."
+        },
+        {
+          "text": "No saltes sobre objetivos rodeados de aliados,",
+          "warning": "tu daño baja mucho si no está aislado."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Kindred",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Tiradora",
+      "difficulty": "Media",
+      "body": "Kindred marca monstruos y campeones para cazarlos y ganar stacks, y su ultimate crea una zona donde nadie puede morir por un tiempo. Escala con las marcas cazadas, premiando el control constante de la jungla.",
+      "tips": [
+        {
+          "text": "Priorizá cazar las marcas disponibles antes de simplemente farmear cualquier camp."
+        },
+        {
+          "text": "Usá tu ultimate para ganar peleas de equipo alargando el intercambio a tu favor."
+        },
+        {
+          "text": "No actives tu ultimate cuando tu equipo está perdiendo la pelea claramente,",
+          "warning": "también le da tiempo extra de vida al equipo rival."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Kled",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchador",
+      "difficulty": "Difícil",
+      "body": "Kled pierde su montura Skaarl al recibir suficiente daño, quedando desmontado y mucho más débil hasta recuperar valor suficiente para volver a montar. Es extremadamente agresivo mientras está montado, pero vulnerable a pie.",
+      "tips": [
+        {
+          "text": "Cargá tu lanza antes de iniciar para el combo de daño y control completo."
+        },
+        {
+          "text": "Retirate a base o recuperá valor con creeps si quedás desmontado en mal momento."
+        },
+        {
+          "text": "No inicies peleas grandes ya desmontado,",
+          "warning": "tu daño y tu supervivencia bajan muchísimo sin tu montura."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "KogMaw",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tirador / Mago",
+      "difficulty": "Media",
+      "body": "Kog'Maw dispara con un alcance que crece cuanto más quieto se queda, y su ultimate perfora en línea recta con daño verdadero. Es extremadamente frágil, dependiendo por completo de que su equipo lo proteja en peleas.",
+      "tips": [
+        {
+          "text": "Quedate quieto durante el combate para maximizar tu alcance de ataque."
+        },
+        {
+          "text": "Usá tu ultimate para perforar líneas de enemigos agrupados."
+        },
+        {
+          "text": "No te adelantes de posición en peleas grupales,",
+          "warning": "sos de los campeones más frágiles del juego, necesitás protección constante."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "KSante",
+    "content": {
+      "role": "Top",
+      "championClass": "Tanque / Luchador",
+      "difficulty": "Difícil",
+      "body": "K'Sante se vuelve un tanque completo al activar su ultimate, ganando una muralla que puede empujar rivales contra el terreno para un control masivo. Es exigente de manejar, pero domina el 1v1 y el rol de tanque a la vez.",
+      "tips": [
+        {
+          "text": "Activá tu ultimate para el combo de empuje contra una pared cercana."
+        },
+        {
+          "text": "Usá tu forma inicial más ágil para trades cortos antes de transformarte."
+        },
+        {
+          "text": "No definas tu ultimate sin una pared cerca para el combo de control,",
+          "warning": "sin eso perdés gran parte de su impacto en la pelea."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Leblanc",
+    "content": {
+      "role": "Medio",
+      "championClass": "Asesina / Maga",
+      "difficulty": "Difícil",
+      "body": "LeBlanc deja una copia de sí misma al usar su parpadeo, pudiendo intercambiar posiciones con ella para confundir y escapar. Es devastadora en burst si conecta su combo completo, pero muy frágil si falla el intercambio.",
+      "tips": [
+        {
+          "text": "Guardá tu intercambio de posición para escapar después del combo, no antes."
+        },
+        {
+          "text": "Marcá al objetivo antes de rematar con tu daño mágico completo."
+        },
+        {
+          "text": "No gastes tu parpadeo sin plan de combo claro,",
+          "warning": "sin él quedás extremadamente expuesta el resto de la pelea."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "LeeSin",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Luchador / Asesino",
+      "difficulty": "Difícil",
+      "body": "Lee Sin combina una patada que puede lanzar aliados o rivales con un salto hacia cualquier campeón marcado, dándole una movilidad brutal para ganks tempranos. Es de los junglas más técnicos y populares del juego.",
+      "tips": [
+        {
+          "text": "Marcá al rival con tu Q antes de saltar para asegurar el gank."
+        },
+        {
+          "text": "Usá tu patada para lanzar rivales lejos de su equipo o aliados hacia el combate."
+        },
+        {
+          "text": "No definas peleas extendidas en el late game sin ventaja clara,",
+          "warning": "tu poder relativo baja mucho comparado con carrys ya armados."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Leona",
+    "content": {
+      "role": "Support",
+      "championClass": "Tanque / Iniciadora",
+      "difficulty": "Fácil",
+      "body": "Leona encadena inmovilizaciones y aturdimientos casi sin descanso cuando está cerca del rival, siendo una de las mejores iniciadoras del juego. Es simple de aprender y muy efectiva agarrando picks tempranos.",
+      "tips": [
+        {
+          "text": "Encadená tu inmovilización con tu golpe de escudo para el combo de control completo."
+        },
+        {
+          "text": "Usá tu ultimate en peleas grupales para marcar varios objetivos con daño solar."
+        },
+        {
+          "text": "No inicies sin apoyo de tu equipo cerca,",
+          "warning": "no tenés daño propio suficiente para ganar el intercambio sola."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Lillia",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Luchadora / Maga",
+      "difficulty": "Media",
+      "body": "Lillia duerme a los enemigos que acumulan suficiente somnolencia y hace más daño cuanto más vida máxima tiene el objetivo, siendo una gran contadora de tanques. Es lenta para limpiar la jungla temprano pero escala muy bien.",
+      "tips": [
+        {
+          "text": "Apuntá tus habilidades a objetivos con mucha vida máxima, tu daño escala con eso."
+        },
+        {
+          "text": "Usá tu ultimate para cubrir grandes áreas y acumular somnolencia en varios rivales."
+        },
+        {
+          "text": "No invadas la jungla rival temprano sin ventaja,",
+          "warning": "tu clear inicial es lento comparado con otros junglas."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Lissandra",
+    "content": {
+      "role": "Medio",
+      "championClass": "Maga de control",
+      "difficulty": "Media",
+      "body": "Lissandra se protege dentro de un bloque de hielo que la vuelve invulnerable por un instante mientras controla con inmovilizaciones a distancia. Es fuerte tanto pokeando en línea como iniciando peleas de equipo.",
+      "tips": [
+        {
+          "text": "Usá tu bloque de hielo para esquivar el golpe decisivo de una pelea, no antes de tiempo."
+        },
+        {
+          "text": "Encadená tu enraizamiento con tu ultimate para un combo de control largo."
+        },
+        {
+          "text": "No gastes tu bloque de hielo de forma defensiva sin necesidad,",
+          "warning": "también podés usarlo ofensivamente para reposicionarte encima del rival."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Locke",
+    "content": {
+      "role": "Medio",
+      "championClass": "Asesino / Mago",
+      "difficulty": "Difícil",
+      "body": "Locke marca enemigos con clavos de alma que puede consumir para potenciar sus autoataques, y su daño de red de castigo crece cuanto más aísla a un objetivo. Es un exorcista de combos técnicos, fuerte castigando a quien queda atrapado sin escape.",
+      "tips": [
+        {
+          "text": "Marcá al objetivo con tus clavos antes de consumirlos para el daño bonificado."
+        },
+        {
+          "text": "Usá tu dash de persecución para cerrar distancia después de una iniciación de tu equipo."
+        },
+        {
+          "text": "No definas tu ultimate contra objetivos con mucha movilidad,",
+          "warning": "rinde mucho más sellando a un rival que no puede escapar fácil."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Lucian",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tirador",
+      "difficulty": "Media",
+      "body": "Lucian dispara ráfagas rápidas y su dash resetea el cooldown de sus habilidades si conecta un golpe justo después, permitiendo combos de burst muy rápidos. Es fuerte en dúos agresivos que puedan aprovechar su movilidad.",
+      "tips": [
+        {
+          "text": "Usá tu habilidad justo después de dashear para resetear el cooldown más rápido."
+        },
+        {
+          "text": "Aprovechá tu ultimate para peleas grupales, tu daño en área ahí es enorme."
+        },
+        {
+          "text": "No te adelantes de posición sin tu dash disponible,",
+          "warning": "es tu única forma real de escapar de un all-in."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Lulu",
+    "content": {
+      "role": "Support",
+      "championClass": "Maga de utilidad",
+      "difficulty": "Media",
+      "body": "Lulu puede agrandar a un aliado para volverlo más fuerte o encoger a un rival para neutralizarlo por completo, siendo una de las soportes más versátiles para proteger a un carry. Su ultimate puede salvar vidas o ganar peleas de un solo uso.",
+      "tips": [
+        {
+          "text": "Agrandá a tu carry justo antes de que entre a rematar, no antes de tiempo."
+        },
+        {
+          "text": "Guardá tu encogimiento para neutralizar la mayor amenaza del equipo rival."
+        },
+        {
+          "text": "No gastes tu ultimate de forma preventiva,",
+          "warning": "su verdadero valor está en salvar a tu carry en el momento justo."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Lux",
+    "content": {
+      "role": "Support",
+      "championClass": "Maga de control",
+      "difficulty": "Fácil",
+      "body": "Lux pokea a distancia con un rayo de luz que también inmoviliza, rematando con un láser que atraviesa a todos los enemigos en línea recta. Es de las magas más fáciles de aprender y muy segura desde la distancia.",
+      "tips": [
+        {
+          "text": "Usá tu enraizamiento para confirmar combos, no solo para pokear a lo lejos."
+        },
+        {
+          "text": "Alineá tu ultimate contra varios enemigos agrupados para maximizar el daño."
+        },
+        {
+          "text": "No te acerques demasiado a la línea del frente,",
+          "warning": "todo tu kit está pensado para pelear desde una distancia segura."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Malphite",
+    "content": {
+      "role": "Top",
+      "championClass": "Tanque / Iniciador",
+      "difficulty": "Fácil",
+      "body": "Malphite convierte parte de su armadura en daño mágico y su ultimate lanza por el aire a todos los enemigos en un cono amplio, siendo una de las mejores iniciaciones de área contra equipos agrupados. Es simple de jugar y muy tolerante a errores.",
+      "tips": [
+        {
+          "text": "Guardá tu ultimate para cuando el equipo rival esté agrupado en un espacio reducido."
+        },
+        {
+          "text": "Priorizá objetos de armadura, potencian tanto tu resistencia como tu daño."
+        },
+        {
+          "text": "No definas tu ultimate contra un solo objetivo disperso,",
+          "warning": "su valor real está en golpear a varios enemigos a la vez."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Malzahar",
+    "content": {
+      "role": "Medio",
+      "championClass": "Mago de control",
+      "difficulty": "Fácil",
+      "body": "Malzahar suprime por completo a un objetivo con su ultimate, dejándolo indefenso mientras sus voidlings invocados atacan solos en línea. Es de los magos más seguros de jugar y muy fuerte contra asesinos que dependen de un solo salto.",
+      "tips": [
+        {
+          "text": "Guardá tu supresión para el asesino o carry más peligroso del equipo rival."
+        },
+        {
+          "text": "Dejá que tus voidlings limpien la línea mientras vos pokeás con tu Q."
+        },
+        {
+          "text": "No definas tu ultimate contra tanques con mucha resistencia mágica,",
+          "warning": "rinde mucho más neutralizando a un carry frágil."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Maokai",
+    "content": {
+      "role": "Support",
+      "championClass": "Tanque / Iniciador",
+      "difficulty": "Fácil",
+      "body": "Maokai planta semillas que puede detonar para enraizar rivales y su ultimate atrapa a un objetivo alejándolo del resto del equipo. Es un tanque muy sólido tanto en línea como en la jungla.",
+      "tips": [
+        {
+          "text": "Colocá tus semillas en rutas de escape antes de que empiece la pelea."
+        },
+        {
+          "text": "Usá tu ultimate para aislar al carry más peligroso del equipo rival."
+        },
+        {
+          "text": "No gastes tus semillas sin plan,",
+          "warning": "necesitás ese enraizamiento listo para confirmar el combo de tu equipo."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "MasterYi",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Luchador / Asesino",
+      "difficulty": "Fácil",
+      "body": "Master Yi se vuelve invulnerable a habilidades por un instante con su meditación y su ultimate le da velocidad de movimiento y ataque brutal para cazar objetivos débiles. Escala muy rápido si consigue farmear sin ser molestado.",
+      "tips": [
+        {
+          "text": "Usá tu meditación justo antes de recibir el combo de control del rival."
+        },
+        {
+          "text": "Activá tu ultimate para perseguir carrys con poca vida en el late game."
+        },
+        {
+          "text": "No definas peleas contra equipos con mucho control en cadena,",
+          "warning": "tu meditación solo bloquea una parte del daño, no todo el control."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Mel",
+    "content": {
+      "role": "Support",
+      "championClass": "Maga",
+      "difficulty": "Media",
+      "body": "Mel refleja parte del daño mágico que recibe y su ultimate marca a los enemigos para exponerlos ante su equipo, combinando utilidad defensiva con presión constante. Es fuerte controlando el ritmo de la línea sin exponerse demasiado.",
+      "tips": [
+        {
+          "text": "Usá tu reflejo justo antes de recibir el hechizo más fuerte del mago rival."
+        },
+        {
+          "text": "Marcá al objetivo prioritario con tu ultimate antes de que tu equipo se comprometa a pelear."
+        },
+        {
+          "text": "No pelees de cerca sin tu reflejo disponible,",
+          "warning": "es tu principal herramienta defensiva contra el daño mágico."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Milio",
+    "content": {
+      "role": "Support",
+      "championClass": "Mago de utilidad",
+      "difficulty": "Fácil",
+      "body": "Milio cura en área y su fuego amistoso le da a los aliados golpeados un empujón extra de daño y control, siendo un soporte de utilidad pura pensado para proteger a distancia. Es simple de jugar y muy seguro en línea.",
+      "tips": [
+        {
+          "text": "Curá en el momento justo antes de que un aliado reciba el golpe decisivo."
+        },
+        {
+          "text": "Usá tu ultimate para limpiar controles negativos de todo tu equipo a la vez."
+        },
+        {
+          "text": "No gastes tu ultimate de forma preventiva,",
+          "warning": "su mayor valor está en salvar a tu equipo del control en el momento crítico."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "MissFortune",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tiradora / Maga",
+      "difficulty": "Fácil",
+      "body": "Miss Fortune dispara balas que rebotan entre enemigos cercanos y su ultimate llueve balas en un área amplia haciendo daño masivo a todo lo que quede dentro. Es fuerte pokeando en línea y devastadora en peleas grupales agrupadas.",
+      "tips": [
+        {
+          "text": "Pokeá con tu Q cuando los enemigos estén agrupados, rebota entre ellos."
+        },
+        {
+          "text": "Guardá tu ultimate para cuando el equipo rival esté atrapado sin escape."
+        },
+        {
+          "text": "No definas tu ultimate contra un solo objetivo con movilidad,",
+          "warning": "rinde mucho más contra grupos atrapados sin forma de esquivar."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "MonkeyKing",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchador / Tanque",
+      "difficulty": "Media",
+      "body": "Wukong se vuelve invisible por un instante dejando un clon que confunde al rival, y su ultimate lo agranda mientras golpea en área a su alrededor. Es fuerte iniciando peleas grupales y difícil de perseguir en 1v1.",
+      "tips": [
+        {
+          "text": "Usá tu invisibilidad para reposicionarte y confundir antes del combo final."
+        },
+        {
+          "text": "Activá tu ultimate cuando el equipo rival esté agrupado para el daño en área."
+        },
+        {
+          "text": "No definas tu clon como única forma de escapar,",
+          "warning": "un rival atento puede distinguirlo y seguir atacándote."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Mordekaiser",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchador / Mago",
+      "difficulty": "Media",
+      "body": "Mordekaiser arrastra a un solo rival a otra dimensión con su ultimate para pelear un 1v1 sin ninguna ayuda externa de ningún equipo. Es devastador en duelos aislados, pero no aporta nada en peleas grupales de varios contra varios.",
+      "tips": [
+        {
+          "text": "Buscá aislar a objetivos prioritarios que puedas ganar 1v1 con tu ultimate."
+        },
+        {
+          "text": "Usá tu escudo de daño acumulado antes de comprometerte al combo completo."
+        },
+        {
+          "text": "No definas tu ultimate en peleas grupales grandes,",
+          "warning": "solo te lleva a un rival, dejás a tu equipo peleando sin vos."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Morgana",
+    "content": {
+      "role": "Support",
+      "championClass": "Maga de control",
+      "difficulty": "Fácil",
+      "body": "Morgana atrapa rivales con una cadena de energía oscura y su escudo negro bloquea por completo el próximo hechizo de control que reciba un aliado. Es de las mejores contadoras de campeones con mucho control del juego.",
+      "tips": [
+        {
+          "text": "Usá tu escudo negro antes de que el rival lance su control principal, no después."
+        },
+        {
+          "text": "Conectá tu cadena antes de ir por el combo completo de daño."
+        },
+        {
+          "text": "No gastes tu escudo sin necesidad clara,",
+          "warning": "su cooldown es largo y necesitás tenerlo listo contra el control clave del rival."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Naafiri",
+    "content": {
+      "role": "Medio",
+      "championClass": "Asesina / Luchadora",
+      "difficulty": "Media",
+      "body": "Naafiri invoca jaurías de perros que atacan junto a ella y su ultimate le da un dash largo para cerrar distancia sobre objetivos alejados. Es agresiva y directa, premiando entrar rápido a rematar carrys frágiles.",
+      "tips": [
+        {
+          "text": "Usá tu invocación de jauría antes de comprometerte al combo principal."
+        },
+        {
+          "text": "Guardá tu ultimate para cerrar distancia sobre carrys que intenten huir."
+        },
+        {
+          "text": "No definas tu ultimate contra objetivos con mucho control a distancia,",
+          "warning": "podés quedar atrapada apenas aterrices cerca del rival."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Nami",
+    "content": {
+      "role": "Support",
+      "championClass": "Maga de utilidad",
+      "difficulty": "Fácil",
+      "body": "Nami cura y acelera a sus aliados mientras controla con una ola que aturde en área, y su ultimate empuja rivales en una línea larga por todo el mapa. Es una de las soportes más equilibradas entre daño, cura y control.",
+      "tips": [
+        {
+          "text": "Conectá tu ola de aturdimiento antes de que tu equipo se comprometa a pelear."
+        },
+        {
+          "text": "Usá tu ultimate para iniciar peleas grupales empujando al rival hacia tu equipo."
+        },
+        {
+          "text": "No gastes tu cura de forma preventiva sin necesidad,",
+          "warning": "el cooldown es largo y tu equipo la va a necesitar en el momento crítico."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Nasus",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchador / Tanque",
+      "difficulty": "Fácil",
+      "body": "Nasus apila daño permanente en su golpe de castigo cada vez que remata un minion o campeón, volviéndose imparable si consigue suficientes stacks hacia el late game. Es lento para empezar pero devastador si escala sin ser detenido.",
+      "tips": [
+        {
+          "text": "Priorizá last-hitear minions con tu golpe de castigo por sobre cualquier otra cosa en el early."
+        },
+        {
+          "text": "Usá tu marchitar para reducir la velocidad de ataque del rival en duelos."
+        },
+        {
+          "text": "No ignores acumular stacks por pelear de más,",
+          "warning": "tu poder de late game depende directamente de esos stacks acumulados."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Nautilus",
+    "content": {
+      "role": "Support",
+      "championClass": "Tanque / Iniciador",
+      "difficulty": "Fácil",
+      "body": "Nautilus engancha rivales a distancia y encadena aturdimientos con casi cada habilidad que usa después, siendo una de las mejores iniciaciones garantizadas del juego. Es simple de jugar y muy efectivo agarrando picks.",
+      "tips": [
+        {
+          "text": "Enganchá desde una distancia segura antes de comprometerte a la pelea."
+        },
+        {
+          "text": "Encadená tu golpe y tu ultimate para maximizar el tiempo de control."
+        },
+        {
+          "text": "No engancha sin apoyo cercano de tu equipo,",
+          "warning": "tu daño propio no alcanza para ganar el intercambio solo."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Neeko",
+    "content": {
+      "role": "Support",
+      "championClass": "Maga",
+      "difficulty": "Media",
+      "body": "Neeko puede disfrazarse de cualquier aliado o minion para confundir al rival, y su ultimate lanza por el aire a todos los enemigos cercanos con un daño mágico enorme. Es sorprendente e impredecible si se juega bien el disfraz.",
+      "tips": [
+        {
+          "text": "Usá tu disfraz para emboscar desde una posición inesperada, no solo para huir."
+        },
+        {
+          "text": "Guardá tu ultimate para cuando varios rivales estén agrupados cerca tuyo."
+        },
+        {
+          "text": "No reveles tu posición real antes de tiempo,",
+          "warning": "tu disfraz pierde todo su valor si el rival ya sabe dónde estás."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Nidalee",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Asesina / Maga",
+      "difficulty": "Difícil",
+      "body": "Nidalee cambia entre forma humana, con lanzas a distancia, y forma de puma, con garras cuerpo a cuerpo, haciendo mucho más daño con golpes desde atrás. Es de las junglas más rápidas invadiendo temprano, pero exige mucha precisión.",
+      "tips": [
+        {
+          "text": "Buscá golpear desde atrás en forma de puma, tu pasiva premia el daño por la espalda."
+        },
+        {
+          "text": "Usá tu trampa en forma humana para pokear antes de comprometerte al ataque."
+        },
+        {
+          "text": "No cambies de forma sin plan claro,",
+          "warning": "cada forma cumple un rol distinto y mezclarlas mal pierde tiempo valioso."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Nilah",
+    "content": {
+      "role": "ADC",
+      "championClass": "Luchador / Iniciador",
+      "difficulty": "Difícil",
+      "body": "Nilah se enfoca en buscar trades cortos e iniciaciones explosivas: su rol es impactar peleas 2v2, 3v3 y team fights, no ganar la línea sola. Es débil ante duelistas de juego temprano y asesinos, pero su kit escala hacia un juego medio/tardío donde castiga a campeones de rango y tanques, además de dejarla escapar de rivales que dependen de autoataques.",
+      "tips": [
+        {
+          "text": "Juega los primeros niveles con calma: tu pasiva ya compensa parte del XP denegado por el enemigo."
+        },
+        {
+          "text": "Busca peleas solo cuando tu soporte o un aliado ya encontró la iniciación,",
+          "warning": "evita a toda costa iniciar tú y gastar recursos temprano."
+        },
+        {
+          "text": "Las runas y el build de Nilah son flexibles en su mayoría,",
+          "warning": "adáptalos según el matchup que tengas en frente."
+        },
+        {
+          "text": "Con 2 a 3 ítems completos, busca peleas activamente e inicia tú si hace falta para que tu equipo haga follow up."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Nocturne",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Luchador / Asesino",
+      "difficulty": "Media",
+      "body": "Nocturne oscurece la visión de un solo enemigo antes de saltar sobre él y su ultimate cubre todo el mapa en oscuridad, avisando a su equipo hacia dónde va a atacar. Es directo y agresivo, ideal para cazar carrys aislados.",
+      "tips": [
+        {
+          "text": "Usá tu oscurecimiento antes de saltar para limitar la visión del objetivo."
+        },
+        {
+          "text": "Guardá tu ultimate para picks claros sobre carrys prioritarios, no como sorpresa vacía."
+        },
+        {
+          "text": "No definas tu ultimate sin un plan de seguimiento,",
+          "warning": "avisa a todo el mapa que vas a atacar, el rival puede prepararse."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Nunu",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Tanque / Mago",
+      "difficulty": "Fácil",
+      "body": "Nunu y Willump hacen una bola de nieve que crece cuanto más rueda, arrasando con todo lo que encuentra en su camino, y limpian la jungla rápido gracias a su mordisco devorador. Son fuertes controlando objetivos grandes como el dragón o el heraldo.",
+      "tips": [
+        {
+          "text": "Hacé rodar tu bola de nieve desde lejos para que llegue con más impacto."
+        },
+        {
+          "text": "Usá tu mordisco para acelerar drásticamente la toma de objetivos grandes."
+        },
+        {
+          "text": "No hagas rodar la bola sin espacio para acumular tamaño,",
+          "warning": "una bola pequeña hace muy poco daño comparado con una bien cargada."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Olaf",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Luchador",
+      "difficulty": "Media",
+      "body": "Olaf se vuelve inmune a controles de movimiento cuanto menos vida le queda y su ultimate le da resistencia extra mientras lo activa, siendo casi imposible de detener en peleas extendidas. Es directo y agresivo sin muchas vueltas técnicas.",
+      "tips": [
+        {
+          "text": "Aprovechá tu resistencia a controles cuando tengas poca vida para seguir peleando."
+        },
+        {
+          "text": "Usá tu ultimate contra objetivos con mucho control antes de comprometerte al combate."
+        },
+        {
+          "text": "No te alejes de la pelea antes de tiempo,",
+          "warning": "tu pasiva te hace más fuerte mientras menos vida te queda, no huyas de más."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Orianna",
+    "content": {
+      "role": "Medio",
+      "championClass": "Maga de control",
+      "difficulty": "Media",
+      "body": "Orianna controla una bola que puede mover entre aliados y rivales para curar, dañar o proteger según dónde la coloque, y su ultimate atrae a todos hacia el punto donde detona. Es una de las mejores magas para peleas grupales coordinadas.",
+      "tips": [
+        {
+          "text": "Movete con tu bola cerca antes de comprometerte, es tu única forma de daño real."
+        },
+        {
+          "text": "Guardá tu ultimate para atrapar a varios rivales agrupados a la vez."
+        },
+        {
+          "text": "No definas tu ultimate contra un solo objetivo disperso,",
+          "warning": "su verdadero poder está en atrapar a un grupo entero."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Ornn",
+    "content": {
+      "role": "Top",
+      "championClass": "Tanque",
+      "difficulty": "Media",
+      "body": "Ornn puede mejorar los objetos legendarios de todo su equipo desde la forja, dándole un valor único fuera de combate además de ser un tanque sólido en línea. Su ultimate empuja una ola de fuego que puede derribar muros para abrir el mapa.",
+      "tips": [
+        {
+          "text": "Mejorá los objetos de tus aliados en cuanto tengas la opción disponible."
+        },
+        {
+          "text": "Usá tu ultimate para derribar muros y sorprender por rutas inesperadas."
+        },
+        {
+          "text": "No ignores la forja por pelear de más,",
+          "warning": "las mejoras de objetos son una ventaja de equipo que nadie más puede dar."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Pantheon",
+    "content": {
+      "role": "Support",
+      "championClass": "Luchador / Asesino",
+      "difficulty": "Media",
+      "body": "Pantheon salta desde el cielo hacia cualquier punto del mapa con su ultimate, aturdiendo a todo lo que caiga cerca, y bloquea el próximo golpe crítico que reciba con su escudo. Es muy fuerte en el early game tanto en línea como iniciando ganks.",
+      "tips": [
+        {
+          "text": "Usá tu bloqueo justo antes de recibir el golpe más fuerte del combo rival."
+        },
+        {
+          "text": "Guardá tu salto ultimate para iniciar peleas por sorpresa desde otra línea."
+        },
+        {
+          "text": "No definas tu ultimate sin avisar a tu equipo,",
+          "warning": "necesitás que estén listos para aprovechar la sorpresa del salto."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Poppy",
+    "content": {
+      "role": "Top",
+      "championClass": "Tanque / Luchadora",
+      "difficulty": "Media",
+      "body": "Poppy bloquea dashes enemigos con su escudo, deteniendo en seco a campeones muy móviles, y su ultimate empuja a un rival contra el terreno más cercano para un stun garantizado. Es una gran contadora de asesinos y duelistas móviles.",
+      "tips": [
+        {
+          "text": "Posicionate para bloquear el dash del rival justo cuando lo va a usar."
+        },
+        {
+          "text": "Usá tu ultimate cerca de muros o terreno para maximizar el tiempo de stun."
+        },
+        {
+          "text": "No definas tu ultimate lejos de cualquier terreno,",
+          "warning": "sin una pared cerca, el control dura mucho menos tiempo."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Pyke",
+    "content": {
+      "role": "Support",
+      "championClass": "Asesino de soporte",
+      "difficulty": "Media",
+      "body": "Pyke se cura al recuperar vida fuera de combate y su ultimate ejecuta con una hoz que da oro extra a los aliados que ayudaron en la kill, sin quitarle experiencia a su carry. Es un soporte agresivo pensado para cazar picks constantemente.",
+      "tips": [
+        {
+          "text": "Usá tu gancho para atraer objetivos hacia tu equipo antes de rematar."
+        },
+        {
+          "text": "Guardá tu ejecución para objetivos con poca vida que puedan escapar."
+        },
+        {
+          "text": "No te quedes en línea de forma pasiva,",
+          "warning": "tu kit rinde mucho más cazando picks por el mapa que farmeando de más."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Qiyana",
+    "content": {
+      "role": "Medio",
+      "championClass": "Asesina",
+      "difficulty": "Difícil",
+      "body": "Qiyana cambia el elemento de sus habilidades según el terreno donde esté parada, ganando efectos distintos de control según la superficie. Es explosiva y rápida para eliminar objetivos, pero exige mucha atención al terreno disponible.",
+      "tips": [
+        {
+          "text": "Posicionate cerca de terreno elemental antes de comprometerte a pelear."
+        },
+        {
+          "text": "Usá tu ultimate para separar a un objetivo del resto de su equipo."
+        },
+        {
+          "text": "No definas combos sin revisar qué elemento tenés disponible,",
+          "warning": "cada terreno te da un efecto de control completamente distinto."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Quinn",
+    "content": {
+      "role": "Top",
+      "championClass": "Tiradora / Asesina",
+      "difficulty": "Media",
+      "body": "Quinn se transforma en su ultimate para volverse más rápida y perseguir objetivos por todo el mapa, marcando rivales para hacerles más daño con su compañera Valor. Es fuerte presionando rutas laterales y rotando entre líneas.",
+      "tips": [
+        {
+          "text": "Marcá al objetivo con tu visión aérea antes de comprometerte a atacarlo."
+        },
+        {
+          "text": "Usá tu ultimate para rotar rápido entre líneas o perseguir objetivos huyendo."
+        },
+        {
+          "text": "No pelees de cerca contra duelistas fuertes,",
+          "warning": "tu kit funciona mejor a distancia y con movilidad, no en trades directos."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Rakan",
+    "content": {
+      "role": "Support",
+      "championClass": "Iniciador de utilidad",
+      "difficulty": "Media",
+      "body": "Rakan encanta y aturde a los rivales mientras salta entre aliados para curarlos, y su ultimate lo hace correr hacia cualquier punto cercano listo para iniciar. Es muy móvil y difícil de atrapar, ideal para peleas rápidas y agresivas.",
+      "tips": [
+        {
+          "text": "Saltá entre aliados heridos para curarlos antes de comprometerte a pelear."
+        },
+        {
+          "text": "Usá tu ultimate para iniciar peleas por sorpresa junto a tu carry."
+        },
+        {
+          "text": "No inicies sin tu carry cerca para dar seguimiento,",
+          "warning": "tu control por sí solo no alcanza para ganar la pelea."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Rammus",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Tanque",
+      "difficulty": "Fácil",
+      "body": "Rammus se enrosca en una bola imparable que gana velocidad al chocar con enemigos y refleja parte del daño físico recibido, siendo devastador contra equipos con mucho daño de auto-ataque. Es uno de los tanques más simples de jugar.",
+      "tips": [
+        {
+          "text": "Rodá desde lejos para llegar con velocidad máxima a la pelea."
+        },
+        {
+          "text": "Usá tu reflejo de daño antes de recibir el golpe físico más fuerte del rival."
+        },
+        {
+          "text": "No definas peleas contra equipos de puro daño mágico,",
+          "warning": "tu reflejo de daño solo funciona contra ataques físicos."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "RekSai",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Luchadora / Tanque",
+      "difficulty": "Media",
+      "body": "Rek'Sai cava túneles por el mapa que le permiten teletransportarse entre ellos, dándole una movilidad única para rotar rápido y sorprender por rutas inesperadas. Es fuerte controlando el mapa entero con presión constante.",
+      "tips": [
+        {
+          "text": "Colocá tus túneles en puntos clave antes de que la pelea empiece."
+        },
+        {
+          "text": "Usá tu forma de excavación para reposicionarte rápido entre objetivos del mapa."
+        },
+        {
+          "text": "No definas peleas lejos de tus túneles,",
+          "warning": "perdés gran parte de tu movilidad y capacidad de sorpresa."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Rell",
+    "content": {
+      "role": "Support",
+      "championClass": "Tanque / Iniciadora",
+      "difficulty": "Media",
+      "body": "Rell puede desmontar de su caballo para volverse más ágil y su ultimate atrae hacia ella a todos los enemigos con armadura o escudo cercanos. Es una iniciadora de área muy fuerte contra equipos con muchos tanques.",
+      "tips": [
+        {
+          "text": "Desmontá antes de comprometerte a un combo de control cercano."
+        },
+        {
+          "text": "Usá tu ultimate contra equipos con varios tanques o campeones con escudo."
+        },
+        {
+          "text": "No inicies sola sin apoyo cercano,",
+          "warning": "tu daño propio es bajo, necesitás que tu equipo siga la iniciación."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Renata",
+    "content": {
+      "role": "Support",
+      "championClass": "Maga de control",
+      "difficulty": "Media",
+      "body": "Renata Glasc puede forzar a un rival a atacar a sus propios aliados con su ultimate, generando caos total en las peleas de equipo, además de curar y potenciar a sus aliados con cadenas de control. Es una de las soportes más disruptivas del juego.",
+      "tips": [
+        {
+          "text": "Guardá tu ultimate para el carry más peligroso del equipo rival en el momento justo."
+        },
+        {
+          "text": "Usá tu cadena para encadenar aliados y potenciar su daño en conjunto."
+        },
+        {
+          "text": "No definas tu ultimate contra objetivos con mucho control de purga,",
+          "warning": "pueden limpiar el efecto antes de que haga daño real."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Renekton",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchador / Tanque",
+      "difficulty": "Media",
+      "body": "Renekton acumula furia con cada golpe que puede gastar en versiones más fuertes de sus habilidades, siendo extremadamente dominante en el early game de la línea top. Pierde relevancia relativa si la partida se extiende demasiado.",
+      "tips": [
+        {
+          "text": "Acumulá furia pegando minions y campeones antes de gastar tus habilidades potenciadas."
+        },
+        {
+          "text": "Presioná fuerte en los primeros niveles, tu ventaja relativa baja en el late game."
+        },
+        {
+          "text": "No guardes furia sin usar en trades importantes,",
+          "warning": "tus versiones potenciadas de habilidades son mucho más fuertes que las básicas."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Rengar",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Asesino / Luchador",
+      "difficulty": "Media",
+      "body": "Rengar se vuelve invisible en arbustos y salta con daño extra sobre quien encuentre desprevenido, siendo un cazador letal de objetivos aislados. Es directo y explosivo, pero pierde fuerza si el rival compra visión temprano.",
+      "tips": [
+        {
+          "text": "Saltá desde arbustos para maximizar el daño bonificado de tu emboscada."
+        },
+        {
+          "text": "Buscá objetivos aislados sin visión cercana antes de comprometerte."
+        },
+        {
+          "text": "No saltes sobre objetivos rodeados de aliados con visión,",
+          "warning": "perdés el elemento sorpresa que es la base de todo tu daño."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Riven",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchadora / Asesina",
+      "difficulty": "Difícil",
+      "body": "Riven encadena sus habilidades con cancelaciones de animación para moverse y golpear más rápido de lo normal, siendo una de las campeonas de mayor techo técnico en el top lane. Su ultimate potencia temporalmente el alcance de sus ataques.",
+      "tips": [
+        {
+          "text": "Practicá las cancelaciones de animación en partidas normales antes de usarlas en ranked."
+        },
+        {
+          "text": "Usá tu ultimate durante el combo para extender el alcance de tus golpes finales."
+        },
+        {
+          "text": "No definas peleas extendidas sin espacio para tu movilidad,",
+          "warning": "tu kit depende de moverte constantemente durante el combate."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Rumble",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchador / Mago",
+      "difficulty": "Difícil",
+      "body": "Rumble gestiona una barra de calor que, si se sobrecalienta, potencia sus habilidades pero también puede dañarlo a él mismo, exigiendo un manejo cuidadoso del recurso. Su ultimate lanza misiles en área que castigan fuerte a quien se quede parado.",
+      "tips": [
+        {
+          "text": "Mantené tu barra de calor cerca del límite sin pasarte, ahí tu daño es máximo."
+        },
+        {
+          "text": "Usá tu ultimate contra enemigos agrupados o sin mucha movilidad."
+        },
+        {
+          "text": "No sobrecalientes tu barra sin necesidad,",
+          "warning": "el sobrecalentamiento también te hace daño a vos mismo."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Ryze",
+    "content": {
+      "role": "Medio",
+      "championClass": "Mago",
+      "difficulty": "Difícil",
+      "body": "Ryze resetea el cooldown de su parpadeo cada vez que golpea con otra habilidad, permitiéndole encadenar movilidad y daño en combos largos y técnicos. Escala muy bien acumulando maná extra a lo largo de la partida.",
+      "tips": [
+        {
+          "text": "Encadená tus habilidades en el orden correcto para maximizar los resets de parpadeo."
+        },
+        {
+          "text": "Priorizá objetos que den maná extra, tu daño escala directamente con eso."
+        },
+        {
+          "text": "No gastes todo tu combo sin plan de reposicionamiento,",
+          "warning": "sin resets de parpadeo quedás muy expuesto tras el combo."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Samira",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tiradora / Luchadora",
+      "difficulty": "Difícil",
+      "body": "Samira acumula estilo con cada acción distinta que realiza sin repetir la anterior, y su ultimate solo se activa si hay suficientes enemigos cerca marcados por control. Es una tiradora agresiva que se mete de lleno en las peleas.",
+      "tips": [
+        {
+          "text": "Alterná entre habilidades distintas para mantener tu barra de estilo alta."
+        },
+        {
+          "text": "Esperá a que tus aliados controlen rivales antes de activar tu ultimate."
+        },
+        {
+          "text": "No repitas la misma acción dos veces seguidas,",
+          "warning": "eso resetea tu barra de estilo y baja tu daño total."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Sejuani",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Tanque",
+      "difficulty": "Media",
+      "body": "Sejuani acumula escarcha en los rivales golpeados que, al llenarse, los deja aturdidos, y su ultimate golpea en área con un salto que también acumula esa escarcha. Es una gran iniciadora de peleas grupales contra equipos agrupados.",
+      "tips": [
+        {
+          "text": "Acumulá escarcha con tus habilidades antes de comprometerte al combo final."
+        },
+        {
+          "text": "Usá tu ultimate contra grupos de enemigos agrupados para maximizar el control."
+        },
+        {
+          "text": "No inicies sin apoyo de tu equipo cerca,",
+          "warning": "tu daño propio es bajo, necesitás que sigan tu iniciación."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Senna",
+    "content": {
+      "role": "Support",
+      "championClass": "Tiradora de utilidad",
+      "difficulty": "Media",
+      "body": "Senna gana daño y alcance de forma permanente al recoger almas de enemigos caídos, incluidos los que mueren cerca suyo aunque no los haya matado ella. Puede volverse invisible en niebla junto a sus aliados con su ultimate.",
+      "tips": [
+        {
+          "text": "Recogé almas de cualquier muerte cercana, no solo de tus propias kills."
+        },
+        {
+          "text": "Usá tu niebla ultimate para reposicionar a tu equipo antes de una pelea."
+        },
+        {
+          "text": "No ignores recoger almas por pelear de más,",
+          "warning": "tu daño escala directamente con la cantidad de almas acumuladas."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Seraphine",
+    "content": {
+      "role": "Support",
+      "championClass": "Maga de utilidad",
+      "difficulty": "Fácil",
+      "body": "Seraphine potencia sus habilidades cuando hay aliados cerca en la dirección del hechizo, combinando control, daño y cura según la situación. Es flexible entre soporte, medio y tirador según cómo se construya.",
+      "tips": [
+        {
+          "text": "Posicionate cerca de aliados en la dirección de tus hechizos para potenciarlos."
+        },
+        {
+          "text": "Guardá tu ultimate para encantar y controlar a varios rivales agrupados."
+        },
+        {
+          "text": "No definas hechizos sin aliados cerca,",
+          "warning": "perdés el bonus de potenciación que es central en su kit."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Sett",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchador / Tanque",
+      "difficulty": "Fácil",
+      "body": "Sett acumula golpe a golpe una barra que libera con un puñetazo devastador y su ultimate agarra a un rival para golpearlo en el aire frente a todo su equipo. Es simple de jugar y muy fuerte en peleas cuerpo a cuerpo directas.",
+      "tips": [
+        {
+          "text": "Acumulá tu barra pegando en trades constantes antes de liberar el golpe grande."
+        },
+        {
+          "text": "Usá tu ultimate contra el objetivo más peligroso del equipo rival."
+        },
+        {
+          "text": "No pelees contra campeones de rango sin cerrar distancia primero,",
+          "warning": "tu kit depende de estar cerca del rival para funcionar."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Shaco",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Asesino",
+      "difficulty": "Difícil",
+      "body": "Shaco deja clones falsos que confunden al rival y coloca cajas sorpresa escondidas que aturden a quien las active, siendo uno de los junglas más impredecibles del juego. Es fuerte invadiendo temprano y generando caos constante.",
+      "tips": [
+        {
+          "text": "Colocá tus cajas en rutas de escape o arbustos clave antes de la pelea."
+        },
+        {
+          "text": "Usá tu clon para confundir al rival sobre tu posición real durante el combate."
+        },
+        {
+          "text": "No definas peleas directas prolongadas,",
+          "warning": "tu kit rinde mucho más con sorpresa y burst que en un enfrentamiento sostenido."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Shen",
+    "content": {
+      "role": "Top",
+      "championClass": "Tanque",
+      "difficulty": "Media",
+      "body": "Shen puede teletransportarse hacia cualquier aliado del mapa con su ultimate, dándole un escudo mientras protege líneas lejanas de su propia posición. Es un tanque de utilidad global más que un dominador puro de línea.",
+      "tips": [
+        {
+          "text": "Usá tu ultimate para salvar a un aliado en peligro en otra línea del mapa."
+        },
+        {
+          "text": "Bloqueá el próximo ataque enemigo con tu habilidad antes de comprometerte a un trade."
+        },
+        {
+          "text": "No abandones tu línea sin avisar,",
+          "warning": "tu presencia global depende de que sepan cuándo vas a rotar."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Shyvana",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Luchadora / Tanque",
+      "difficulty": "Media",
+      "body": "Shyvana se transforma en dragón con su ultimate, ganando daño en área y resistencia extra mientras dura la transformación. Limpia la jungla muy rápido y es fuerte forzando peleas antes de que el rival pueda reaccionar.",
+      "tips": [
+        {
+          "text": "Activá tu transformación de dragón antes de comprometerte a la pelea principal."
+        },
+        {
+          "text": "Aprovechá tu velocidad de clear para presionar objetivos del mapa temprano."
+        },
+        {
+          "text": "No definas tu ultimate sin plan de seguimiento,",
+          "warning": "la transformación tiene tiempo limitado, no la gastes sin un objetivo claro."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Singed",
+    "content": {
+      "role": "Top",
+      "championClass": "Tanque / Mago",
+      "difficulty": "Media",
+      "body": "Singed deja un rastro de veneno tóxico mientras se mueve y su lanzamiento arroja rivales detrás suyo directo al veneno, siendo especialista en dar vueltas alrededor del rival para maximizar el daño. Es fuerte tanto en línea como en peleas de resistencia prolongadas.",
+      "tips": [
+        {
+          "text": "Corré en círculos alrededor del rival dentro de tu veneno para maximizar el daño recibido."
+        },
+        {
+          "text": "Usá tu lanzamiento para arrastrar objetivos peligrosos lejos de su equipo."
+        },
+        {
+          "text": "No pelees en línea recta sin usar tu veneno,",
+          "warning": "gran parte de tu daño depende de que el rival esté parado en tu rastro tóxico."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Sion",
+    "content": {
+      "role": "Top",
+      "championClass": "Tanque",
+      "difficulty": "Fácil",
+      "body": "Sion sigue con vida por unos segundos incluso después de morir, pudiendo rematar con un golpe final devastador, y su carga puede recorrer todo el mapa acumulando daño con la distancia. Es un tanque tolerante a errores con un techo de daño alto si acumula bien su carga.",
+      "tips": [
+        {
+          "text": "Cargá tu embestida desde lejos para maximizar el daño y el control al conectar."
+        },
+        {
+          "text": "Aprovechá tu tiempo post-mortem para rematar o escapar según convenga."
+        },
+        {
+          "text": "No definas tu carga sin apuntar bien la dirección,",
+          "warning": "un golpe fallido te deja completamente vulnerable durante varios segundos."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Sivir",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tiradora",
+      "difficulty": "Fácil",
+      "body": "Sivir lanza una hoja que atraviesa varios enemigos en línea y su ultimate acelera a todo su equipo cercano, siendo una gran tiradora de presión de oleadas y peleas grupales rápidas. Es simple de aprender y muy segura en línea.",
+      "tips": [
+        {
+          "text": "Usá tu hoja boomerang para limpiar oleadas rápido y pokear a la vez."
+        },
+        {
+          "text": "Guardá tu ultimate para peleas grupales, la velocidad extra decide muchos intercambios."
+        },
+        {
+          "text": "No gastes tu bloqueo de habilidades sin necesidad clara,",
+          "warning": "guardalo para la habilidad más peligrosa del combo rival."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Skarner",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Tanque / Luchador",
+      "difficulty": "Media",
+      "body": "Skarner puede atravesar el terreno y aturdir enemigos al emerger, y su ultimate arrastra a un rival lejos de su equipo para pelear en desventaja. Es fuerte controlando el mapa gracias a su movilidad a través de paredes.",
+      "tips": [
+        {
+          "text": "Usá tu movimiento a través del terreno para sorprender por rutas inesperadas."
+        },
+        {
+          "text": "Guardá tu ultimate para aislar al objetivo prioritario del equipo rival."
+        },
+        {
+          "text": "No definas tu ultimate cerca de todo el equipo rival junto,",
+          "warning": "solo aislás a uno, el resto queda libre para responder."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Smolder",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tiradora / Maga",
+      "difficulty": "Media",
+      "body": "Smolder acumula tesoro con cada eliminación y último golpe, haciendo que sus habilidades crezcan en daño y alcance a lo largo de la partida. Empieza débil pero escala de forma explosiva si consigue suficiente farmeo.",
+      "tips": [
+        {
+          "text": "Priorizá el farmeo constante, tu daño depende directamente del tesoro acumulado."
+        },
+        {
+          "text": "Usá tu vuelo de escape en el momento justo, no antes de tiempo."
+        },
+        {
+          "text": "No busques peleas agresivas antes de acumular suficiente tesoro,",
+          "warning": "tu poder temprano es bajo comparado con la mayoría de tiradores."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Sona",
+    "content": {
+      "role": "Support",
+      "championClass": "Maga de utilidad",
+      "difficulty": "Fácil",
+      "body": "Sona toca melodías que curan, aceleran o debilitan según cuál elija, acumulando poder de acordes con el tiempo, y su ultimate aturde a distancia a todos los que golpee. Es de las soportes más fáciles de aprender.",
+      "tips": [
+        {
+          "text": "Alterná entre melodías según lo que necesite tu equipo en cada momento."
+        },
+        {
+          "text": "Usá tu ultimate desde una distancia segura para iniciar o rematar peleas."
+        },
+        {
+          "text": "No te quedes tocando una sola melodía todo el tiempo,",
+          "warning": "alternar entre las tres es lo que maximiza tu impacto en la partida."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Soraka",
+    "content": {
+      "role": "Support",
+      "championClass": "Maga de utilidad",
+      "difficulty": "Fácil",
+      "body": "Soraka cura a distancia sin necesidad de estar cerca de sus aliados y su ultimate cura a todo el equipo a la vez sin importar dónde estén. Es la soporte de sustain más fuerte del juego, pero muy frágil si la atrapan.",
+      "tips": [
+        {
+          "text": "Curá a distancia constantemente sin exponerte innecesariamente en línea."
+        },
+        {
+          "text": "Guardá tu ultimate para el momento de mayor daño recibido de tu equipo."
+        },
+        {
+          "text": "No te acerques a la línea del frente en peleas,",
+          "warning": "sos extremadamente frágil y sin escapes reales si te atrapan."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Swain",
+    "content": {
+      "role": "Support",
+      "championClass": "Mago",
+      "difficulty": "Media",
+      "body": "Swain drena vida en área con su ultimate mientras dura activo, y puede arrastrar rivales cercanos hacia él con su ala demoníaca. Es fuerte en peleas prolongadas donde puede quedarse canalizando su ultimate.",
+      "tips": [
+        {
+          "text": "Activá tu ultimate en peleas grupales prolongadas para maximizar el drenaje de vida."
+        },
+        {
+          "text": "Usá tu ala para arrastrar objetivos hacia tu equipo antes de comprometerte."
+        },
+        {
+          "text": "No canalices tu ultimate sin protección cercana,",
+          "warning": "quedás vulnerable mientras el efecto está activo."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Sylas",
+    "content": {
+      "role": "Medio",
+      "championClass": "Mago / Asesino",
+      "difficulty": "Media",
+      "body": "Sylas puede robar el ultimate del último enemigo campeón que haya golpeado, adaptando su kit final según a quién enfrente. Es muy fuerte contra equipos con ultimates poderosos que pueda copiar en el momento justo.",
+      "tips": [
+        {
+          "text": "Golpeá al enemigo con el mejor ultimate disponible antes de comprometerte a pelear."
+        },
+        {
+          "text": "Usá el ultimate robado en el momento donde más impacto tenga, no de inmediato."
+        },
+        {
+          "text": "No definas peleas sin revisar qué ultimate tenés robado,",
+          "warning": "tu plan de combate cambia completamente según cuál hayas copiado."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Syndra",
+    "content": {
+      "role": "Medio",
+      "championClass": "Maga",
+      "difficulty": "Difícil",
+      "body": "Syndra acumula esferas oscuras que puede lanzar en conjunto para un burst enorme, y su ultimate hace más daño cuantas más esferas tenga disponibles al momento de usarlo. Es de las magas con mayor daño de burst del juego.",
+      "tips": [
+        {
+          "text": "Acumulá esferas antes de comprometerte al combo completo de burst."
+        },
+        {
+          "text": "Guardá tu ultimate para cuando tengas el máximo de esferas disponibles."
+        },
+        {
+          "text": "No gastes tus esferas en poke innecesario,",
+          "warning": "necesitás varias acumuladas para tu combo de burst más fuerte."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "TahmKench",
+    "content": {
+      "role": "Support",
+      "championClass": "Tanque",
+      "difficulty": "Media",
+      "body": "Tahm Kench puede tragarse a un aliado para transportarlo a un lugar seguro, o a un rival para llevarlo lejos de su equipo, siendo una de las herramientas de rescate y control más únicas del juego. Es difícil de matar gracias a su gordura que reduce el daño recibido.",
+      "tips": [
+        {
+          "text": "Tragá a un aliado en peligro para salvarlo de una situación crítica."
+        },
+        {
+          "text": "Usá tu ultimate para llevarte a un rival prioritario lejos de su equipo."
+        },
+        {
+          "text": "No gastes tu tragada ofensiva sin plan de escape,",
+          "warning": "quedás comprometido en territorio enemigo si sale mal."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Taliyah",
+    "content": {
+      "role": "Support",
+      "championClass": "Maga",
+      "difficulty": "Media",
+      "body": "Taliyah puede moverse por paredes de piedra creadas por ella misma y su ultimate crea una zona que ralentiza y hace daño en área. Es fuerte controlando el mapa entre línea y rotaciones tempranas a la jungla.",
+      "tips": [
+        {
+          "text": "Usá tus paredes de piedra tanto para bloquear rutas como para moverte rápido."
+        },
+        {
+          "text": "Guardá tu ultimate para peleas grupales en espacios donde el rival no pueda escapar fácil."
+        },
+        {
+          "text": "No definas combos sin terreno para tu movilidad,",
+          "warning": "gran parte de tu kit depende de crear y usar esas paredes de piedra."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Talon",
+    "content": {
+      "role": "Medio",
+      "championClass": "Asesino",
+      "difficulty": "Media",
+      "body": "Talon puede saltar sobre muros para aparecer por rutas inesperadas y su ultimate lo vuelve invisible mientras acelera, ideal para cazar objetivos aislados sin ser visto. Es devastador contra magos sin escape y débil contra tanques resistentes.",
+      "tips": [
+        {
+          "text": "Usá tu salto sobre muros para flanquear antes de que el rival te vea venir."
+        },
+        {
+          "text": "Buscá objetivos aislados y frágiles, tu daño baja mucho contra tanques."
+        },
+        {
+          "text": "No definas tu ultimate contra objetivos con mucho control de área,",
+          "warning": "tu invisibilidad no te protege del control que ya está en camino."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Taric",
+    "content": {
+      "role": "Support",
+      "championClass": "Tanque / Utilidad",
+      "difficulty": "Fácil",
+      "body": "Taric brilla junto a un aliado vinculado, duplicando el efecto de sus habilidades entre ambos, y su ultimate vuelve invulnerable a todo su equipo cercano por un instante. Es una soporte muy tolerante a errores con un ultimate que puede ganar peleas por sí solo.",
+      "tips": [
+        {
+          "text": "Vinculate con el aliado que más necesite protección constante."
+        },
+        {
+          "text": "Guardá tu ultimate para el momento de mayor daño en una pelea grupal."
+        },
+        {
+          "text": "No definas tu ultimate demasiado pronto,",
+          "warning": "su ventana de invulnerabilidad es corta, el timing decide la pelea."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Teemo",
+    "content": {
+      "role": "Top",
+      "championClass": "Tiradora / Maga",
+      "difficulty": "Fácil",
+      "body": "Teemo se vuelve invisible en hierba alta y coloca hongos venenosos que explotan al ser pisados, controlando el mapa con trampas mientras pokea a distancia. Es muy fuerte en línea, pero frágil en peleas directas cuerpo a cuerpo.",
+      "tips": [
+        {
+          "text": "Colocá hongos en rutas de jungla y arbustos clave para controlar el mapa."
+        },
+        {
+          "text": "Usá tu invisibilidad para reposicionarte en pelea sin que te vean venir."
+        },
+        {
+          "text": "No pelees de cerca contra duelistas fuertes,",
+          "warning": "tu kit está pensado para distancia y control de zona, no para trades directos."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Thresh",
+    "content": {
+      "role": "Support",
+      "championClass": "Tanque / Iniciador",
+      "difficulty": "Media",
+      "body": "Thresh engancha rivales a distancia y recoge almas de los que mueren cerca para volverse más fuerte con el tiempo, además de poder lanzar una linterna que salva a un aliado acercándolo a él. Es de los soportes con mayor techo de habilidad del juego.",
+      "tips": [
+        {
+          "text": "Recogé almas constantemente, tu armadura y poder escalan directamente con eso."
+        },
+        {
+          "text": "Usá tu linterna tanto para salvar aliados como para reposicionarlos ofensivamente."
+        },
+        {
+          "text": "No engancha sin apoyo cercano de tu equipo,",
+          "warning": "tu daño propio es bajo, necesitás que sigan la iniciación."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Tristana",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tiradora / Asesina",
+      "difficulty": "Fácil",
+      "body": "Tristana gana alcance de ataque con cada nivel y puede saltar sobre el rival para luego patearlo lejos de su equipo, siendo fuerte tanto pokeando a distancia como rematando de cerca. Escala muy bien hacia el late game.",
+      "tips": [
+        {
+          "text": "Usá tu salto para escapar o para rematar objetivos con poca vida cerca."
+        },
+        {
+          "text": "Pateá al carry prioritario lejos de su equipo antes de que pueda hacer daño."
+        },
+        {
+          "text": "No definas tu salto sin plan de reposicionamiento,",
+          "warning": "quedás cerca del rival, asegurate de tener forma de volver a salir."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Trundle",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchador / Tanque",
+      "difficulty": "Fácil",
+      "body": "Trundle roba estadísticas de resistencia al rival mientras lo golpea y su ultimate reduce a la mitad la vida máxima y el daño de un objetivo por un tiempo. Es un gran contador de tanques y de campeones que dependen de su vida máxima.",
+      "tips": [
+        {
+          "text": "Usá tu ultimate contra el tanque o duelista más fuerte del equipo rival."
+        },
+        {
+          "text": "Aprovechá tu pilar de hielo para bloquear rutas de escape en peleas de río."
+        },
+        {
+          "text": "No definas tu ultimate contra objetivos frágiles,",
+          "warning": "rinde mucho más contra campeones con mucha vida máxima o resistencia."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Tryndamere",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchador",
+      "difficulty": "Media",
+      "body": "Tryndamere nunca puede morir de un solo golpe gracias a su furia acumulada, y su ultimate lo vuelve invulnerable por un momento crítico durante la pelea. Es un duelista implacable que escala con crítico hacia el late game.",
+      "tips": [
+        {
+          "text": "Acumulá furia con tus golpes antes de comprometerte a un all-in largo."
+        },
+        {
+          "text": "Guardá tu ultimate para sobrevivir al golpe que normalmente te mataría."
+        },
+        {
+          "text": "No definas tu ultimate demasiado pronto en la pelea,",
+          "warning": "su verdadero valor está en sobrevivir el momento más crítico, no al principio."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "TwistedFate",
+    "content": {
+      "role": "Medio",
+      "championClass": "Mago / Tirador",
+      "difficulty": "Media",
+      "body": "Twisted Fate elige entre tres cartas con efectos distintos antes de lanzarlas, y su ultimate lo teletransporta a cualquier punto del mapa para ayudar en peleas lejanas. Es un gran generador de presión global fuera de su propia línea.",
+      "tips": [
+        {
+          "text": "Elegí la carta según la situación: azul para pokear, roja para stunear, dorada para daño."
+        },
+        {
+          "text": "Usá tu ultimate para aparecer en peleas de otras líneas antes de que terminen."
+        },
+        {
+          "text": "No definas tu ultimate sin revisar el estado del mapa,",
+          "warning": "podés llegar tarde o exponerte innecesariamente si no calculás bien el viaje."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Twitch",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tirador / Asesino",
+      "difficulty": "Media",
+      "body": "Twitch se vuelve invisible para acercarse sin ser detectado y su ultimate dispara en línea recta atravesando a todos los enemigos con veneno acumulado. Es devastador si consigue posicionarse sin ser visto antes de la pelea.",
+      "tips": [
+        {
+          "text": "Usá tu invisibilidad para posicionarte detrás del equipo rival antes de revelarte."
+        },
+        {
+          "text": "Acumulá veneno en los rivales antes de rematar con tu ultimate en línea."
+        },
+        {
+          "text": "No te reveles antes de tiempo,",
+          "warning": "sos extremadamente frágil una vez que el rival sabe dónde estás."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Udyr",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Luchador",
+      "difficulty": "Media",
+      "body": "Udyr cambia entre distintas posturas de combate según lo que necesite: velocidad de ataque, movilidad, resistencia o control, adaptándose a cada pelea. Limpia la jungla muy rápido y es fuerte en duelos extendidos.",
+      "tips": [
+        {
+          "text": "Cambiá de postura según la necesidad: ofensiva para daño, defensiva para sobrevivir."
+        },
+        {
+          "text": "Usá tu postura de movilidad para cerrar distancia antes de comprometerte a pelear."
+        },
+        {
+          "text": "No te quedes en una sola postura toda la pelea,",
+          "warning": "tu kit depende de alternar entre posturas para maximizar tu efectividad."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Urgot",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchador / Tanque",
+      "difficulty": "Media",
+      "body": "Urgot ejecuta con su ultimate a rivales con poca vida de una forma brutal y su disparo de cadena atrapa objetivos mientras los empuja hacia atrás. Es fuerte contra duelistas melee y castiga a quien queda bajo de vida.",
+      "tips": [
+        {
+          "text": "Guardá tu ultimate para ejecutar objetivos prioritarios con poca vida."
+        },
+        {
+          "text": "Usá tu disparo de cadena para atrapar y alejar a duelistas melee agresivos."
+        },
+        {
+          "text": "No definas tu ultimate contra objetivos con mucha vida restante,",
+          "warning": "rinde mucho más como remate que como apertura de combate."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Varus",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tirador / Mago",
+      "difficulty": "Media",
+      "body": "Varus puede construirse como tirador de auto-ataques o como mago de veneno según el equipo lo necesite, y su ultimate encadena e inmoviliza a todos los enemigos marcados en línea. Es flexible entre línea inferior y línea media.",
+      "tips": [
+        {
+          "text": "Marcá objetivos con tu Q antes de comprometerte al combo de veneno completo."
+        },
+        {
+          "text": "Usá tu ultimate para encadenar varios enemigos agrupados en una sola línea."
+        },
+        {
+          "text": "No definas tu build sin mirar la composición de tu equipo,",
+          "warning": "cada camino de objetos cambia por completo tu rol en las peleas."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Vayne",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tiradora / Asesina",
+      "difficulty": "Difícil",
+      "body": "Vayne hace daño verdadero cada tercer golpe y puede volverse invisible al esquivar rodando, siendo devastadora en el late game contra tanques. Es muy débil en las primeras fases y depende de sobrevivir hasta que sus objetos hagan efecto.",
+      "tips": [
+        {
+          "text": "Jugá con extrema cautela en las primeras fases, tu poder real llega en el late game."
+        },
+        {
+          "text": "Empujá rivales contra muros con tu estaca para inmovilizarlos por más tiempo."
+        },
+        {
+          "text": "No busques peleas agresivas antes de tener objetos,",
+          "warning": "tu curva de poder está pensada para el late, no para el early."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Veigar",
+    "content": {
+      "role": "Medio",
+      "championClass": "Mago",
+      "difficulty": "Fácil",
+      "body": "Veigar acumula poder mágico permanente con cada eliminación de minion o campeón, escalando hasta hacer más daño que casi cualquier otro mago del juego. Su jaula de rejas evita que el rival escape del combo final.",
+      "tips": [
+        {
+          "text": "Priorizá last-hitear minions con tu Q siempre que puedas para acumular poder."
+        },
+        {
+          "text": "Encerrá al rival con tu jaula antes de comprometerte al combo de burst completo."
+        },
+        {
+          "text": "No ignores el farmeo por pelear de más,",
+          "warning": "tu poder mágico depende directamente de esos stacks acumulados."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Velkoz",
+    "content": {
+      "role": "Support",
+      "championClass": "Mago",
+      "difficulty": "Media",
+      "body": "Vel'Koz hace más daño cuanto más tiempo mantiene sus rayos apuntando al mismo objetivo, y su ultimate dispara un láser que se puede redirigir mientras dura. Es fuerte pokeando a distancia y devastador si logra mantener el foco en un objetivo.",
+      "tips": [
+        {
+          "text": "Mantené tus rayos apuntando al mismo objetivo para maximizar el daño acumulado."
+        },
+        {
+          "text": "Redirigí tu ultimate durante el canalizado para no perder el objetivo de vista."
+        },
+        {
+          "text": "No cambies de objetivo constantemente en pelea,",
+          "warning": "tu daño depende de sostener el foco sobre un mismo rival."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Vex",
+    "content": {
+      "role": "Medio",
+      "championClass": "Maga",
+      "difficulty": "Fácil",
+      "body": "Vex hace más daño contra rivales con dashes recientes y su ultimate persigue en línea recta ejecutando con miedo a quien alcanza. Es directa y punitiva contra campeones muy móviles.",
+      "tips": [
+        {
+          "text": "Apuntá tu combo a rivales que acaban de usar un dash, tu pasiva premia eso."
+        },
+        {
+          "text": "Usá tu ultimate para perseguir objetivos huyendo con poca vida."
+        },
+        {
+          "text": "No definas tu ultimate contra objetivos con mucho control de purga,",
+          "warning": "pueden limpiar el miedo antes de que se complete la ejecución."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Vi",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Luchadora",
+      "difficulty": "Fácil",
+      "body": "Vi carga un puñetazo que atraviesa escudos por completo y su ultimate la lanza directo hacia un objetivo específico atravesando todo lo que encuentre en el camino. Es directa y agresiva, ideal para cazar carrys prioritarios.",
+      "tips": [
+        {
+          "text": "Cargá tu golpe antes de comprometerte para atravesar escudos defensivos."
+        },
+        {
+          "text": "Guardá tu ultimate para carrys prioritarios escondidos detrás de su equipo."
+        },
+        {
+          "text": "No definas tu ultimate sin apoyo de seguimiento,",
+          "warning": "quedás sola frente al resto del equipo rival tras el impacto."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Viego",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Luchador / Asesino",
+      "difficulty": "Difícil",
+      "body": "Viego posee el cuerpo de cualquier campeón enemigo que remate, heredando temporalmente sus habilidades para seguir peleando. Es devastador si encadena posesiones en peleas grupales, pero depende de conseguir la primera eliminación.",
+      "tips": [
+        {
+          "text": "Buscá rematar objetivos con poca vida para poseer su cuerpo y extender la pelea."
+        },
+        {
+          "text": "Usá tu dash a través de terreno para reposicionarte antes de comprometerte."
+        },
+        {
+          "text": "No definas tu ultimate sin un objetivo claro para rematar después,",
+          "warning": "sin una posesión encadenada perdés gran parte de tu impacto en la pelea."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Viktor",
+    "content": {
+      "role": "Medio",
+      "championClass": "Mago",
+      "difficulty": "Media",
+      "body": "Viktor puede potenciar una de sus habilidades a elección con su cuchilla aumentativa, definiendo su estilo de juego según cuál elija. Su ultimate hace daño y ralentiza en un área amplia sobre la que puede detonar de nuevo.",
+      "tips": [
+        {
+          "text": "Elegí la potenciación según la necesidad: control extra, más poke o más daño en área."
+        },
+        {
+          "text": "Colocá tu zona de gravedad antes de comprometerte al combo de daño completo."
+        },
+        {
+          "text": "No definas peleas sin tu zona activa disponible,",
+          "warning": "gran parte de tu daño de área depende de tenerla lista."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Vladimir",
+    "content": {
+      "role": "Medio",
+      "championClass": "Mago / Luchador",
+      "difficulty": "Media",
+      "body": "Vladimir se sumerge en un charco de sangre volviéndose intangible por un instante, esquivando cualquier habilidad mientras dura, y escala su daño con su propia vida máxima. Es muy seguro en línea gracias a esa esquiva garantizada.",
+      "tips": [
+        {
+          "text": "Usá tu charco de sangre justo antes de recibir el combo de control del rival."
+        },
+        {
+          "text": "Priorizá objetos de vida máxima, potencian directamente tu daño mágico."
+        },
+        {
+          "text": "No definas tu charco de forma preventiva sin necesidad,",
+          "warning": "el cooldown es largo, guardalo para esquivar el golpe realmente decisivo."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Volibear",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Luchador / Tanque",
+      "difficulty": "Fácil",
+      "body": "Volibear se lanza en picada desde el cielo con su ultimate aturdiendo a todo lo que encuentre alrededor, y muerde a los rivales para curarse mientras pelea. Es directo y agresivo, sin mucha complejidad técnica.",
+      "tips": [
+        {
+          "text": "Usá tu ultimate para iniciar peleas por sorpresa desde fuera de la visión rival."
+        },
+        {
+          "text": "Mordé al objetivo prioritario para maximizar tu sustain durante el combate."
+        },
+        {
+          "text": "No definas tu ultimate sin avisar a tu equipo,",
+          "warning": "necesitás que estén listos para seguir la iniciación inmediatamente."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Warwick",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Luchador / Tanque",
+      "difficulty": "Fácil",
+      "body": "Warwick huele a los rivales con poca vida a través de las paredes y su ultimate lo vuelve imparable mientras persigue a un objetivo suprimiéndolo. Es de los junglas más simples de aprender y muy efectivo cazando objetivos débiles.",
+      "tips": [
+        {
+          "text": "Perseguí objetivos con poca vida, tu pasiva te da velocidad extra contra ellos."
+        },
+        {
+          "text": "Guardá tu ultimate para suprimir al carry prioritario del equipo rival."
+        },
+        {
+          "text": "No definas tu ultimate contra objetivos con mucha vida,",
+          "warning": "rinde mucho más contra rivales ya heridos que podés rematar rápido."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Xayah",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tiradora",
+      "difficulty": "Media",
+      "body": "Xayah deja plumas clavadas en el suelo que puede hacer volver de golpe para dañar a todo lo que atraviesen, y su ultimate la vuelve intangible mientras las plumas caen del cielo. Es fuerte en peleas grupales prolongadas junto a su pareja Rakan.",
+      "tips": [
+        {
+          "text": "Colocá plumas en el suelo durante los intercambios antes de hacerlas volver."
+        },
+        {
+          "text": "Usá tu ultimate para esquivar el momento de mayor daño de una pelea grupal."
+        },
+        {
+          "text": "No gastes todas tus plumas sin plan,",
+          "warning": "necesitás varias en el suelo para maximizar el daño de tu combo de retorno."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Xerath",
+    "content": {
+      "role": "Support",
+      "championClass": "Mago de control",
+      "difficulty": "Media",
+      "body": "Xerath pokea desde una distancia enorme con hechizos a distancia y su ultimate puede golpear en cualquier punto del mapa con un daño devastador. Es extremadamente seguro pokeando pero muy frágil si lo alcanzan.",
+      "tips": [
+        {
+          "text": "Pokeá constantemente desde fuera del alcance de respuesta del rival."
+        },
+        {
+          "text": "Usá tu ultimate para rematar objetivos con poca vida en cualquier parte del mapa."
+        },
+        {
+          "text": "No te acerques a la línea del frente en peleas,",
+          "warning": "sos extremadamente frágil sin ninguna forma real de escapar."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "XinZhao",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Luchador / Tanque",
+      "difficulty": "Fácil",
+      "body": "Xin Zhao marca con vulnerabilidad al tercer golpe consecutivo sobre un mismo objetivo, y su ultimate crea una zona que empuja lejos a todos los enemigos que no sean el objetivo elegido. Es directo y agresivo, fuerte en peleas cortas.",
+      "tips": [
+        {
+          "text": "Golpeá tres veces seguidas al mismo objetivo para aplicar la marca de vulnerabilidad."
+        },
+        {
+          "text": "Usá tu ultimate para aislar a un objetivo prioritario del resto del equipo."
+        },
+        {
+          "text": "No definas tu ultimate en espacios muy abiertos,",
+          "warning": "el resto del equipo rival puede volver a entrar a la pelea rápido."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Yasuo",
+    "content": {
+      "role": "Medio",
+      "championClass": "Luchador / Asesino",
+      "difficulty": "Difícil",
+      "body": "Yasuo lanza por el aire a cualquier rival ya inmovilizado por un aliado y su muro bloquea todos los proyectiles enemigos por un instante, siendo devastador en combos coordinados con su equipo. Es de los campeones de mayor techo técnico del juego.",
+      "tips": [
+        {
+          "text": "Esperá a que un aliado inmovilice al rival antes de rematar con tu golpe aéreo."
+        },
+        {
+          "text": "Usá tu muro para bloquear el proyectil decisivo de una pelea, no cualquiera."
+        },
+        {
+          "text": "No definas combos sin coordinar con tu equipo,",
+          "warning": "tu mayor daño depende de aprovechar el control que generan tus aliados."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Yone",
+    "content": {
+      "role": "Medio",
+      "championClass": "Luchador / Asesino",
+      "difficulty": "Difícil",
+      "body": "Yone golpea tanto en el mundo real como en el espiritual, acumulando daño extra que se libera todo junto, y su ultimate lo lanza junto con todos los enemigos que atraviesa por el aire. Es una versión más resistente y de mayor alcance que su hermano Yasuo.",
+      "tips": [
+        {
+          "text": "Encadená tu dash con tu golpe elevador para maximizar el daño del combo."
+        },
+        {
+          "text": "Usá tu ultimate contra varios enemigos alineados para atraparlos a todos."
+        },
+        {
+          "text": "No definas tu dash de regreso sin plan,",
+          "warning": "volver a tu punto de origen te puede dejar en medio del equipo rival."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Yorick",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchador / Invocador",
+      "difficulty": "Media",
+      "body": "Yorick invoca ghouls que pelean junto a él y puede levantar una muralla de tumbas que bloquea el paso a cualquier rival, siendo muy fuerte presionando la línea y dividiendo el mapa en el split push. Escala bien con la cantidad de ghouls activos.",
+      "tips": [
+        {
+          "text": "Mantené varios ghouls activos antes de comprometerte a una pelea o gank."
+        },
+        {
+          "text": "Usá tu muralla de tumbas para bloquear rutas de escape o de refuerzo enemigo."
+        },
+        {
+          "text": "No pelees sin ghouls a tu lado si podés evitarlo,",
+          "warning": "tu daño y control bajan mucho sin ellos acompañándote."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Yunara",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tiradora",
+      "difficulty": "Media",
+      "body": "Yunara hace daño mágico extra con sus golpes críticos y entra en un estado trascendente que mejora sus habilidades básicas, ganando más movilidad y alcance mientras dura. Es una tiradora versátil que premia jugar alrededor de las ventanas de su transformación.",
+      "tips": [
+        {
+          "text": "Guardá tu estado trascendente para el momento de mayor impacto en la pelea."
+        },
+        {
+          "text": "Usá tu movimiento fantasma para reposicionarte antes de que el rival reaccione."
+        },
+        {
+          "text": "No definas peleas largas fuera de tu estado trascendente,",
+          "warning": "tus habilidades básicas rinden mucho menos sin esa mejora activa."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Yuumi",
+    "content": {
+      "role": "Support",
+      "championClass": "Maga de utilidad",
+      "difficulty": "Fácil",
+      "body": "Yuumi se pega a un aliado volviéndose casi invulnerable mientras lo acompaña, curándolo y potenciando sus ataques a distancia. Es de las soportes más seguras del juego, pero depende completamente de que su aliado sepa pelear bien.",
+      "tips": [
+        {
+          "text": "Pegate al aliado que más daño esté haciendo en cada momento de la partida."
+        },
+        {
+          "text": "Usá tu ultimate para enraizar rivales y ayudar a cerrar peleas importantes."
+        },
+        {
+          "text": "No te despegues sin necesidad en medio de una pelea,",
+          "warning": "sos extremadamente frágil por tu cuenta sin protección."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Zaahen",
+    "content": {
+      "role": "Top",
+      "championClass": "Luchador",
+      "difficulty": "Media",
+      "body": "Zaahen acumula determinación con cada golpe conectado a campeones enemigos, ganando daño de ataque permanente y hasta la posibilidad de revivir al llenar la barra. Es un luchador resistente que premia el compromiso en peleas extendidas.",
+      "tips": [
+        {
+          "text": "Buscá conectar golpes constantes a campeones para acumular determinación."
+        },
+        {
+          "text": "Usá tu dash con tirón para atrapar objetivos que intenten escapar del combate."
+        },
+        {
+          "text": "No te alejes de la pelea con la barra casi llena,",
+          "warning": "estás cerca de una mejora permanente de daño y hasta una revivida."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Zac",
+    "content": {
+      "role": "Jungla",
+      "championClass": "Tanque",
+      "difficulty": "Media",
+      "body": "Zac puede rebotar entre paredes con su salto elástico y deja pedazos de gelatina en el suelo que puede recoger para curarse. Su ultimate lo divide en cuatro partes que aturden todo lo que golpean.",
+      "tips": [
+        {
+          "text": "Recogé los pedazos de gelatina en el suelo para curarte entre peleas."
+        },
+        {
+          "text": "Usá tu salto elástico entre paredes para iniciar por rutas inesperadas."
+        },
+        {
+          "text": "No definas tu ultimate en espacios muy reducidos,",
+          "warning": "necesitás espacio para que las cuatro partes golpeen a varios enemigos."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Zed",
+    "content": {
+      "role": "Medio",
+      "championClass": "Asesino",
+      "difficulty": "Difícil",
+      "body": "Zed invoca una sombra que puede intercambiar posición consigo mismo en cualquier momento, dándole una movilidad de entrada y salida muy segura, y su ultimate marca a un objetivo para rematarlo tras un breve retraso. Es devastador contra magos sin escape.",
+      "tips": [
+        {
+          "text": "Usá tu sombra para entrar a rematar y luego volver a una posición segura."
+        },
+        {
+          "text": "Guardá tu ultimate para objetivos frágiles sin mucha movilidad de escape."
+        },
+        {
+          "text": "No definas tu ultimate sin sombra disponible para el intercambio,",
+          "warning": "sin ella quedás expuesto en territorio enemigo tras el combo."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Zeri",
+    "content": {
+      "role": "ADC",
+      "championClass": "Tiradora",
+      "difficulty": "Media",
+      "body": "Zeri dispara en ráfagas constantes mientras se mueve y puede saltar muros bajos deslizándose sobre el terreno, ganando velocidad de ataque con cada golpe conectado. Es una tiradora muy móvil que exige reposicionarse todo el tiempo.",
+      "tips": [
+        {
+          "text": "Movete constantemente durante la pelea para aprovechar tu velocidad de ataque creciente."
+        },
+        {
+          "text": "Usá tu deslizamiento sobre muros bajos para escapar de ganks o reposicionarte."
+        },
+        {
+          "text": "No te quedes quieta disparando en un solo lugar,",
+          "warning": "tu kit entero está pensado para moverse sin parar durante el combate."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Ziggs",
+    "content": {
+      "role": "Medio",
+      "championClass": "Mago",
+      "difficulty": "Fácil",
+      "body": "Ziggs coloca minas explosivas a distancia y su ultimate hace un daño masivo capaz de destruir estructuras enteras de un solo golpe. Es muy seguro pokeando desde lejos, pero frágil si lo alcanzan cuerpo a cuerpo.",
+      "tips": [
+        {
+          "text": "Colocá minas en rutas de escape antes de comprometerte a una pelea."
+        },
+        {
+          "text": "Usá tu ultimate contra estructuras o grupos de enemigos agrupados."
+        },
+        {
+          "text": "No te acerques a pelear de cerca,",
+          "warning": "tu kit está pensado para hacer daño a distancia, no en corto alcance."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Zilean",
+    "content": {
+      "role": "Support",
+      "championClass": "Mago de utilidad",
+      "difficulty": "Media",
+      "body": "Zilean coloca bombas de tiempo que puede detonar dos veces si las apila sobre el mismo objetivo, y su ultimate puede revivir a un aliado justo después de morir. Es de los soportes con mayor impacto en el timing de una pelea.",
+      "tips": [
+        {
+          "text": "Apilá dos bombas sobre el mismo objetivo antes de detonarlas para el daño completo."
+        },
+        {
+          "text": "Guardá tu ultimate de revivir para el aliado más importante en la pelea decisiva."
+        },
+        {
+          "text": "No gastes tu ultimate de forma preventiva sin necesidad clara,",
+          "warning": "su verdadero valor está en revivir en el momento justo, no antes."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Zoe",
+    "content": {
+      "role": "Medio",
+      "championClass": "Maga",
+      "difficulty": "Difícil",
+      "body": "Zoe puede robar objetos consumibles del rival y su ultimate deja una estrella dormida que aturde al despertar, siendo devastadora si logra sorprender con combos desde ángulos inesperados. Es una de las magas con mayor techo de creatividad del juego.",
+      "tips": [
+        {
+          "text": "Robá pociones o consumibles enemigos para negarle recursos a tu rival."
+        },
+        {
+          "text": "Colocá tu estrella dormida en ángulos donde el rival no la vea venir."
+        },
+        {
+          "text": "No definas combos sin sorpresa de por medio,",
+          "warning": "tu kit rinde mucho más golpeando desde ángulos inesperados que de frente."
+        }
+      ]
+    }
+  },
+  {
+    "championKey": "Zyra",
+    "content": {
+      "role": "Support",
+      "championClass": "Maga de control de área",
+      "difficulty": "Media",
+      "body": "Zyra planta semillas que puede convertir en plantas que atacan solas, controlando el espacio de la línea, y su ultimate lanza por el aire a todos los enemigos cercanos. Es fuerte pokeando en línea y devastadora en peleas grupales con buen posicionamiento de plantas.",
+      "tips": [
+        {
+          "text": "Plantá semillas en arbustos y rutas clave antes de que empiece la pelea."
+        },
+        {
+          "text": "Usá tu ultimate cuando tengas plantas activas cerca para maximizar el daño en área."
+        },
+        {
+          "text": "No pelees sin plantas colocadas si podés evitarlo,",
+          "warning": "gran parte de tu daño y control depende de tenerlas activas."
+        }
+      ]
+    }
+  }
+]

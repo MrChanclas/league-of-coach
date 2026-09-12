@@ -28,6 +28,13 @@ export function getChampionIconUrl(championKey: string, version: string) {
   return `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${championKey}.png`
 }
 
+// Splash loading art isn't versioned per-patch like the square icon, so no
+// `version` param — used for one-off hero images (lesson media) rather than
+// grids, where the bigger file size would add up (see handoff_loc/07-pool-champ.md).
+export function getChampionSplashUrl(championKey: string) {
+  return `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${championKey}_0.jpg`
+}
+
 let cachedChampionListPromise: Promise<string[]> | null = null
 
 export function getChampionList(version: string): Promise<string[]> {

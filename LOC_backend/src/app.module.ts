@@ -7,6 +7,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AccountsModule } from './accounts/accounts.module';
 import { ClerkAuthGuard } from './auth/clerk-auth.guard';
+import { ChampionGuidesModule } from './champion-guides/champion-guides.module';
+import { ChampionPoolsModule } from './champion-pools/champion-pools.module';
 import { AppExceptionFilter } from './discord/app-exception.filter';
 import { DiscordModule } from './discord/discord.module';
 import { FeedbackModule } from './feedback/feedback.module';
@@ -31,6 +33,8 @@ import { UsersModule } from './users/users.module';
     FeedbackModule,
     GoalsModule,
     LearningModule,
+    ChampionGuidesModule,
+    ChampionPoolsModule,
     MatchesModule,
     StatsModule,
   ],
