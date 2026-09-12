@@ -1,6 +1,14 @@
 import { getChampionIconUrl } from '../../lib/riotAssets'
-import { MAX_CHAMPIONS_PER_ROLE, MIN_CHAMPIONS_PER_ROLE, POOL_ROLE_KEYS, POOL_ROLE_LABELS, POOL_STATE_LABELS } from '../../lib/poolLabels'
-import type { PoolView } from '../../types/dashboard'
+import {
+  MAX_CHAMPIONS_PER_ROLE,
+  MIN_CHAMPIONS_PER_ROLE,
+  PERFORMANCE_TIP_BAD_MESSAGE,
+  PERFORMANCE_TIP_GOOD_MESSAGE,
+  POOL_ROLE_KEYS,
+  POOL_ROLE_LABELS,
+  POOL_STATE_LABELS,
+} from '../../lib/poolLabels'
+import type { ChampionPerformanceTip, PoolView } from '../../types/dashboard'
 
 type PoolBoardProps = {
   poolView: PoolView
@@ -17,6 +25,34 @@ function formatWinrate(gamesPlayed: number, winrate: number) {
   if (gamesPlayed < MIN_GAMES_FOR_WINRATE) return { label: '—', className: 'pool-wr pool-wr--muted' }
   const pct = Math.round(winrate * 100)
   return { label: `${pct}%`, className: pct >= 50 ? 'pool-wr pool-wr--win' : 'pool-wr pool-wr--loss' }
+}
+
+/** Per-champion "seguí así o cambiá" note — null once there isn't enough data yet to say either way. */
+function PerformanceTip({
+  performance,
+  onAddSubstitute,
+}: {
+  performance: ChampionPerformanceTip
+  onAddSubstitute: (championKey: string) => void
+}) {
+  if (performance.status === 'insufficient_data') return null
+  if (performance.status === 'good') {
+    return <span className="pool-performance-tip pool-performance-tip--good">✓ {PERFORMANCE_TIP_GOOD_MESSAGE}</span>
+  }
+  return (
+    <div className="pool-performance-tip pool-performance-tip--bad">
+      <span>{PERFORMANCE_TIP_BAD_MESSAGE}</span>
+      {performance.substitute && (
+        <button
+          type="button"
+          className="pool-performance-substitute"
+          onClick={() => onAddSubstitute(performance.substitute!.championKey)}
+        >
+          Probar {performance.substitute.name} en su lugar
+        </button>
+      )}
+    </div>
+  )
 }
 
 function formatProvenance(pool: PoolView['pool']) {
@@ -115,6 +151,8 @@ export function PoolBoard({
                       ) : (
                         <span className="pool-guide-link pool-guide-link--muted">Sin guía</span>
                       )}
+
+                      <PerformanceTip performance={entry.performance} onAddSubstitute={onAddOutsider} />
                     </div>
                   )
                 })}
@@ -161,23 +199,26 @@ export function PoolBoard({
               {outsiders.map((outsider) => {
                 const wr = formatWinrate(outsider.gamesPlayed, outsider.winrate)
                 return (
-                  <div key={outsider.championKey} className="pool-outsider-row">
-                    <div className="pool-champion-art pool-champion-art--sm">
-                      {ddragonVersion ? (
-                        <img src={getChampionIconUrl(outsider.championKey, ddragonVersion)} alt={outsider.name} />
-                      ) : (
-                        <div className="avatar-tile avatar-tile--xs">{outsider.name.slice(0, 2).toUpperCase()}</div>
-                      )}
+                  <div key={outsider.championKey} className="pool-outsider-block">
+                    <div className="pool-outsider-row">
+                      <div className="pool-champion-art pool-champion-art--sm">
+                        {ddragonVersion ? (
+                          <img src={getChampionIconUrl(outsider.championKey, ddragonVersion)} alt={outsider.name} />
+                        ) : (
+                          <div className="avatar-tile avatar-tile--xs">{outsider.name.slice(0, 2).toUpperCase()}</div>
+                        )}
+                      </div>
+                      <div className="pool-outsider-info">
+                        <span className="pool-outsider-name">{outsider.name}</span>
+                        <span className="pool-outsider-meta">
+                          <span className={wr.className}>{wr.label}</span> · {outsider.gamesPlayed} partidas
+                        </span>
+                      </div>
+                      <button type="button" className="pool-outsider-add" onClick={() => onAddOutsider(outsider.championKey)}>
+                        + Sumar
+                      </button>
                     </div>
-                    <div className="pool-outsider-info">
-                      <span className="pool-outsider-name">{outsider.name}</span>
-                      <span className="pool-outsider-meta">
-                        <span className={wr.className}>{wr.label}</span> · {outsider.gamesPlayed} partidas
-                      </span>
-                    </div>
-                    <button type="button" className="pool-outsider-add" onClick={() => onAddOutsider(outsider.championKey)}>
-                      + Sumar
-                    </button>
+                    <PerformanceTip performance={outsider.performance} onAddSubstitute={onAddOutsider} />
                   </div>
                 )
               })}

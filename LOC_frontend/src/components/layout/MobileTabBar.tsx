@@ -1,13 +1,15 @@
+import { LockGlyph } from '../shared/LockGlyph'
 import type { TabKey } from '../../types/dashboard'
 
 type MobileTabBarProps = {
   activeTab: TabKey
   onTabChange: (tab: TabKey) => void
+  lockedTabs: TabKey[]
 }
 
 const TABS: { key: TabKey; label: string; tour?: string }[] = [
   { key: 'cuentas', label: 'Cuentas' },
-  { key: 'partidas', label: 'Partidas' },
+  { key: 'partidas', label: 'Partidas', tour: 'nav-partidas' },
   { key: 'aprendizaje', label: 'Aprendizaje', tour: 'nav-aprendizaje' },
   { key: 'pool-champ', label: 'Pool', tour: 'nav-pool-champ' },
   { key: 'objetivos', label: 'Objetivos', tour: 'nav-objetivos' },
@@ -63,7 +65,7 @@ function TabGlyph({ tab, active }: { tab: TabKey; active: boolean }) {
   )
 }
 
-export function MobileTabBar({ activeTab, onTabChange }: MobileTabBarProps) {
+export function MobileTabBar({ activeTab, onTabChange, lockedTabs }: MobileTabBarProps) {
   return (
     <nav className="mobile-tabbar" role="tablist" aria-label="Navegación principal">
       {TABS.map((tab) => {
@@ -78,7 +80,10 @@ export function MobileTabBar({ activeTab, onTabChange }: MobileTabBarProps) {
             className={active ? 'mobile-tab active' : 'mobile-tab'}
             onClick={() => onTabChange(tab.key)}
           >
-            <TabGlyph tab={tab.key} active={active} />
+            <span className="mobile-tab-glyph-wrap">
+              <TabGlyph tab={tab.key} active={active} />
+              {lockedTabs.includes(tab.key) && <LockGlyph className="mobile-tab-lock" />}
+            </span>
             <span className="mobile-tab-label">{tab.label}</span>
           </button>
         )

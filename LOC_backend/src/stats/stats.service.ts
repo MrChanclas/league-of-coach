@@ -46,9 +46,12 @@ export class StatsService {
     return { totalAccountsAnalyzed };
   }
 
-  async getAccountSummary(accountId: string) {
+  async getAccountSummary(accountId: string, since?: Date) {
     const participants = await this.prisma.matchParticipant.findMany({
-      where: { accountId },
+      where: {
+        accountId,
+        ...(since && { match: { gameCreation: { gte: since } } }),
+      },
       include: { match: true },
     });
 
@@ -64,15 +67,16 @@ export class StatsService {
     return this.summarize(participants);
   }
 
-  async getByChampion(accountId: string, sinceDays?: number) {
-    const since = sinceDays
-      ? new Date(Date.now() - sinceDays * 24 * 60 * 60 * 1000)
-      : undefined;
-
+  async getByChampion(accountId: string, since?: Date, queueId?: number) {
     const participants = await this.prisma.matchParticipant.findMany({
       where: {
         accountId,
-        ...(since && { match: { gameCreation: { gte: since } } }),
+        ...((since || queueId) && {
+          match: {
+            ...(since && { gameCreation: { gte: since } }),
+            ...(queueId && { queueId }),
+          },
+        }),
       },
       include: { match: true },
     });
@@ -99,10 +103,20 @@ export class StatsService {
    */
   async getPrimaryRoleByChampion(
     accountId: string,
+    since?: Date,
+    queueId?: number,
   ): Promise<Map<string, string>> {
     const rows = await this.prisma.matchParticipant.groupBy({
       by: ['champion', 'teamPosition'],
-      where: { accountId },
+      where: {
+        accountId,
+        ...((since || queueId) && {
+          match: {
+            ...(since && { gameCreation: { gte: since } }),
+            ...(queueId && { queueId }),
+          },
+        }),
+      },
       _count: { _all: true },
     });
 
@@ -148,9 +162,13 @@ export class StatsService {
    * ingestion, including each row's own team objective totals) — no
    * teammate join needed.
    */
-  async getRoleMetrics(accountId: string, teamPosition: string) {
+  async getRoleMetrics(accountId: string, teamPosition: string, since?: Date) {
     const participants = await this.prisma.matchParticipant.findMany({
-      where: { accountId, teamPosition },
+      where: {
+        accountId,
+        teamPosition,
+        ...(since && { match: { gameCreation: { gte: since } } }),
+      },
       include: { match: true },
     });
 
@@ -167,9 +185,15 @@ export class StatsService {
     accountId: string,
     teamPosition: string,
     champion: string,
+    since?: Date,
   ) {
     const participants = await this.prisma.matchParticipant.findMany({
-      where: { accountId, teamPosition, champion },
+      where: {
+        accountId,
+        teamPosition,
+        champion,
+        ...(since && { match: { gameCreation: { gte: since } } }),
+      },
       include: { match: true },
     });
 
@@ -322,8 +346,11 @@ export class StatsService {
       .sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  async getStreak(accountId: string) {
-    return this.computeStreak({ accountId });
+  async getStreak(accountId: string, since?: Date) {
+    return this.computeStreak({
+      accountId,
+      ...(since && { match: { gameCreation: { gte: since } } }),
+    });
   }
 
   async getStreakByQueue(accountId: string, queueId: number) {
@@ -355,9 +382,12 @@ export class StatsService {
     return { type, count };
   }
 
-  async getLaneDistribution(accountId: string) {
+  async getLaneDistribution(accountId: string, since?: Date) {
     const participants = await this.prisma.matchParticipant.findMany({
-      where: { accountId },
+      where: {
+        accountId,
+        ...(since && { match: { gameCreation: { gte: since } } }),
+      },
       select: { teamPosition: true },
     });
 

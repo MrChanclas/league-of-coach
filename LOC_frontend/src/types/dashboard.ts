@@ -112,6 +112,12 @@ export type GoalCreateInput =
       deadline?: string
     }
 
+// Pre-fill for GoalFormModal when a goal is created from a detected learning
+// error (see BehaviorFlag below) instead of opened blank.
+export type GoalPrefill =
+  | { type: 'rol'; targetRole: string }
+  | { type: 'campeon'; targetChampion: string; targetWinratePct?: number }
+
 export type DashboardSummary = {
   totalAccounts: number
   totalGoals: number
@@ -266,6 +272,11 @@ export type RosterChampion = {
   championClass: string | null
 }
 
+export type ChampionPerformanceTip =
+  | { status: 'insufficient_data' }
+  | { status: 'good' }
+  | { status: 'bad'; substitute: { championKey: string; name: string; role: PoolRoleKey } | null }
+
 export type PoolEntry = {
   championKey: string
   name: string
@@ -276,6 +287,7 @@ export type PoolEntry = {
   position: number
   gamesPlayed: number
   winrate: number
+  performance: ChampionPerformanceTip
 }
 
 export type PoolOutsider = {
@@ -284,6 +296,7 @@ export type PoolOutsider = {
   role: PoolRoleKey
   gamesPlayed: number
   winrate: number
+  performance: ChampionPerformanceTip
 }
 
 export type PoolHealthNote = { label: string }

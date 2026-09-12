@@ -175,6 +175,11 @@
   color: var(--hf-muted-4);
 }
 
+.nav-item-lock {
+  color: var(--hf-muted-4);
+  flex: none;
+}
+
 .sidebar-accounts {
   display: flex;
   flex-direction: column;
@@ -1663,6 +1668,13 @@
   color: var(--hf-muted-2);
 }
 
+.goals-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
 .goal-row {
   position: relative;
   display: grid;
@@ -1949,6 +1961,124 @@
   padding: 24px;
   color: var(--hf-muted-2);
   font: 400 13px/1.5 var(--font-body);
+}
+
+.detected-errors {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 18px 0 26px;
+}
+
+.detected-errors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detected-error-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--hf-border);
+  background: var(--hf-surface);
+}
+
+.detected-error-art {
+  width: 40px;
+  height: 40px;
+  border-radius: 9px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.detected-error-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detected-error-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detected-error-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detected-error-badge {
+  padding: 2px 8px;
+  border-radius: 20px;
+  font: 600 9.5px/1.6 var(--font-mono);
+  letter-spacing: 0.06em;
+}
+
+.detected-error-badge--high {
+  color: var(--hf-loss);
+  background: rgba(205, 106, 99, 0.14);
+}
+
+.detected-error-badge--medium {
+  color: var(--hf-gold-strong);
+  background: rgba(216, 181, 106, 0.14);
+}
+
+.detected-error-badge--low {
+  color: var(--hf-muted-2);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.detected-error-role {
+  font: 600 10px/1 var(--font-mono);
+  color: var(--hf-muted-4);
+  letter-spacing: 0.06em;
+}
+
+.detected-error-narrative {
+  margin: 0;
+  font: 400 12.5px/1.5 var(--font-body);
+  color: var(--hf-muted-1);
+}
+
+.detected-error-cta {
+  flex-shrink: 0;
+}
+
+.locked-tab-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  max-width: 480px;
+  margin: 40px auto;
+  padding: 40px 28px;
+  text-align: center;
+  border-radius: 13px;
+  border: 1px dashed var(--hf-border-strong);
+}
+
+.locked-tab-state-icon {
+  color: var(--hf-gold-dim);
+}
+
+.locked-tab-state h1 {
+  margin: 0;
+  font: 700 22px/1.2 var(--font-display);
+  color: var(--hf-heading-2);
+}
+
+.locked-tab-state p {
+  margin: 0;
+  color: var(--hf-muted-2);
+  font: 400 13px/1.6 var(--font-body);
 }
 
 .lesson-card--clickable {
@@ -3425,6 +3555,20 @@
   .mobile-tab.active .mobile-tab-label {
     color: var(--hf-gold);
   }
+
+  .mobile-tab-glyph-wrap {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .mobile-tab-lock {
+    position: absolute;
+    top: -3px;
+    right: -6px;
+    color: var(--hf-muted-4);
+    background: var(--hf-bg);
+    border-radius: 50%;
+  }
 }
 
 /* ── Onboarding ──────────────────────────────────────────────────────── */
@@ -4628,6 +4772,7 @@
 
 .pool-champion-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 15px;
   padding: 15px 18px;
@@ -4713,6 +4858,37 @@
 .pool-guide-link--muted {
   color: var(--hf-muted-6);
   cursor: default;
+}
+
+.pool-performance-tip {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 500 11.5px/1.4 var(--font-body);
+}
+
+.pool-performance-tip--good {
+  color: var(--hf-win-green);
+}
+
+.pool-performance-tip--bad {
+  color: var(--hf-loss);
+}
+
+.pool-performance-substitute {
+  background: none;
+  border: 1px dashed rgba(216, 181, 106, 0.4);
+  border-radius: 20px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font: 500 11px var(--font-body);
+  color: var(--hf-gold-dim);
+}
+
+.pool-performance-substitute:hover {
+  background: rgba(216, 181, 106, 0.07);
+  border-color: rgba(216, 181, 106, 0.6);
 }
 
 .pool-board-aside {
@@ -4810,10 +4986,21 @@
   color: var(--hf-muted-3);
 }
 
+.pool-outsider-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .pool-outsider-row {
   display: flex;
   align-items: center;
   gap: 11px;
+}
+
+.pool-outsider-block .pool-performance-tip {
+  flex-basis: auto;
+  padding-left: 43px;
 }
 
 .pool-outsider-info {

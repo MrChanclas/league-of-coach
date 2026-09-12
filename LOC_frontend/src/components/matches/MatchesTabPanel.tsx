@@ -48,7 +48,7 @@ export function MatchesTabPanel({
         <div className="page-head">
           <div>
             <h1>Historial de partidas</h1>
-            <p>Agregá una cuenta de Riot en la pestaña &quot;Cuentas&quot; para ver tu historial de partidas.</p>
+            <p>Agrega una cuenta de Riot en la pestaña &quot;Cuentas&quot; para ver tu historial de partidas.</p>
           </div>
         </div>
       </div>

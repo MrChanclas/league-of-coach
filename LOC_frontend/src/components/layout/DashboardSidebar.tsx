@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { getTierColor } from '../../lib/hexforge'
+import { LockGlyph } from '../shared/LockGlyph'
 import type { AccountCard, TabKey } from '../../types/dashboard'
 
 type DashboardSidebarProps = {
@@ -14,11 +15,12 @@ type DashboardSidebarProps = {
   onOpenAccountModal: () => void
   onReplayOnboarding: () => void
   navMeta: { cuentas: number; partidas: number; aprendizaje: number; 'pool-champ': number; objetivos: number }
+  lockedTabs: TabKey[]
 }
 
 const navItems: { key: TabKey; label: string; tour?: string }[] = [
   { key: 'cuentas', label: 'Cuentas' },
-  { key: 'partidas', label: 'Partidas' },
+  { key: 'partidas', label: 'Partidas', tour: 'nav-partidas' },
   { key: 'aprendizaje', label: 'Aprendizaje', tour: 'nav-aprendizaje' },
   { key: 'pool-champ', label: 'Pool Champ', tour: 'nav-pool-champ' },
   { key: 'objetivos', label: 'Objetivos', tour: 'nav-objetivos' },
@@ -51,6 +53,7 @@ export function DashboardSidebar({
   onOpenAccountModal,
   onReplayOnboarding,
   navMeta,
+  lockedTabs,
 }: DashboardSidebarProps) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
 
@@ -77,6 +80,7 @@ export function DashboardSidebar({
             >
               <span className="nav-item-dot" />
               <span className="nav-item-label">{item.label}</span>
+              {lockedTabs.includes(item.key) && <LockGlyph className="nav-item-lock" />}
               <span className="nav-item-meta">{navMeta[item.key]}</span>
             </button>
           ))}

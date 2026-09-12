@@ -7,6 +7,7 @@ import type {
   AccountStatsSummary,
   ActivityDay,
   AuthUser,
+  BehaviorFlag,
   ChampionGuideResponse,
   DashboardPayload,
   LaneEntry,
@@ -40,6 +41,7 @@ export const queryKeys = {
   accountRankHistory: (accountId: string | undefined, queue: string) =>
     ['account', accountId, 'rankHistory', queue] as const,
   accountLessons: (accountId: string | undefined) => ['account', accountId, 'lessons'] as const,
+  accountBehaviorFlags: (accountId: string | undefined) => ['account', accountId, 'behaviorFlags'] as const,
   accountsQueueStats: (accountIds: string[]) => ['accountsQueueStats', ...accountIds] as const,
   championGuide: (accountId: string | undefined, champion: string | undefined) =>
     ['account', accountId, 'championGuide', champion] as const,
@@ -183,6 +185,19 @@ export function useAccountLessons(accountId: string | undefined) {
     queryFn: async () => {
       const token = await getToken()
       return apiFetch<LessonCard[]>(`/learning/account/${accountId}/lessons`, { token })
+    },
+    enabled: Boolean(accountId),
+  })
+}
+
+/** Account-wide detected weaknesses (role and champion), no champion filter — used to surface "errores detectados" in Aprendizaje. */
+export function useAccountBehaviorFlags(accountId: string | undefined) {
+  const { getToken } = useAuth()
+  return useQuery({
+    queryKey: queryKeys.accountBehaviorFlags(accountId),
+    queryFn: async () => {
+      const token = await getToken()
+      return apiFetch<BehaviorFlag[]>(`/learning/account/${accountId}/behavior-flags`, { token })
     },
     enabled: Boolean(accountId),
   })

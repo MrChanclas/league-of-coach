@@ -29,3 +29,9 @@ export const RECOMMENDATION_LABELS: Record<PoolRecommendationLabel, string> = {
   TU_ESTILO: 'TU ESTILO',
   CUBRE_HUECO: 'CUBRE HUECO',
 }
+
+// Copy for the per-champion "seguí así o cambiá" tip (winrate > 49% = bien,
+// <= 49% = mal) — kept in sync with BAD_WINRATE_THRESHOLD in the backend's
+// champion-performance.ts.
+export const PERFORMANCE_TIP_GOOD_MESSAGE = 'Sigue utilizándolo'
+export const PERFORMANCE_TIP_BAD_MESSAGE = 'Necesitas mejorar'

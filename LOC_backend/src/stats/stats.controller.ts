@@ -78,7 +78,10 @@ export class StatsController {
     query: z.infer<typeof ChampionsQuerySchema>,
   ) {
     await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
-    return this.statsService.getByChampion(accountId, query.days);
+    const since = query.days
+      ? new Date(Date.now() - query.days * 24 * 60 * 60 * 1000)
+      : undefined;
+    return this.statsService.getByChampion(accountId, since);
   }
 
   @Get('account/:accountId/activity')

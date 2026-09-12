@@ -4,8 +4,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { z } from 'zod';
+import { getCurrentSplitStart } from '../common/season';
+import { QUEUE_IDS } from '../common/queue';
+import { rankScore } from '../common/rank-order';
 import { PrismaService } from '../prisma/prisma.service';
 import { StatsService } from '../stats/stats.service';
+import { evaluateChampionPerformance } from './champion-performance';
 import {
   ChampionRosterService,
   type RosterChampion,
@@ -95,14 +99,60 @@ export class ChampionPoolsService {
     return this.roster.getRoster();
   }
 
+  /**
+   * Which ranked queue's games should count for Pool Champ's stats and role
+   * detection: the account's higher-elo queue. A player often plays off-role
+   * in whichever queue they take less seriously (duo/fill in Flex, say), so
+   * blending both queues can dilute the "what's your main role" signal —
+   * see user-reported bug where a mid main got recommended mostly top/adc.
+   * Falls back to combining both queues (undefined = no queue filter) when
+   * there's no real elo difference to go on, e.g. both unranked or tied.
+   */
+  private async getPreferredQueueId(
+    accountId: string,
+  ): Promise<number | undefined> {
+    const account = await this.prisma.lolAccount.findUnique({
+      where: { id: accountId },
+      select: {
+        soloTier: true,
+        soloDivision: true,
+        soloLp: true,
+        flexTier: true,
+        flexDivision: true,
+        flexLp: true,
+      },
+    });
+    if (!account) return undefined;
+
+    const soloScore = rankScore(
+      account.soloTier,
+      account.soloDivision,
+      account.soloLp,
+    );
+    const flexScore = rankScore(
+      account.flexTier,
+      account.flexDivision,
+      account.flexLp,
+    );
+    if (soloScore === flexScore) return undefined;
+    return flexScore > soloScore ? QUEUE_IDS.FLEX : QUEUE_IDS.SOLO;
+  }
+
   async getPoolView(accountId: string) {
-    const [pool, championStats, roster] = await Promise.all([
+    const splitStart = getCurrentSplitStart();
+    const preferredQueueId = await this.getPreferredQueueId(accountId);
+    const [pool, championStats, roster, roleMap] = await Promise.all([
       this.prisma.championPool.findUnique({
         where: { accountId },
         include: { entries: { orderBy: { position: 'asc' } } },
       }),
-      this.stats.getByChampion(accountId) as Promise<ChampionStatEntry[]>,
+      this.stats.getByChampion(
+        accountId,
+        splitStart,
+        preferredQueueId,
+      ) as Promise<ChampionStatEntry[]>,
       this.roster.getRoster(),
+      this.stats.getPrimaryRoleByChampion(accountId, splitStart, preferredQueueId),
     ]);
 
     const rosterByKey = new Map(
@@ -112,27 +162,52 @@ export class ChampionPoolsService {
       championStats.map((stat) => [stat.champion, stat]),
     );
 
-    const entries: EnrichedPoolEntry[] = (pool?.entries ?? []).map((entry) =>
-      this.enrichEntry(entry, rosterByKey, statsByChampion),
+    const poolChampionKeys = new Set(
+      (pool?.entries ?? []).map((entry) => entry.championKey),
     );
 
-    const poolChampionKeys = new Set(entries.map((entry) => entry.championKey));
-    const roleMap = await this.stats.getPrimaryRoleByChampion(accountId);
+    const entries: EnrichedPoolEntry[] = (pool?.entries ?? []).map((entry) => {
+      const base = this.enrichEntry(entry, rosterByKey, statsByChampion);
+      // A champion already in the pool is never its own substitute.
+      const excludeKeys = new Set(poolChampionKeys);
+      excludeKeys.delete(entry.championKey);
+      return {
+        ...base,
+        performance: evaluateChampionPerformance(
+          entry.championKey,
+          base.role,
+          roster,
+          championStats,
+          roleMap,
+          excludeKeys,
+        ),
+      };
+    });
+
     const outsiders: PoolOutsider[] = championStats
       .filter(
         (stat) => stat.gamesPlayed > 0 && !poolChampionKeys.has(stat.champion),
       )
       .map((stat) => {
         const playedRole = roleMap.get(stat.champion);
+        const role =
+          playedRole && isPoolRoleKey(playedRole)
+            ? playedRole
+            : (rosterByKey.get(stat.champion)?.role ?? 'MIDDLE');
         return {
           championKey: stat.champion,
           name: rosterByKey.get(stat.champion)?.name ?? stat.champion,
-          role:
-            playedRole && isPoolRoleKey(playedRole)
-              ? playedRole
-              : (rosterByKey.get(stat.champion)?.role ?? 'MIDDLE'),
+          role,
           gamesPlayed: stat.gamesPlayed,
           winrate: stat.winrate,
+          performance: evaluateChampionPerformance(
+            stat.champion,
+            role,
+            roster,
+            championStats,
+            roleMap,
+            poolChampionKeys,
+          ),
         };
       })
       .sort((a, b) => b.gamesPlayed - a.gamesPlayed);
@@ -153,9 +228,15 @@ export class ChampionPoolsService {
   }
 
   async getRecommendation(accountId: string) {
+    const splitStart = getCurrentSplitStart();
+    const preferredQueueId = await this.getPreferredQueueId(accountId);
     const [championStats, roleMap, roster, existingPool] = await Promise.all([
-      this.stats.getByChampion(accountId) as Promise<ChampionStatEntry[]>,
-      this.stats.getPrimaryRoleByChampion(accountId),
+      this.stats.getByChampion(
+        accountId,
+        splitStart,
+        preferredQueueId,
+      ) as Promise<ChampionStatEntry[]>,
+      this.stats.getPrimaryRoleByChampion(accountId, splitStart, preferredQueueId),
       this.roster.getRoster(),
       this.prisma.championPool.findUnique({
         where: { accountId },
@@ -295,7 +376,7 @@ export class ChampionPoolsService {
     },
     rosterByKey: Map<string, RosterChampion>,
     statsByChampion: Map<string, ChampionStatEntry>,
-  ): EnrichedPoolEntry {
+  ): Omit<EnrichedPoolEntry, 'performance'> {
     const stat = statsByChampion.get(entry.championKey);
     return {
       championKey: entry.championKey,

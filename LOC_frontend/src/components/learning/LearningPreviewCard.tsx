@@ -29,7 +29,7 @@ export function LearningPreviewCard({ lessons, gamesAnalyzed, onOpenLesson, onGo
           <div className="learning-preview-eyebrow">APRENDIZAJE</div>
           <h2>{lessons.length === 0 ? 'Sin lecciones pendientes' : countLabel(lessons.length)}</h2>
           <p>
-            De tus últimas {gamesAnalyzed} partidas. Entrá a la lección para ver la evidencia
+            De tus últimas {gamesAnalyzed} partidas. Entra a la lección para ver la evidencia
             {lessons.some((lesson) => lesson.kind === 'champion') ? ' y la guía.' : '.'}
           </p>
         </div>

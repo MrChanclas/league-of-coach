@@ -1,3 +1,4 @@
+import type { ChampionPerformanceTip } from './champion-performance';
 import type { PoolAddedBy, PoolEntryState, PoolRoleKey } from './pool-roles';
 
 export type EnrichedPoolEntry = {
@@ -10,6 +11,7 @@ export type EnrichedPoolEntry = {
   position: number;
   gamesPlayed: number;
   winrate: number;
+  performance: ChampionPerformanceTip;
 };
 
 export type PoolOutsider = {
@@ -18,6 +20,7 @@ export type PoolOutsider = {
   role: PoolRoleKey;
   gamesPlayed: number;
   winrate: number;
+  performance: ChampionPerformanceTip;
 };
 
 export type ChampionStatEntry = {
