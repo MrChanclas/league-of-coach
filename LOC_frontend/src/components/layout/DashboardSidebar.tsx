@@ -13,13 +13,14 @@ type DashboardSidebarProps = {
   onSetCurrentAccountId: (id: string) => void
   onOpenAccountModal: () => void
   onReplayOnboarding: () => void
-  navMeta: { cuentas: number; partidas: number; aprendizaje: number; objetivos: number }
+  navMeta: { cuentas: number; partidas: number; aprendizaje: number; 'pool-champ': number; objetivos: number }
 }
 
 const navItems: { key: TabKey; label: string; tour?: string }[] = [
   { key: 'cuentas', label: 'Cuentas' },
   { key: 'partidas', label: 'Partidas' },
   { key: 'aprendizaje', label: 'Aprendizaje', tour: 'nav-aprendizaje' },
+  { key: 'pool-champ', label: 'Pool Champ', tour: 'nav-pool-champ' },
   { key: 'objetivos', label: 'Objetivos', tour: 'nav-objetivos' },
 ]
 

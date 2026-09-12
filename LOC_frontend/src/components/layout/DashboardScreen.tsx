@@ -11,6 +11,7 @@ import { LearningTabPanel } from '../learning/LearningTabPanel'
 import { MatchesTabPanel } from '../matches/MatchesTabPanel'
 import { FirstStepsChecklist } from '../onboarding/FirstStepsChecklist'
 import { OnboardingTour } from '../onboarding/OnboardingTour'
+import { PoolChampTabPanel } from '../poolchamp/PoolChampTabPanel'
 
 import type { SubmitEvent } from 'react'
 import type {
@@ -18,13 +19,16 @@ import type {
   AccountForm,
   AccountStatsSummary,
   ActivityDay,
-  ChampionSplitStat,
   GoalCreateInput,
   GoalItem,
   LaneEntry,
   LessonCard,
   MatchParticipantEntry,
+  PoolRecommendation,
+  PoolView,
   RankSnapshotEntry,
+  ReplacePoolEntryInput,
+  RosterChampion,
   StreakInfo,
   TabKey,
   TimeRange,
@@ -47,13 +51,19 @@ type DashboardScreenProps = {
   streak: StreakInfo | null
   lanes: LaneEntry[]
   weeklyActivity: ActivityDay[]
-  championsSplit: ChampionSplitStat[]
   rankHistory: RankSnapshotEntry[]
   lessons: LessonCard[]
   ddragonVersion: string | null
   timeRange: TimeRange
   isSyncing: boolean
   lastSyncedLabel: string
+  championRoster: RosterChampion[]
+  poolView: PoolView | undefined
+  poolRecommendation: PoolRecommendation | undefined
+  isPoolRecommendationLoading: boolean
+  isSavingPool: boolean
+  onSavePool: (entries: ReplacePoolEntryInput[]) => Promise<boolean>
+  onAddPoolOutsider: (championKey: string) => void
   // undefined = todavía no se resolvió el usuario (no auto-abrir); null = resuelto
   // y nunca vio el onboarding (auto-abrir); string = ya lo vio/saltó.
   onboardingCompletedAt: string | null | undefined
@@ -87,13 +97,19 @@ export function DashboardScreen({
   streak,
   lanes,
   weeklyActivity,
-  championsSplit,
   rankHistory,
   lessons,
   ddragonVersion,
   timeRange,
   isSyncing,
   lastSyncedLabel,
+  championRoster,
+  poolView,
+  poolRecommendation,
+  isPoolRecommendationLoading,
+  isSavingPool,
+  onSavePool,
+  onAddPoolOutsider,
   onboardingCompletedAt,
   onCompleteOnboarding,
   onTimeRangeChange,
@@ -110,6 +126,17 @@ export function DashboardScreen({
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false)
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false)
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false)
+  const [selectedLessonIndex, setSelectedLessonIndex] = useState<number | null>(null)
+
+  const handleOpenLesson = (index: number) => {
+    setSelectedLessonIndex(index)
+    onTabChange('aprendizaje')
+  }
+
+  const handleOpenChampionLesson = (championKey: string) => {
+    const index = lessons.findIndex((lesson) => lesson.kind === 'champion' && lesson.championKey === championKey)
+    if (index >= 0) handleOpenLesson(index)
+  }
 
   // Se auto-abre una sola vez, apenas se confirma que el usuario nunca
   // completó/saltó el onboarding. Comparar contra el último valor visto (en
@@ -138,14 +165,21 @@ export function DashboardScreen({
     cuentas: userAccounts.length,
     partidas: statsSummary?.gamesPlayed ?? matches.length,
     aprendizaje: lessons.length,
+    'pool-champ': poolView?.entries.length ?? 0,
     objetivos: goalsByAccount.length,
   }
 
   // Estado real, no el paso del tour — ver handoff_loc/04-onboarding.md.
+  // "Leer tu primera lección" no puede exigir lessons.length > 0: un jugador
+  // sin nada que corregir nunca tiene lecciones y ese paso quedaría
+  // trabado para siempre. Una vez que hay partidas cargadas, el motor de
+  // lecciones ya corrió sobre ellas — haya encontrado algo o no, el paso
+  // está resuelto.
   const checklistCompleted = [
     userAccounts.length > 0,
     (statsSummary?.gamesPlayed ?? 0) > 0,
-    lessons.length > 0,
+    lessons.length > 0 || (statsSummary?.gamesPlayed ?? 0) > 0,
+    Boolean(poolView?.pool),
     goalsByAccount.length > 0,
   ]
 
@@ -195,16 +229,21 @@ export function DashboardScreen({
             lanes={lanes}
             rankHistory={rankHistory}
             weeklyActivity={weeklyActivity}
-            championsSplit={championsSplit}
             goalsByAccount={goalsByAccount}
-            matches={matches}
+            lessons={lessons}
             timeRange={timeRange}
             checklistCompleted={checklistCompleted}
+            championRoster={championRoster}
+            hasChampionPool={Boolean(poolView?.pool)}
+            poolView={poolView}
             onTimeRangeChange={onTimeRangeChange}
             onSetCurrentAccountId={onSetCurrentAccountId}
             onDeleteAccount={onDeleteAccount}
-            onGoToMatches={() => onTabChange('partidas')}
             onGoToGoals={() => onTabChange('objetivos')}
+            onGoToLearning={() => onTabChange('aprendizaje')}
+            onGoToPoolChamp={() => onTabChange('pool-champ')}
+            onOpenGoalModal={() => setIsGoalModalOpen(true)}
+            onOpenLesson={handleOpenLesson}
           />
         )}
 
@@ -212,8 +251,6 @@ export function DashboardScreen({
           <MatchesTabPanel
             activeAccount={activeAccount}
             matches={matches}
-            statsSummary={statsSummary}
-            streak={streak}
             rankHistory={rankHistory}
             ddragonVersion={ddragonVersion}
           />
@@ -224,6 +261,27 @@ export function DashboardScreen({
             activeAccount={activeAccount}
             lessons={lessons}
             gamesAnalyzed={statsSummary?.gamesPlayed ?? 0}
+            ddragonVersion={ddragonVersion}
+            overallStats={statsSummary}
+            selectedIndex={selectedLessonIndex}
+            onSelectIndex={setSelectedLessonIndex}
+          />
+        )}
+
+        {activeTab === 'pool-champ' && (
+          <PoolChampTabPanel
+            activeAccount={activeAccount}
+            poolView={poolView}
+            roster={championRoster}
+            ddragonVersion={ddragonVersion}
+            lessons={lessons}
+            recommendation={poolRecommendation}
+            isRecommendationLoading={isPoolRecommendationLoading}
+            isSavingPool={isSavingPool}
+            onSavePool={onSavePool}
+            onAddOutsider={onAddPoolOutsider}
+            onOpenChampionLesson={handleOpenChampionLesson}
+            onGoToAccounts={() => onTabChange('cuentas')}
           />
         )}
 

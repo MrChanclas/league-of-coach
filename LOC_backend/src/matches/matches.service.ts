@@ -18,6 +18,17 @@ import {
   RANKED_QUEUE_IDS,
   type QueueKey,
 } from '../common/queue';
+import {
+  computePeelIncidents,
+  PEEL_SUPPORT_CHAMPIONS,
+} from '../common/peel-support';
+import { computeMidRoamFrames } from '../common/mid-roam';
+import { getTeleportCasts } from '../common/summoner-spells';
+import {
+  deriveRoleProfile,
+  roleMatchesProfile,
+  RoleProfile,
+} from '../common/role-profile';
 
 // The match history view only ever shows ranked Solo/Duo and Flex games,
 // regardless of what other queues get synced. Copied into a plain mutable
@@ -273,6 +284,147 @@ export class MatchesService {
     throw lastError;
   }
 
+  /**
+   * Every timeline-derived lesson signal (peel incidents, mid-lane roaming)
+   * shares a single Timeline API fetch per match instead of one call each —
+   * that endpoint is the rate-limit-costly part, not the frame parsing. It's
+   * also only worth paying for when the ACCOUNT BEING SYNCED is the one the
+   * data would be attributed to (they're playing that role this game) AND
+   * that role is actually their primary or secondary role historically —
+   * otherwise the fetch just enriches a one-off autofill game (or some other,
+   * likely-untracked player's row) that will never surface a role-specific
+   * lesson anyway, since lessons.service.ts gates on that same primary/
+   * secondary profile. A timeline fetch failure just means this one match's
+   * derived fields stay null, same as any other match synced before this
+   * tracking existed; it must never block storing the match itself.
+   */
+  private async computeTimelineDerivedStats(
+    server: string,
+    matchDto: RiotMatchDto,
+    trackedParticipant: RiotMatchDto['info']['participants'][number],
+    trackedAccountRoles: RoleProfile,
+  ): Promise<
+    Map<
+      number,
+      {
+        peelAdcDeathsTracked?: number;
+        peelAdcDeathsUnguarded?: number;
+        midRoamFramesTracked?: number;
+        midRoamFramesAway?: number;
+      }
+    >
+  > {
+    const result = new Map<
+      number,
+      {
+        peelAdcDeathsTracked?: number;
+        peelAdcDeathsUnguarded?: number;
+        midRoamFramesTracked?: number;
+        midRoamFramesAway?: number;
+      }
+    >();
+    const participants = matchDto.info.participants;
+
+    const trackedPlaysPeelRoleThisGame =
+      (trackedParticipant.teamPosition === 'UTILITY' ||
+        trackedParticipant.teamPosition === 'BOTTOM') &&
+      roleMatchesProfile(
+        [trackedParticipant.teamPosition],
+        trackedAccountRoles,
+      );
+    const trackedPlaysMidThisGame =
+      trackedParticipant.teamPosition === 'MIDDLE' &&
+      roleMatchesProfile(['MIDDLE'], trackedAccountRoles);
+
+    // Constrained to the tracked participant's own team: this is only worth
+    // fetching for their own lane's peel dynamic, not an unrelated pair
+    // elsewhere in the lobby.
+    const support =
+      trackedPlaysPeelRoleThisGame &&
+      participants.find(
+        (participant) =>
+          participant.teamId === trackedParticipant.teamId &&
+          participant.teamPosition === 'UTILITY' &&
+          PEEL_SUPPORT_CHAMPIONS.includes(participant.championName),
+      );
+    const adc =
+      support &&
+      participants.find(
+        (participant) =>
+          participant.teamId === support.teamId &&
+          participant.teamPosition === 'BOTTOM',
+      );
+    const mid =
+      trackedPlaysMidThisGame &&
+      participants.find((participant) => participant.teamPosition === 'MIDDLE');
+
+    if (!(support && adc) && !mid) return result;
+
+    try {
+      const timeline = await this.riotApi.getMatchTimeline(
+        server,
+        matchDto.metadata.matchId,
+      );
+
+      if (support && adc) {
+        const peelCounts = computePeelIncidents(
+          timeline,
+          support.participantId,
+          adc.participantId,
+        );
+        // Same shared incident, written onto both rows — the support's copy
+        // powers "No más escudos", the ADC's copy powers "Espera a tu
+        // compañero" (see lessons-knowledge-base.json).
+        const peelFields = {
+          peelAdcDeathsTracked: peelCounts.tracked,
+          peelAdcDeathsUnguarded: peelCounts.unguarded,
+        };
+        result.set(support.participantId, {
+          ...result.get(support.participantId),
+          ...peelFields,
+        });
+        result.set(adc.participantId, {
+          ...result.get(adc.participantId),
+          ...peelFields,
+        });
+      }
+
+      if (mid) {
+        const roamCounts = computeMidRoamFrames(timeline, mid.participantId);
+        result.set(mid.participantId, {
+          ...result.get(mid.participantId),
+          midRoamFramesTracked: roamCounts.tracked,
+          midRoamFramesAway: roamCounts.away,
+        });
+      }
+    } catch (error) {
+      this.logger.warn(
+        `No se pudo obtener el timeline de ${matchDto.metadata.matchId}: ${error instanceof Error ? error.message : error}`,
+      );
+    }
+
+    return result;
+  }
+
+  /**
+   * A lightweight, count-only query (not the full StatsService lane
+   * distribution) — this only needs to know whether a role is worth an
+   * extra Riot API call, not the account's full stats.
+   */
+  private async getAccountRoleProfile(accountId: string): Promise<RoleProfile> {
+    const counts = await this.prisma.matchParticipant.groupBy({
+      by: ['teamPosition'],
+      where: { accountId },
+      _count: { _all: true },
+    });
+    return deriveRoleProfile(
+      counts.map((row) => ({
+        lane: row.teamPosition,
+        games: row._count._all,
+      })),
+    );
+  }
+
   private async storeMatch(
     accountId: string,
     server: string,
@@ -320,6 +472,14 @@ export class MatchesService {
       matchDto.info.teams.map((team) => [team.teamId, team.objectives]),
     );
 
+    const trackedAccountRoles = await this.getAccountRoleProfile(accountId);
+    const timelineStatsByParticipantId = await this.computeTimelineDerivedStats(
+      server,
+      matchDto,
+      trackedParticipant,
+      trackedAccountRoles,
+    );
+
     // skipDuplicates so re-running this for an already-known match only
     // inserts the participant rows that are actually missing (this
     // account's own, most commonly) without erroring on the ones other
@@ -362,6 +522,19 @@ export class MatchesService {
           teamDragonKills: teamObjectives?.dragon.kills ?? null,
           teamBaronKills: teamObjectives?.baron.kills ?? null,
           teamRiftHeraldKills: teamObjectives?.riftHerald.kills ?? null,
+          peelAdcDeathsTracked:
+            timelineStatsByParticipantId.get(participant.participantId)
+              ?.peelAdcDeathsTracked ?? null,
+          peelAdcDeathsUnguarded:
+            timelineStatsByParticipantId.get(participant.participantId)
+              ?.peelAdcDeathsUnguarded ?? null,
+          midRoamFramesTracked:
+            timelineStatsByParticipantId.get(participant.participantId)
+              ?.midRoamFramesTracked ?? null,
+          midRoamFramesAway:
+            timelineStatsByParticipantId.get(participant.participantId)
+              ?.midRoamFramesAway ?? null,
+          teleportCasts: getTeleportCasts(participant),
           itemIds: [
             participant.item0,
             participant.item1,

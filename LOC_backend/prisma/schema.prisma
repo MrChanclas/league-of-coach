@@ -41,6 +41,7 @@ model LolAccount {
   goals             Goal[]
   matchParticipants MatchParticipant[]
   rankSnapshots     RankSnapshot[]
+  championPool      ChampionPool?
 }
 
 model RankSnapshot {
@@ -106,6 +107,50 @@ model Goal {
   targetKda      Float?
 }
 
+// Per-champion strategy guide (build/runes-agnostic identity + playstyle
+// tips) — see src/champion-guides. `content` follows the JSON shape in
+// champion-guides/guide-content.schema.ts so the format can grow (build,
+// runas, matchups...) without a schema migration. Hand-authored from
+// src/champion-guides/data/manual-guides on first request per champion.
+model ChampionGuide {
+  id           String   @id @default(cuid())
+  championKey  String   @unique // Data Dragon champion key, e.g. "Nilah"
+  patchVersion String // Data Dragon version this content was written for
+  content      Json
+  createdAt    DateTime @default(now())
+}
+
+// The champion pool a player declares for an account — what LoC treats as
+// "the champions this player actually plays" instead of averaging across
+// every champion they've ever touched. One pool per account (not per user):
+// someone with a mid account and a support account needs two independent
+// pools, and the header's account selector already scopes everything else
+// this way. See handoff_loc/07-pool-champ.md.
+model ChampionPool {
+  id        String      @id @default(cuid())
+  accountId String      @unique
+  account   LolAccount  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  source    String // 'manual' | 'coach' — how the pool was first put together
+  entries   PoolEntry[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model PoolEntry {
+  id          String       @id @default(cuid())
+  poolId      String
+  pool        ChampionPool @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  championKey String // Data Dragon champion id, e.g. "Nilah"
+  role        String // TOP | JUNGLE | MIDDLE | BOTTOM | UTILITY — the pool slot, not validated against the champion's "official" role
+  state       String       @default("testing") // 'main' | 'secondary' | 'testing'
+  note        String? // short, editable — why this champion is in the pool
+  addedBy     String       @default("player") // 'player' | 'coach'
+  position    Int          @default(0) // display order within the pool
+  createdAt   DateTime     @default(now())
+
+  @@unique([poolId, championKey])
+}
+
 model Match {
   id           String             @id @default(cuid())
   matchId      String             @unique
@@ -160,6 +205,33 @@ model MatchParticipant {
   teamDragonKills              Int?
   teamBaronKills               Int?
   teamRiftHeraldKills          Int?
+
+  // Only populated when this match has a UTILITY participant on a curated
+  // "peel" champion (see common/peel-support.ts) paired with a BOTTOM
+  // teammate — derived from the Match Timeline API at ingestion time, and
+  // written identically onto BOTH of their rows since it's the same shared
+  // incident read from two angles ("no más escudos" for the support, "espera
+  // a tu compañero" for the ADC). peelAdcDeathsTracked counts the ADC's early
+  // deaths (<20min); peelAdcDeathsUnguarded is the subset where the support
+  // was not within peel range at the closest timeline frame.
+  peelAdcDeathsTracked   Int?
+  peelAdcDeathsUnguarded Int?
+
+  // Only populated for a MIDDLE participant — derived from the Match
+  // Timeline API at ingestion time (see common/mid-roam.ts).
+  // midRoamFramesTracked counts early-game (<25min) timeline frames with a
+  // known position; midRoamFramesAway is the subset where they were outside
+  // the mid lane corridor, regardless of whether that rotation produced a
+  // kill, assist, or objective takedown.
+  midRoamFramesTracked Int?
+  midRoamFramesAway    Int?
+
+  // How many times this participant cast Teleport, straight from Riot's
+  // summonerXCasts field (see common/summoner-spells.ts) — no timeline
+  // needed, Riot already counts it. Null when they didn't equip Teleport at
+  // all, so "brought it and never cast it" (0) can be told apart from
+  // "didn't bring it" (null).
+  teleportCasts Int?
 
   @@unique([matchId, puuid])
 }

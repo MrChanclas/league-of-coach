@@ -7,13 +7,16 @@ import type {
   AccountStatsSummary,
   ActivityDay,
   AuthUser,
-  ChampionSplitStat,
+  ChampionGuideResponse,
   DashboardPayload,
   LaneEntry,
   LessonCard,
   MatchParticipantEntry,
+  PoolRecommendation,
+  PoolView,
   QueueStats,
   RankSnapshotEntry,
+  RosterChampion,
   StreakInfo,
 } from '../types/dashboard'
 
@@ -28,16 +31,22 @@ export const queryKeys = {
   platformStats: () => ['platformStats'] as const,
   account: (accountId: string | undefined) => ['account', accountId] as const,
   accountMatches: (accountId: string | undefined) => ['account', accountId, 'matches'] as const,
-  accountStats: (accountId: string | undefined) => ['account', accountId, 'stats'] as const,
-  accountStreak: (accountId: string | undefined) => ['account', accountId, 'streak'] as const,
+  accountStats: (accountId: string | undefined, queueId?: number) =>
+    ['account', accountId, 'stats', queueId ?? 'all'] as const,
+  accountStreak: (accountId: string | undefined, queueId?: number) =>
+    ['account', accountId, 'streak', queueId ?? 'all'] as const,
   accountLanes: (accountId: string | undefined) => ['account', accountId, 'lanes'] as const,
   accountActivity: (accountId: string | undefined) => ['account', accountId, 'activity'] as const,
-  accountChampions: (accountId: string | undefined, days: number) =>
-    ['account', accountId, 'champions', days] as const,
   accountRankHistory: (accountId: string | undefined, queue: string) =>
     ['account', accountId, 'rankHistory', queue] as const,
   accountLessons: (accountId: string | undefined) => ['account', accountId, 'lessons'] as const,
   accountsQueueStats: (accountIds: string[]) => ['accountsQueueStats', ...accountIds] as const,
+  championGuide: (accountId: string | undefined, champion: string | undefined) =>
+    ['account', accountId, 'championGuide', champion] as const,
+  championRoster: () => ['championRoster'] as const,
+  accountPool: (accountId: string | undefined) => ['account', accountId, 'pool'] as const,
+  accountPoolRecommendation: (accountId: string | undefined) =>
+    ['account', accountId, 'pool', 'recommendation'] as const,
 }
 
 
@@ -99,25 +108,33 @@ export function useAccountMatches(accountId: string | undefined) {
   })
 }
 
-export function useAccountStats(accountId: string | undefined) {
+/** queueId omitted = combined solo + flex (the account's whole history). */
+export function useAccountStats(accountId: string | undefined, queueId?: number) {
   const { getToken } = useAuth()
   return useQuery({
-    queryKey: queryKeys.accountStats(accountId),
+    queryKey: queryKeys.accountStats(accountId, queueId),
     queryFn: async () => {
       const token = await getToken()
-      return apiFetch<AccountStatsSummary>(`/stats/account/${accountId}`, { token })
+      const path = queueId
+        ? `/stats/account/${accountId}/by-queue/${queueId}`
+        : `/stats/account/${accountId}`
+      return apiFetch<AccountStatsSummary>(path, { token })
     },
     enabled: Boolean(accountId),
   })
 }
 
-export function useAccountStreak(accountId: string | undefined) {
+/** queueId omitted = combined solo + flex (the account's whole history). */
+export function useAccountStreak(accountId: string | undefined, queueId?: number) {
   const { getToken } = useAuth()
   return useQuery({
-    queryKey: queryKeys.accountStreak(accountId),
+    queryKey: queryKeys.accountStreak(accountId, queueId),
     queryFn: async () => {
       const token = await getToken()
-      return apiFetch<StreakInfo>(`/stats/account/${accountId}/streak`, { token })
+      const path = queueId
+        ? `/stats/account/${accountId}/streak/by-queue/${queueId}`
+        : `/stats/account/${accountId}/streak`
+      return apiFetch<StreakInfo>(path, { token })
     },
     enabled: Boolean(accountId),
   })
@@ -147,18 +164,6 @@ export function useAccountActivity(accountId: string | undefined) {
   })
 }
 
-export function useAccountChampions(accountId: string | undefined, days: number) {
-  const { getToken } = useAuth()
-  return useQuery({
-    queryKey: queryKeys.accountChampions(accountId, days),
-    queryFn: async () => {
-      const token = await getToken()
-      return apiFetch<ChampionSplitStat[]>(`/stats/account/${accountId}/champions?days=${days}`, { token })
-    },
-    enabled: Boolean(accountId),
-  })
-}
-
 export function useAccountRankHistory(accountId: string | undefined, queue: 'solo' | 'flex') {
   const { getToken } = useAuth()
   return useQuery({
@@ -180,6 +185,62 @@ export function useAccountLessons(accountId: string | undefined) {
       return apiFetch<LessonCard[]>(`/learning/account/${accountId}/lessons`, { token })
     },
     enabled: Boolean(accountId),
+  })
+}
+
+/** Champion guide (identity, class, difficulty, tips) plus this account's behavior flags for that champion. */
+export function useChampionGuide(accountId: string | undefined, champion: string | undefined) {
+  const { getToken } = useAuth()
+  return useQuery({
+    queryKey: queryKeys.championGuide(accountId, champion),
+    queryFn: async () => {
+      const token = await getToken()
+      return apiFetch<ChampionGuideResponse>(`/champion-guides/${champion}?accountId=${accountId}`, { token })
+    },
+    enabled: Boolean(accountId && champion),
+    // Guide content only changes with a patch or a manual edit — no need to refetch on every focus.
+    staleTime: 5 * 60_000,
+  })
+}
+
+/** Full champion roster (id, name, role, class) for the Pool Champ grid — not account-scoped. */
+export function useChampionRoster() {
+  const { getToken } = useAuth()
+  return useQuery({
+    queryKey: queryKeys.championRoster(),
+    queryFn: async () => {
+      const token = await getToken()
+      return apiFetch<RosterChampion[]>('/champion-pools/roster', { token })
+    },
+    // The champion list only changes with a patch — no need to refetch often.
+    staleTime: 30 * 60_000,
+  })
+}
+
+export function useAccountPool(accountId: string | undefined) {
+  const { getToken } = useAuth()
+  return useQuery({
+    queryKey: queryKeys.accountPool(accountId),
+    queryFn: async () => {
+      const token = await getToken()
+      return apiFetch<PoolView>(`/champion-pools/account/${accountId}`, { token })
+    },
+    enabled: Boolean(accountId),
+  })
+}
+
+export function useAccountPoolRecommendation(accountId: string | undefined) {
+  const { getToken } = useAuth()
+  return useQuery({
+    queryKey: queryKeys.accountPoolRecommendation(accountId),
+    queryFn: async () => {
+      const token = await getToken()
+      return apiFetch<PoolRecommendation>(`/champion-pools/account/${accountId}/recommendation`, { token })
+    },
+    enabled: Boolean(accountId),
+    // Only shifts when the account's stats shift meaningfully — no need to
+    // recompute on every focus while the Pool Champ tab is just sitting open.
+    staleTime: 60_000,
   })
 }
 

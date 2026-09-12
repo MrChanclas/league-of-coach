@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react'
 import { MatchRow } from './MatchRow'
 import { QUEUE_IDS } from '../../lib/constants'
-import type { AccountCard, AccountStatsSummary, MatchParticipantEntry, RankSnapshotEntry, StreakInfo } from '../../types/dashboard'
+import { useAccountStats, useAccountStreak } from '../../hooks/useApiQueries'
+import type { AccountCard, MatchParticipantEntry, RankSnapshotEntry } from '../../types/dashboard'
 
 type MatchesTabPanelProps = {
   activeAccount?: AccountCard
   matches: MatchParticipantEntry[]
-  statsSummary: AccountStatsSummary | null
-  streak: StreakInfo | null
   rankHistory: RankSnapshotEntry[]
   ddragonVersion: string | null
 }
@@ -28,12 +27,18 @@ function matchesFilter(entry: MatchParticipantEntry, filter: QueueFilter) {
 export function MatchesTabPanel({
   activeAccount,
   matches,
-  statsSummary,
-  streak,
   rankHistory,
   ddragonVersion,
 }: MatchesTabPanelProps) {
   const [filter, setFilter] = useState<QueueFilter>('all')
+
+  // 'all' has no numeric queue id — undefined tells the hooks to fetch the
+  // combined solo+flex summary instead of a single queue's.
+  const queueId = filter === 'all' ? undefined : filter
+  const statsQuery = useAccountStats(activeAccount?.id, queueId)
+  const streakQuery = useAccountStreak(activeAccount?.id, queueId)
+  const statsSummary = statsQuery.data ?? null
+  const streak = streakQuery.data ?? null
 
   const filteredMatches = useMemo(() => matches.filter((entry) => matchesFilter(entry, filter)), [matches, filter])
 

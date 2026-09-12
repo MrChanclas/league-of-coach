@@ -9,6 +9,7 @@ const TABS: { key: TabKey; label: string; tour?: string }[] = [
   { key: 'cuentas', label: 'Cuentas' },
   { key: 'partidas', label: 'Partidas' },
   { key: 'aprendizaje', label: 'Aprendizaje', tour: 'nav-aprendizaje' },
+  { key: 'pool-champ', label: 'Pool', tour: 'nav-pool-champ' },
   { key: 'objetivos', label: 'Objetivos', tour: 'nav-objetivos' },
 ]
 
@@ -41,6 +42,16 @@ function TabGlyph({ tab, active }: { tab: TabKey; active: boolean }) {
       <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden>
         <rect x="4" y="4" width="14" height="14" rx="3" transform="rotate(45 11 11)" stroke={stroke} strokeWidth="1.6" />
         <circle cx="11" cy="11" r="2.5" fill={fill} />
+      </svg>
+    )
+  }
+  if (tab === 'pool-champ') {
+    return (
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden>
+        <rect x="2.5" y="2.5" width="7" height="8.5" rx="1.8" stroke={stroke} strokeWidth="1.6" />
+        <rect x="12.5" y="2.5" width="7" height="8.5" rx="1.8" stroke={stroke} strokeWidth="1.6" />
+        <rect x="2.5" y="13" width="7" height="6.5" rx="1.8" stroke={stroke} strokeWidth="1.6" />
+        <rect x="12.5" y="13" width="7" height="6.5" rx="1.8" fill={fill} />
       </svg>
     )
   }

@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 type ParticipantWithMatch = {
@@ -13,6 +14,26 @@ type ParticipantWithMatch = {
 
 type ParticipantWithMatchAndRole = ParticipantWithMatch & {
   teamPosition: string;
+};
+
+type ParticipantForRoleMetrics = {
+  csTotal: number;
+  visionScore: number;
+  deaths: number;
+  controlWardsPlaced: number | null;
+  teamDamagePercentage: number | null;
+  killParticipation: number | null;
+  maxLevelLeadLaneOpponent: number | null;
+  maxCsAdvantageOnLaneOpponent: number | null;
+  turretTakedowns: number | null;
+  soloKills: number | null;
+  dragonTakedowns: number | null;
+  baronTakedowns: number | null;
+  riftHeraldTakedowns: number | null;
+  teamDragonKills: number | null;
+  teamBaronKills: number | null;
+  teamRiftHeraldKills: number | null;
+  match: { gameDuration: number };
 };
 
 @Injectable()
@@ -68,6 +89,37 @@ export class StatsService {
       .sort((a, b) => b.gamesPlayed - a.gamesPlayed);
   }
 
+  /**
+   * The role each champion is actually played in for this account, picked as
+   * whichever teamPosition has the most games with that champion — used by
+   * Pool Champ (see champion-pools) to assign a role to a champion the
+   * player has played but not declared, since there's no static
+   * champion->role table (a champion's "official" role isn't necessarily how
+   * this player uses it).
+   */
+  async getPrimaryRoleByChampion(
+    accountId: string,
+  ): Promise<Map<string, string>> {
+    const rows = await this.prisma.matchParticipant.groupBy({
+      by: ['champion', 'teamPosition'],
+      where: { accountId },
+      _count: { _all: true },
+    });
+
+    const best = new Map<string, { position: string; count: number }>();
+    for (const row of rows) {
+      const current = best.get(row.champion);
+      const count = row._count._all;
+      if (!current || count > current.count) {
+        best.set(row.champion, { position: row.teamPosition, count });
+      }
+    }
+
+    return new Map(
+      [...best].map(([champion, entry]) => [champion, entry.position]),
+    );
+  }
+
   async getByRole(accountId: string) {
     const participants = await this.prisma.matchParticipant.findMany({
       where: { accountId },
@@ -102,6 +154,29 @@ export class StatsService {
       include: { match: true },
     });
 
+    return this.summarizeRoleMetrics(participants);
+  }
+
+  /**
+   * Same shape as getRoleMetrics, scoped to a single champion within that
+   * role — used to compare a player's per-champion performance against their
+   * own role average (see common/champion-performance.ts), since there's no
+   * static per-champion benchmark table.
+   */
+  async getChampionRoleMetrics(
+    accountId: string,
+    teamPosition: string,
+    champion: string,
+  ) {
+    const participants = await this.prisma.matchParticipant.findMany({
+      where: { accountId, teamPosition, champion },
+      include: { match: true },
+    });
+
+    return this.summarizeRoleMetrics(participants);
+  }
+
+  private summarizeRoleMetrics(participants: ParticipantForRoleMetrics[]) {
     const gamesPlayed = participants.length;
     if (gamesPlayed === 0) {
       return {
@@ -248,8 +323,16 @@ export class StatsService {
   }
 
   async getStreak(accountId: string) {
+    return this.computeStreak({ accountId });
+  }
+
+  async getStreakByQueue(accountId: string, queueId: number) {
+    return this.computeStreak({ accountId, match: { queueId } });
+  }
+
+  private async computeStreak(where: Prisma.MatchParticipantWhereInput) {
     const participants = await this.prisma.matchParticipant.findMany({
-      where: { accountId },
+      where,
       select: { win: true },
       orderBy: { match: { gameCreation: 'desc' } },
       take: 50,

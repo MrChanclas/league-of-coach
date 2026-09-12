@@ -44,8 +44,16 @@ export const COACH_STEPS: CoachStep[] = [
     placement: 'right-start',
   },
   {
+    anchorSelector: '[data-tour="nav-pool-champ"]',
+    tag: 'PASO 5 · POOL CHAMP',
+    title: 'Declara qué campeones jugás de verdad',
+    body: 'Arma tu pool por posición —entre cinco y diez campeones por rol— o toma la sugerencia del coach. Con eso dejamos de promediar todos tus campeones y afinamos las lecciones sobre los que realmente jugás.',
+    note: 'Podés dejar roles sin tocar: se completan más adelante, cuando quieras.',
+    placement: 'right-start',
+  },
+  {
     anchorSelector: '[data-tour="nav-objetivos"]',
-    tag: 'PASO 5 · OBJETIVOS',
+    tag: 'PASO 6 · OBJETIVOS',
     title: 'Cuánto falta y a qué ritmo',
     body: 'Fija una meta y el panel te dice la brecha que queda y qué tienes que hacer para cerrarla: «cuatro victorias seguidas», «ocho LP por día». Sin porcentajes que no significan nada.',
     note: 'Si el ritmo necesario supera lo que veníamos viendo en tus partidas, el objetivo se marca ATRASADO solo.',
@@ -63,5 +71,6 @@ export const CHECKLIST_TASKS = [
   { name: 'Registrar tu cuenta de juego', hint: 'Riot ID, servidor y rango actual.' },
   { name: 'Cargar tus primeras partidas', hint: 'Con una sesión ya alcanza para empezar.' },
   { name: 'Leer tu primera lección', hint: 'Aparecen solas cuando hay datos.' },
+  { name: 'Armar tu pool de campeones', hint: 'Mínimo cinco por rol, o toma la del coach.' },
   { name: 'Fijar un objetivo del split', hint: 'Rango, winrate o un hábito.' },
 ] as const

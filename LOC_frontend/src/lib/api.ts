@@ -29,8 +29,21 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
   })
 
   if (!response.ok) {
-    const payload = (await response.json().catch(() => null)) as { message?: string } | null
-    throw new ApiError(payload?.message ?? `No se pudo completar la solicitud (${response.status}).`)
+    const payload = (await response.json().catch(() => null)) as {
+      message?: string
+      errors?: { message?: string }[]
+    } | null
+    // ZodValidationPipe replies with a generic top-level "Validation failed"
+    // plus a per-issue `errors` array — surface those specific messages
+    // (e.g. "Superior tiene 3 campeones: hacen falta al menos 5…") instead
+    // of the generic one whenever they're present.
+    const detailedMessage = payload?.errors
+      ?.map((issue) => issue.message)
+      .filter(Boolean)
+      .join(' ')
+    throw new ApiError(
+      detailedMessage || payload?.message || `No se pudo completar la solicitud (${response.status}).`,
+    )
   }
 
   if (!parseJson || response.status === 204) {

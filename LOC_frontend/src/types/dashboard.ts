@@ -1,4 +1,4 @@
-export type TabKey = 'cuentas' | 'aprendizaje' | 'objetivos' | 'partidas'
+export type TabKey = 'cuentas' | 'aprendizaje' | 'objetivos' | 'partidas' | 'pool-champ'
 
 export type AuthUser = {
   id: string
@@ -173,10 +173,6 @@ export type AccountStatsSummary = {
   avgCsPerMin: number
 }
 
-export type ChampionSplitStat = AccountStatsSummary & {
-  champion: string
-}
-
 export type QueueStats = {
   solo: AccountStatsSummary | null
   flex: AccountStatsSummary | null
@@ -214,10 +210,122 @@ export type LessonCard = {
   title: string
   body: string
   mediaType: 'CLIP' | 'HEATMAP' | 'GOLD_GRAPH' | 'MATCHUP_TABLE' | 'SESSION_REPORT'
-  meta: string
+  kind?: 'champion'
+  championKey?: string
+  championGamesPlayed?: number
+  championWinrate?: number
+  championAvgKda?: number
+}
+
+export type GuideTip = {
+  text: string
+  warning?: string
+}
+
+export type ChampionGuideContent = {
+  role: string
+  championClass: string
+  difficulty: 'Fácil' | 'Media' | 'Difícil'
+  body: string
+  tips: GuideTip[]
+}
+
+export type BehaviorFlag = {
+  type: 'CHAMPION_WEAKNESS' | 'ROLE_WEAKNESS'
+  role: string
+  champion: string | null
+  gamesPlayed: number
+  score: number
+  severity: 'low' | 'medium' | 'high'
+  metric: string
+  narrative: string
+}
+
+export type ChampionGuideResponse = {
+  champion: string
+  content: ChampionGuideContent
+  flags: BehaviorFlag[]
 }
 
 export type TimeRange = '7d' | 'split'
 
 export type GoalGap = { value: string; label: string }
 export type GoalPace = { action: string; context: string }
+
+// Pool Champ (handoff_loc/07-pool-champ.md)
+
+export type PoolRoleKey = 'TOP' | 'JUNGLE' | 'MIDDLE' | 'BOTTOM' | 'UTILITY'
+export type PoolEntryState = 'main' | 'secondary' | 'testing'
+export type PoolAddedBy = 'player' | 'coach'
+export type PoolSource = 'manual' | 'coach'
+
+export type RosterChampion = {
+  championKey: string
+  name: string
+  role: PoolRoleKey
+  championClass: string | null
+}
+
+export type PoolEntry = {
+  championKey: string
+  name: string
+  role: PoolRoleKey
+  state: PoolEntryState
+  note: string | null
+  addedBy: PoolAddedBy
+  position: number
+  gamesPlayed: number
+  winrate: number
+}
+
+export type PoolOutsider = {
+  championKey: string
+  name: string
+  role: PoolRoleKey
+  gamesPlayed: number
+  winrate: number
+}
+
+export type PoolHealthNote = { label: string }
+
+export type PoolHealth = {
+  score: number | null
+  coverage: PoolHealthNote
+  concentration: PoolHealthNote
+  testing: PoolHealthNote
+}
+
+export type PoolView = {
+  pool: { id: string; source: PoolSource; createdAt: string; updatedAt: string } | null
+  entries: PoolEntry[]
+  outsiders: PoolOutsider[]
+  health: PoolHealth
+}
+
+export type PoolRecommendationLabel = 'YA_TE_RINDE' | 'TU_ESTILO' | 'CUBRE_HUECO'
+
+export type PoolRecommendationEntry = {
+  championKey: string
+  name: string
+  role: PoolRoleKey
+  state: 'main' | 'testing'
+  label: PoolRecommendationLabel
+  reason: string
+}
+
+export type PoolRecommendation =
+  | { available: true; entries: PoolRecommendationEntry[] }
+  | { available: false; reason: string }
+
+export type ReplacePoolEntryInput = {
+  championKey: string
+  role: PoolRoleKey
+  state: PoolEntryState
+  note?: string
+  addedBy: PoolAddedBy
+}
+
+export type ReplacePoolInput = {
+  source: PoolSource
+  entries: ReplacePoolEntryInput[]
+}

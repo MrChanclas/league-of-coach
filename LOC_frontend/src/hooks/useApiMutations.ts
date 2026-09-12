@@ -1,7 +1,7 @@
 import { useAuth } from '@clerk/clerk-react'
 import { useMutation } from '@tanstack/react-query'
 import { apiFetch } from '../lib/api'
-import type { GoalCreateInput } from '../types/dashboard'
+import type { GoalCreateInput, PoolEntryState, ReplacePoolInput } from '../types/dashboard'
 
 // These hooks only perform the API call — they deliberately don't own cache
 // invalidation. That stays in App.tsx alongside the rest of each action's
@@ -78,6 +78,67 @@ export function useCompleteOnboardingMutation() {
     mutationFn: async (userId: string) => {
       const token = await getToken()
       return apiFetch(`/users/${userId}/onboarding-complete`, { method: 'POST', token })
+    },
+  })
+}
+
+export function useSavePoolMutation() {
+  const { getToken } = useAuth()
+  return useMutation({
+    mutationFn: async ({ accountId, input }: { accountId: string; input: ReplacePoolInput }) => {
+      const token = await getToken()
+      return apiFetch(`/champion-pools/account/${accountId}`, { method: 'PUT', token, body: input })
+    },
+  })
+}
+
+export function useAddPoolEntryMutation() {
+  const { getToken } = useAuth()
+  return useMutation({
+    mutationFn: async ({ accountId, championKey }: { accountId: string; championKey: string }) => {
+      const token = await getToken()
+      return apiFetch(`/champion-pools/account/${accountId}/entries`, {
+        method: 'POST',
+        token,
+        body: { championKey },
+      })
+    },
+  })
+}
+
+export function useUpdatePoolEntryMutation() {
+  const { getToken } = useAuth()
+  return useMutation({
+    mutationFn: async ({
+      accountId,
+      championKey,
+      patch,
+    }: {
+      accountId: string
+      championKey: string
+      patch: { state?: PoolEntryState; note?: string | null }
+    }) => {
+      const token = await getToken()
+      return apiFetch(`/champion-pools/account/${accountId}/entries/${championKey}`, {
+        method: 'PATCH',
+        token,
+        body: patch,
+      })
+    },
+  })
+}
+
+export function useRemovePoolEntryMutation() {
+  const { getToken } = useAuth()
+  return useMutation({
+    mutationFn: async ({ accountId, championKey }: { accountId: string; championKey: string }) => {
+      const token = await getToken()
+      await apiFetch(`/champion-pools/account/${accountId}/entries/${championKey}`, {
+        method: 'DELETE',
+        token,
+        parseJson: false,
+      })
+      return championKey
     },
   })
 }
