@@ -16,6 +16,7 @@ import {
 import {
   queryKeys,
   useAccountActivity,
+  useAccountBehaviorFlags,
   useAccountLanes,
   useAccountLessons,
   useAccountMatches,
@@ -158,6 +159,7 @@ function App() {
   const activityQuery = useAccountActivity(currentAccountId)
   const rankHistoryQuery = useAccountRankHistory(currentAccountId, primaryQueue)
   const lessonsQuery = useAccountLessons(currentAccountId)
+  const behaviorFlagsQuery = useAccountBehaviorFlags(currentAccountId)
   const championRosterQuery = useChampionRoster()
   const poolQuery = useAccountPool(currentAccountId)
   const poolRecommendationQuery = useAccountPoolRecommendation(currentAccountId)
@@ -169,6 +171,7 @@ function App() {
   const weeklyActivity = activityQuery.data ?? []
   const rankHistory = rankHistoryQuery.data ?? []
   const lessons = lessonsQuery.data ?? []
+  const behaviorFlags = behaviorFlagsQuery.data ?? []
   const championRoster = championRosterQuery.data ?? []
 
   const goalsByAccount = useMemo(
@@ -341,6 +344,7 @@ function App() {
       weeklyActivity={weeklyActivity}
       rankHistory={rankHistory}
       lessons={lessons}
+      behaviorFlags={behaviorFlags}
       ddragonVersion={ddragonVersion}
       timeRange={timeRange}
       isSyncing={syncMatchesMutation.isPending}

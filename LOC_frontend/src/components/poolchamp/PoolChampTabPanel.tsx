@@ -58,7 +58,7 @@ export function PoolChampTabPanel({
         <div className="page-head">
           <div>
             <h1>Pool Champ</h1>
-            <p>Agregá una cuenta de Riot en la pestaña &quot;Cuentas&quot; para armar tu pool de campeones.</p>
+            <p>Agrega una cuenta de Riot en la pestaña &quot;Cuentas&quot; para armar tu pool de campeones.</p>
           </div>
         </div>
       </div>

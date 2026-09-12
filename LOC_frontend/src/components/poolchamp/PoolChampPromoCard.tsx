@@ -26,10 +26,10 @@ export function PoolChampPromoCard({ roster, ddragonVersion, onArmarPool, onVerD
       <div className="pool-promo-main">
         <div className="pool-promo-badge">NUEVO</div>
         <div className="pool-promo-eyebrow">POOL CHAMP</div>
-        <h3>Armá tu pool y las lecciones se afinan</h3>
+        <h3>Arma tu pool y las lecciones se afinan</h3>
         <p>
           Con un pool declarado dejamos de promediar todos tus campeones y priorizamos el análisis en los que de
-          verdad jugás.
+          verdad juegas.
         </p>
         <div className="pool-promo-actions">
           <button type="button" className="primary-btn" onClick={onArmarPool}>

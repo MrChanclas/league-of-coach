@@ -19,8 +19,10 @@ import type {
   AccountForm,
   AccountStatsSummary,
   ActivityDay,
+  BehaviorFlag,
   GoalCreateInput,
   GoalItem,
+  GoalPrefill,
   LaneEntry,
   LessonCard,
   MatchParticipantEntry,
@@ -53,6 +55,7 @@ type DashboardScreenProps = {
   weeklyActivity: ActivityDay[]
   rankHistory: RankSnapshotEntry[]
   lessons: LessonCard[]
+  behaviorFlags: BehaviorFlag[]
   ddragonVersion: string | null
   timeRange: TimeRange
   isSyncing: boolean
@@ -99,6 +102,7 @@ export function DashboardScreen({
   weeklyActivity,
   rankHistory,
   lessons,
+  behaviorFlags,
   ddragonVersion,
   timeRange,
   isSyncing,
@@ -124,9 +128,16 @@ export function DashboardScreen({
   onDeleteGoal,
 }: DashboardScreenProps) {
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false)
-  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false)
+  // undefined = modal cerrado; null = abierto sin pre-llenado; GoalPrefill =
+  // abierto con tipo/campos ya completados desde un error detectado.
+  const [goalModalPrefill, setGoalModalPrefill] = useState<GoalPrefill | null | undefined>(undefined)
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false)
   const [selectedLessonIndex, setSelectedLessonIndex] = useState<number | null>(null)
+
+  // Solo se evalúa una vez que poolView resolvió, para no mostrar un flash de
+  // "bloqueado" mientras carga a una cuenta que sí tiene pool armado.
+  const hasPool = poolView !== undefined && Boolean(poolView.pool)
+  const lockedTabs: TabKey[] = poolView !== undefined && !hasPool ? ['aprendizaje', 'objetivos'] : []
 
   const handleOpenLesson = (index: number) => {
     setSelectedLessonIndex(index)
@@ -178,8 +189,8 @@ export function DashboardScreen({
   const checklistCompleted = [
     userAccounts.length > 0,
     (statsSummary?.gamesPlayed ?? 0) > 0,
+    hasPool,
     lessons.length > 0 || (statsSummary?.gamesPlayed ?? 0) > 0,
-    Boolean(poolView?.pool),
     goalsByAccount.length > 0,
   ]
 
@@ -201,6 +212,7 @@ export function DashboardScreen({
         onOpenAccountModal={handleOpenAccountModal}
         onReplayOnboarding={handleReplayOnboarding}
         navMeta={navMeta}
+        lockedTabs={lockedTabs}
       />
 
       <main className="forge-main">
@@ -234,7 +246,7 @@ export function DashboardScreen({
             timeRange={timeRange}
             checklistCompleted={checklistCompleted}
             championRoster={championRoster}
-            hasChampionPool={Boolean(poolView?.pool)}
+            hasChampionPool={hasPool}
             poolView={poolView}
             onTimeRangeChange={onTimeRangeChange}
             onSetCurrentAccountId={onSetCurrentAccountId}
@@ -242,7 +254,7 @@ export function DashboardScreen({
             onGoToGoals={() => onTabChange('objetivos')}
             onGoToLearning={() => onTabChange('aprendizaje')}
             onGoToPoolChamp={() => onTabChange('pool-champ')}
-            onOpenGoalModal={() => setIsGoalModalOpen(true)}
+            onOpenGoalModal={() => setGoalModalPrefill(null)}
             onOpenLesson={handleOpenLesson}
           />
         )}
@@ -260,11 +272,17 @@ export function DashboardScreen({
           <LearningTabPanel
             activeAccount={activeAccount}
             lessons={lessons}
+            behaviorFlags={behaviorFlags}
             gamesAnalyzed={statsSummary?.gamesPlayed ?? 0}
             ddragonVersion={ddragonVersion}
             overallStats={statsSummary}
             selectedIndex={selectedLessonIndex}
             onSelectIndex={setSelectedLessonIndex}
+            hasPool={hasPool}
+            poolView={poolView}
+            championRoster={championRoster}
+            onGoToPoolChamp={() => onTabChange('pool-champ')}
+            onCreateGoalFromFlag={setGoalModalPrefill}
           />
         )}
 
@@ -288,9 +306,13 @@ export function DashboardScreen({
         {activeTab === 'objetivos' && (
           <GoalsTabPanel
             goalsByAccount={goalsByAccount}
-            onOpenGoalModal={() => setIsGoalModalOpen(true)}
+            behaviorFlagsCount={behaviorFlags.length}
+            hasPool={hasPool}
+            onOpenGoalModal={() => setGoalModalPrefill(null)}
             onDeleteGoal={onDeleteGoal}
             onGoToMatches={() => onTabChange('partidas')}
+            onGoToLearning={() => onTabChange('aprendizaje')}
+            onGoToPoolChamp={() => onTabChange('pool-champ')}
           />
         )}
       </main>
@@ -305,10 +327,11 @@ export function DashboardScreen({
       />
 
       <GoalFormModal
-        isOpen={isGoalModalOpen}
+        isOpen={goalModalPrefill !== undefined}
         accountId={activeAccount?.id ?? ''}
         status={status}
-        onClose={() => setIsGoalModalOpen(false)}
+        prefill={goalModalPrefill ?? null}
+        onClose={() => setGoalModalPrefill(undefined)}
         onSubmit={onCreateGoal}
       />
 
@@ -324,7 +347,7 @@ export function DashboardScreen({
         />
       )}
 
-      <MobileTabBar activeTab={activeTab} onTabChange={onTabChange} />
+      <MobileTabBar activeTab={activeTab} onTabChange={onTabChange} lockedTabs={lockedTabs} />
     </div>
   )
 }

@@ -39,7 +39,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
     <div className="modal-backdrop" onClick={handleClose}>
       <div className="modal-card" onClick={(event) => event.stopPropagation()}>
         <div className="modal-header">
-          <h3>Dejanos tu feedback</h3>
+          <h3>Déjanos tu feedback</h3>
           <button type="button" className="modal-close" onClick={handleClose} aria-label="Cerrar">
             ×
           </button>
@@ -52,7 +52,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
               name="message"
               value={message}
               onChange={(event) => setMessage(event.target.value)}
-              placeholder="Contanos qué te gustaría mejorar o qué problema encontraste"
+              placeholder="Cuéntanos qué te gustaría mejorar o qué problema encontraste"
               rows={4}
               maxLength={2000}
               required
@@ -65,7 +65,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
               name="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="Para responderte, si querés"
+              placeholder="Para responderte, si quieres"
             />
           </label>
 

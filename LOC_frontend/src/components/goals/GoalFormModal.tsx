@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { SubmitEvent } from 'react'
-import type { GoalCreateInput, GoalType } from '../../types/dashboard'
+import type { GoalCreateInput, GoalPrefill, GoalType } from '../../types/dashboard'
 import { ROLE_LABELS } from '../../lib/goalLabels'
 import { RANK_DIVISIONS, RANK_TIERS, ROLE_KEYS } from '../../lib/constants'
 import { getChampionList, getDdragonVersion } from '../../lib/riotAssets'
@@ -10,6 +10,7 @@ type GoalFormModalProps = {
   isOpen: boolean
   accountId: string
   status: string
+  prefill: GoalPrefill | null
   onClose: () => void
   onSubmit: (input: GoalCreateInput) => Promise<boolean>
 }
@@ -20,7 +21,7 @@ const TYPE_TABS: { key: GoalType; label: string }[] = [
   { key: 'campeon', label: 'Campeón' },
 ]
 
-export function GoalFormModal({ isOpen, accountId, status, onClose, onSubmit }: GoalFormModalProps) {
+export function GoalFormModal({ isOpen, accountId, status, prefill, onClose, onSubmit }: GoalFormModalProps) {
   const [type, setType] = useState<GoalType>('rango')
   const [queueType, setQueueType] = useState<'solo' | 'flex'>('solo')
   const [targetTier, setTargetTier] = useState('GOLD')
@@ -47,8 +48,6 @@ export function GoalFormModal({ isOpen, accountId, status, onClose, onSubmit }: 
     }
   }, [isOpen, championList.length])
 
-  if (!isOpen) return null
-
   const resetForm = () => {
     setType('rango')
     setQueueType('solo')
@@ -60,6 +59,28 @@ export function GoalFormModal({ isOpen, accountId, status, onClose, onSubmit }: 
     setTargetKda('')
     setDeadline('')
   }
+
+  // Aplica el prefill (o resetea) justo en la transición cerrado→abierto, no
+  // en cada render — mismo patrón que lastSeenOnboardingFlag en
+  // DashboardScreen.tsx: ajustar estado durante el render, no en un efecto.
+  const [wasOpen, setWasOpen] = useState(false)
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen)
+    if (isOpen) {
+      if (prefill?.type === 'rol') {
+        setType('rol')
+        setTargetRole(prefill.targetRole)
+      } else if (prefill?.type === 'campeon') {
+        setType('campeon')
+        setTargetChampion(prefill.targetChampion)
+        if (prefill.targetWinratePct != null) setTargetWinrate(String(prefill.targetWinratePct))
+      } else {
+        resetForm()
+      }
+    }
+  }
+
+  if (!isOpen) return null
 
   const isApexTier = targetTier === 'MASTER' || targetTier === 'GRANDMASTER' || targetTier === 'CHALLENGER'
 

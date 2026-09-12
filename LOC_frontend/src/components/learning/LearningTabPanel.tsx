@@ -1,15 +1,32 @@
+import { DetectedErrorsSection } from './DetectedErrorsSection'
 import { LessonDetailView } from './LessonDetailView'
 import { LessonMediaArt } from './LessonMediaArt'
-import type { AccountCard, AccountStatsSummary, LessonCard } from '../../types/dashboard'
+import { LockedTabState } from '../shared/LockedTabState'
+import { buildGoalPrefillFromFlag } from '../../lib/goalPrefill'
+import type {
+  AccountCard,
+  AccountStatsSummary,
+  BehaviorFlag,
+  GoalPrefill,
+  LessonCard,
+  PoolView,
+  RosterChampion,
+} from '../../types/dashboard'
 
 type LearningTabPanelProps = {
   activeAccount?: AccountCard
   lessons: LessonCard[]
+  behaviorFlags: BehaviorFlag[]
   gamesAnalyzed: number
   ddragonVersion: string | null
   overallStats: AccountStatsSummary | null
   selectedIndex: number | null
   onSelectIndex: (index: number | null) => void
+  hasPool: boolean
+  poolView: PoolView | undefined
+  championRoster: RosterChampion[]
+  onGoToPoolChamp: () => void
+  onCreateGoalFromFlag: (prefill: GoalPrefill) => void
 }
 
 const MEDIA_LABELS: Record<LessonCard['mediaType'], string> = {
@@ -23,11 +40,17 @@ const MEDIA_LABELS: Record<LessonCard['mediaType'], string> = {
 export function LearningTabPanel({
   activeAccount,
   lessons,
+  behaviorFlags,
   gamesAnalyzed,
   ddragonVersion,
   overallStats,
   selectedIndex,
   onSelectIndex,
+  hasPool,
+  poolView,
+  championRoster,
+  onGoToPoolChamp,
+  onCreateGoalFromFlag,
 }: LearningTabPanelProps) {
   if (!activeAccount) {
     return (
@@ -35,10 +58,21 @@ export function LearningTabPanel({
         <div className="page-head">
           <div>
             <h1>Aprendizaje</h1>
-            <p>Agregá una cuenta de Riot en la pestaña &quot;Cuentas&quot; para recibir lecciones basadas en tus partidas.</p>
+            <p>Agrega una cuenta de Riot en la pestaña &quot;Cuentas&quot; para recibir lecciones basadas en tus partidas.</p>
           </div>
         </div>
       </div>
+    )
+  }
+
+  if (!hasPool) {
+    return (
+      <LockedTabState
+        title="Aprendizaje"
+        body="Arma tu pool de campeones para que las lecciones se enfoquen en lo que realmente juegas, no en un promedio de todo tu historial."
+        ctaLabel="Ir a Pool Champ"
+        onCtaClick={onGoToPoolChamp}
+      />
     )
   }
 
@@ -70,6 +104,13 @@ export function LearningTabPanel({
           <h1>Aprendizaje</h1>
         </div>
       </div>
+
+      <DetectedErrorsSection
+        flags={behaviorFlags}
+        ddragonVersion={ddragonVersion}
+        onCreateGoal={(flag) => buildGoalPrefillFromFlag(flag, poolView, championRoster)}
+        onOpenGoalModal={onCreateGoalFromFlag}
+      />
 
       {lessons.length === 0 ? (
         <p className="empty-state">

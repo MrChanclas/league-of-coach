@@ -313,7 +313,7 @@ export function CuentaTabPanel() {
       return (
         <div className="auth-step">
           <div className="auth-step-eyebrow">RECUPERAR ACCESO</div>
-          <h2>Recuperá tu contraseña</h2>
+          <h2>Recupera tu contraseña</h2>
           <p className="auth-step-sub">Te enviamos un código a tu correo para elegir una nueva.</p>
 
           <form className="auth-fields" style={{ marginTop: 26 }} onSubmit={handleForgotRequestSubmit}>

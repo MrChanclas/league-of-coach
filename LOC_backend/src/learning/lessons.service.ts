@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { getCurrentSplitStart } from '../common/season';
 import { PrismaService } from '../prisma/prisma.service';
 import { StatsService } from '../stats/stats.service';
 import {
@@ -451,20 +452,21 @@ export class LessonsService {
   }
 
   private async computeMetrics(accountId: string): Promise<Metrics | null> {
-    const summary = await this.stats.getAccountSummary(accountId);
+    const splitStart = getCurrentSplitStart();
+    const summary = await this.stats.getAccountSummary(accountId, splitStart);
     if (summary.gamesPlayed === 0) return null;
 
     const [streak, lanes, championStats, visionRows, recentRows, account] =
       await Promise.all([
-        this.stats.getStreak(accountId),
-        this.stats.getLaneDistribution(accountId),
-        this.stats.getByChampion(accountId),
+        this.stats.getStreak(accountId, splitStart),
+        this.stats.getLaneDistribution(accountId, splitStart),
+        this.stats.getByChampion(accountId, splitStart),
         this.prisma.matchParticipant.findMany({
-          where: { accountId },
+          where: { accountId, match: { gameCreation: { gte: splitStart } } },
           include: { match: true },
         }),
         this.prisma.matchParticipant.findMany({
-          where: { accountId },
+          where: { accountId, match: { gameCreation: { gte: splitStart } } },
           include: { match: true },
           orderBy: { match: { gameCreation: 'desc' } },
           take: RECENT_GAMES_WINDOW,

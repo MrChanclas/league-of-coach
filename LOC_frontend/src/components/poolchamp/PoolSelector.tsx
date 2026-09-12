@@ -133,7 +133,7 @@ export function PoolSelector({
     }
     setSlots(next)
     setCoachMessage(
-      `Precargamos una base por rol. Todavía necesitás llegar a ${MIN_CHAMPIONS_PER_ROLE} campeones en cada rol que quieras dejar activo.`,
+      `Precargamos una base por rol. Todavía necesitas llegar a ${MIN_CHAMPIONS_PER_ROLE} campeones en cada rol que quieras dejar activo.`,
     )
   }
 
@@ -226,7 +226,7 @@ export function PoolSelector({
         <div className="pool-slots-panel">
           <div className="pool-panel-eyebrow">TUS ROLES</div>
           <p className="pool-panel-hint">
-            Clickeá un retrato para sumarlo al rol activo, o arrastralo al rol que quieras.
+            Haz clic en un retrato para sumarlo al rol activo, o arrástralo al rol que quieras.
           </p>
 
           <div className="pool-slots-list">
@@ -259,7 +259,7 @@ export function PoolSelector({
 
                   {count === 0 && (
                     <p className="pool-role-bucket-hint">
-                      {isActive ? 'Rol activo · elegí de la grilla' : 'Sin campeones todavía'}
+                      {isActive ? 'Rol activo · elige de la grilla' : 'Sin campeones todavía'}
                     </p>
                   )}
                   {status === 'incomplete' && (
@@ -299,7 +299,7 @@ export function PoolSelector({
           {roleLimitMessage && <p className="pool-coach-message pool-coach-message--warn">{roleLimitMessage}</p>}
 
           <div className="pool-panel-footer">
-            Cada rol necesita entre {MIN_CHAMPIONS_PER_ROLE} y {MAX_CHAMPIONS_PER_ROLE} campeones para ser válido. Podés dejar
+            Cada rol necesita entre {MIN_CHAMPIONS_PER_ROLE} y {MAX_CHAMPIONS_PER_ROLE} campeones para ser válido. Puedes dejar
             roles sin tocar — quedan abiertos hasta que quieras completarlos.
           </div>
         </div>
@@ -337,7 +337,7 @@ export function PoolSelector({
 
           {suggested.length > 0 && (
             <div className="pool-grid-section">
-              <div className="pool-grid-section-title">SUGERIDOS PARA VOS</div>
+              <div className="pool-grid-section-title">SUGERIDOS PARA TI</div>
               <div className="pool-suggested-grid">
                 {suggested.map(({ champion, ribbon }) => (
                   <button
