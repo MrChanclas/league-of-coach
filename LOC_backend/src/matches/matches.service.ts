@@ -238,9 +238,17 @@ export class MatchesService {
       // older than it is guaranteed to be already-synced too — stop right
       // there instead of continuing to page back into history just to hit
       // targetCount. That backfill target only matters for a brand-new
-      // account's very first sync (an all-new page keeps it paging).
+      // account's very first sync (an all-new page keeps it paging) — it
+      // must NOT trigger for an account that already had history before
+      // this call, or a page 0 that's entirely new (more than targetCount
+      // games played since the last sync) stops backfilling right there,
+      // permanently skipping everything between the old known history and
+      // this new page. See user-reported bug: an account's Ekko stats
+      // showed 5 games in-app vs 60 on an external tracker, because
+      // `storedCount` alone already exceeded targetCount on every sync
+      // after the first.
       const hasCaughtUpToKnownHistory = newIds.length < matchIds.length;
-      const hasReachedTarget = storedCount + synced >= targetCount;
+      const hasReachedTarget = storedCount === 0 && synced >= targetCount;
       const hasReachedEndOfHistory = matchIds.length < PAGE_SIZE;
       if (
         hasCaughtUpToKnownHistory ||
