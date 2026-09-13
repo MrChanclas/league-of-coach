@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { z } from 'zod';
-import { getCurrentSplitStart } from '../common/season';
+import { getCurrentSeasonStart } from '../common/season';
 import { QUEUE_IDS } from '../common/queue';
 import { rankScore } from '../common/rank-order';
 import { PrismaService } from '../prisma/prisma.service';
@@ -139,7 +139,7 @@ export class ChampionPoolsService {
   }
 
   async getPoolView(accountId: string) {
-    const splitStart = getCurrentSplitStart();
+    const seasonStart = getCurrentSeasonStart();
     const preferredQueueId = await this.getPreferredQueueId(accountId);
     const [pool, championStats, roster, roleMap] = await Promise.all([
       this.prisma.championPool.findUnique({
@@ -148,11 +148,11 @@ export class ChampionPoolsService {
       }),
       this.stats.getByChampion(
         accountId,
-        splitStart,
+        seasonStart,
         preferredQueueId,
       ) as Promise<ChampionStatEntry[]>,
       this.roster.getRoster(),
-      this.stats.getPrimaryRoleByChampion(accountId, splitStart, preferredQueueId),
+      this.stats.getPrimaryRoleByChampion(accountId, seasonStart, preferredQueueId),
     ]);
 
     const rosterByKey = new Map(
@@ -228,15 +228,15 @@ export class ChampionPoolsService {
   }
 
   async getRecommendation(accountId: string) {
-    const splitStart = getCurrentSplitStart();
+    const seasonStart = getCurrentSeasonStart();
     const preferredQueueId = await this.getPreferredQueueId(accountId);
     const [championStats, roleMap, roster, existingPool] = await Promise.all([
       this.stats.getByChampion(
         accountId,
-        splitStart,
+        seasonStart,
         preferredQueueId,
       ) as Promise<ChampionStatEntry[]>,
-      this.stats.getPrimaryRoleByChampion(accountId, splitStart, preferredQueueId),
+      this.stats.getPrimaryRoleByChampion(accountId, seasonStart, preferredQueueId),
       this.roster.getRoster(),
       this.prisma.championPool.findUnique({
         where: { accountId },

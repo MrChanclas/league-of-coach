@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { getCurrentSplitStart } from '../common/season';
+import { getCurrentSeasonStart } from '../common/season';
 import { PrismaService } from '../prisma/prisma.service';
 import { StatsService } from '../stats/stats.service';
 import {
@@ -452,21 +452,21 @@ export class LessonsService {
   }
 
   private async computeMetrics(accountId: string): Promise<Metrics | null> {
-    const splitStart = getCurrentSplitStart();
-    const summary = await this.stats.getAccountSummary(accountId, splitStart);
+    const seasonStart = getCurrentSeasonStart();
+    const summary = await this.stats.getAccountSummary(accountId, seasonStart);
     if (summary.gamesPlayed === 0) return null;
 
     const [streak, lanes, championStats, visionRows, recentRows, account] =
       await Promise.all([
-        this.stats.getStreak(accountId, splitStart),
-        this.stats.getLaneDistribution(accountId, splitStart),
-        this.stats.getByChampion(accountId, splitStart),
+        this.stats.getStreak(accountId, seasonStart),
+        this.stats.getLaneDistribution(accountId, seasonStart),
+        this.stats.getByChampion(accountId, seasonStart),
         this.prisma.matchParticipant.findMany({
-          where: { accountId, match: { gameCreation: { gte: splitStart } } },
+          where: { accountId, match: { gameCreation: { gte: seasonStart } } },
           include: { match: true },
         }),
         this.prisma.matchParticipant.findMany({
-          where: { accountId, match: { gameCreation: { gte: splitStart } } },
+          where: { accountId, match: { gameCreation: { gte: seasonStart } } },
           include: { match: true },
           orderBy: { match: { gameCreation: 'desc' } },
           take: RECENT_GAMES_WINDOW,
