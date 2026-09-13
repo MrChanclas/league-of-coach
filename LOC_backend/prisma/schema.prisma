@@ -34,6 +34,15 @@ model LolAccount {
   flexTier          String             @default("Unranked")
   flexDivision      String             @default("Unranked")
   flexLp            Int                @default(0)
+  // Ranked wins/losses as Riot's league-v4 reports them. Unlike anything
+  // counted from stored matches, these don't depend on the match list Riot
+  // serves for this account, which can stop well short of the season start
+  // even though the games exist — so they are what reveals that the stored
+  // history is still missing games.
+  soloWins          Int                @default(0)
+  soloLosses        Int                @default(0)
+  flexWins          Int                @default(0)
+  flexLosses        Int                @default(0)
   userId            String
   user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt         DateTime           @default(now())

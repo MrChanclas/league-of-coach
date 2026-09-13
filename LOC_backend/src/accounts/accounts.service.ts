@@ -46,9 +46,13 @@ export class AccountsService {
       soloTier: resolved.soloTier,
       soloDivision: resolved.soloDivision,
       soloLp: resolved.soloLp,
+      soloWins: resolved.soloWins,
+      soloLosses: resolved.soloLosses,
       flexTier: resolved.flexTier,
       flexDivision: resolved.flexDivision,
       flexLp: resolved.flexLp,
+      flexWins: resolved.flexWins,
+      flexLosses: resolved.flexLosses,
       userId: resolved.userId,
     };
 
@@ -150,9 +154,13 @@ export class AccountsService {
       soloTier: soloEntry?.tier ?? 'Unranked',
       soloDivision: soloEntry?.rank ?? 'Unranked',
       soloLp: soloEntry?.leaguePoints ?? 0,
+      soloWins: soloEntry?.wins ?? 0,
+      soloLosses: soloEntry?.losses ?? 0,
       flexTier: flexEntry?.tier ?? 'Unranked',
       flexDivision: flexEntry?.rank ?? 'Unranked',
       flexLp: flexEntry?.leaguePoints ?? 0,
+      flexWins: flexEntry?.wins ?? 0,
+      flexLosses: flexEntry?.losses ?? 0,
       leagueEntries: entries,
     };
   }

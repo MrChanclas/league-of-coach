@@ -108,11 +108,15 @@ export class RankSnapshotsService {
           soloTier: soloEntry.tier,
           soloDivision: soloEntry.rank,
           soloLp: soloEntry.leaguePoints,
+          soloWins: soloEntry.wins,
+          soloLosses: soloEntry.losses,
         }),
         ...(flexEntry && {
           flexTier: flexEntry.tier,
           flexDivision: flexEntry.rank,
           flexLp: flexEntry.leaguePoints,
+          flexWins: flexEntry.wins,
+          flexLosses: flexEntry.losses,
         }),
       },
     });
