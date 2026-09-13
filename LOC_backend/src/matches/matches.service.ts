@@ -92,7 +92,16 @@ const RECOVERY_MIN_WINDOW_MS = 24 * 60 * 60 * 1000;
 const RECOVERY_TOLERANCE_GAMES = 5;
 // Shared games (same team) a teammate needs to be worth searching through.
 const RECOVERY_MIN_SHARED_GAMES = 3;
+// How many of the account's oldest stored season games teammates are ranked
+// on. The missing games sit right before those, so whoever the account was
+// queueing with then is the one whose list reaches them - not whoever it plays
+// with most across the season, who may have started after the gap (seen on a
+// real account: its two most frequent teammates had no games at all before
+// the point its own list stopped).
+const RECOVERY_RANKING_GAMES = 60;
 // Teammates searched per account and season before giving up on the rest.
+// Only teammates whose list actually had games in the missing window count:
+// an empty list costs a single request and says nothing about the rest.
 const RECOVERY_MAX_CANDIDATES = 5;
 // Downloads from a teammate's list without finding the account before that
 // teammate is dropped: they weren't queueing together back then.
@@ -662,10 +671,11 @@ export class MatchesService {
 
   /**
    * The teammate the fallback should be searching: the one already in
-   * progress, or else the most frequent same-team player from the account's
-   * stored season games who hasn't been searched yet. Recomputed rather than
-   * fixed up front, so a duo from months ago that only shows up in games
-   * recovered through someone else gets a turn too.
+   * progress, or else the most frequent same-team player in the account's
+   * oldest stored season games (see RECOVERY_RANKING_GAMES) who hasn't been
+   * searched yet. Recomputed rather than fixed up front: as recovered games
+   * push the oldest stored games further back, the duo from that earlier
+   * stretch rises to the top and gets a turn too.
    */
   private async nextRecoveryCandidate(
     accountId: string,
@@ -681,9 +691,10 @@ export class MatchesService {
 
     const searched = await this.prisma.seasonRecoveryCandidate.findMany({
       where: { accountId, season: seasonStart },
-      select: { puuid: true },
+      select: { puuid: true, checked: true },
     });
-    if (searched.length >= RECOVERY_MAX_CANDIDATES) return null;
+    const searchedWithGames = searched.filter((item) => item.checked > 0);
+    if (searchedWithGames.length >= RECOVERY_MAX_CANDIDATES) return null;
 
     const ownGames = await this.prisma.matchParticipant.findMany({
       where: {
@@ -693,6 +704,8 @@ export class MatchesService {
           gameCreation: { gte: seasonStart },
         },
       },
+      orderBy: { match: { gameCreation: 'asc' } },
+      take: RECOVERY_RANKING_GAMES,
       select: { matchId: true, teamId: true },
     });
     if (ownGames.length === 0) return null;
