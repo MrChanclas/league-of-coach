@@ -59,6 +59,11 @@ const MAX_BACKFILL_MATCHES_PER_SYNC = 20;
 // call. These cost a single cheap list request each (no match fetches), and
 // this cap only matters while re-verifying a long stretch of known games.
 const MAX_BACKFILL_PAGES_PER_SYNC = 20;
+// How long continuePendingBackfills keeps handing out rounds. A round can
+// take about a minute, so this leaves room for the one in flight to finish
+// inside Cloud Run's 300s request timeout (and inside the scheduler job's
+// attempt deadline) instead of being cut off mid-page.
+const BACKFILL_JOB_BUDGET_MS = 150_000;
 // A single match can transiently 404 right after it finishes (Riot's match
 // details lag slightly behind the ids list). Retry with backoff instead of
 // giving up — we'd rather a sync take longer than silently skip a recent
@@ -133,6 +138,14 @@ export class MatchesService {
       },
     });
 
+    const seasonStart = getCurrentSeasonStart();
+    // While a season backfill is still pending, the freshest page is the
+    // least of our problems: we're chasing months of history, not a game
+    // that ended seconds ago, so the stale-list recheck below is pure
+    // waiting. It comes back once the season is covered.
+    const hasPendingSeasonBackfill =
+      account.seasonBackfillDoneFor?.getTime() !== seasonStart.getTime();
+
     let puuid = account.puuid;
     let synced = 0;
     let skipped = 0;
@@ -154,7 +167,8 @@ export class MatchesService {
     // top-up still hasn't met the history we already had.
     for (let page = 0; page < MAX_TOPUP_PAGES; page += 1) {
       const isFirstPage = page === 0;
-      const listAttempts = isFirstPage ? LIST_RECHECK_ATTEMPTS : 1;
+      const listAttempts =
+        isFirstPage && !hasPendingSeasonBackfill ? LIST_RECHECK_ATTEMPTS : 1;
       let matchIds: string[] = [];
       let newIds: string[] = [];
 
@@ -249,7 +263,6 @@ export class MatchesService {
       start += PAGE_SIZE;
     }
 
-    const seasonStart = getCurrentSeasonStart();
     let cursor = account.seasonBackfillCursor;
     let doneFor = account.seasonBackfillDoneFor;
     if (reachedEndOfHistory) {
@@ -303,6 +316,81 @@ export class MatchesService {
         seasonStart,
         oldestSyncedAt: backfill.oldestSyncedAt,
       },
+    };
+  }
+
+  /**
+   * Advances the season backfill of every account that still has one
+   * pending, so a first full-season catch-up finishes on its own instead of
+   * needing somebody to sit on the sync button (see the Cloud Scheduler job
+   * in the deploy workflow, and BackfillPollerService for local dev).
+   *
+   * Accounts take turns one round at a time rather than one account being
+   * drained before the next starts: they all share a single Riot key's rate
+   * limit, so this way the newest linked account doesn't wait behind
+   * somebody else's entire season. The call stops handing out rounds once
+   * its time budget is spent, well inside Cloud Run's request timeout -
+   * whatever is left simply continues on the next tick.
+   */
+  async continuePendingBackfills() {
+    const seasonStart = getCurrentSeasonStart();
+    const startedAt = Date.now();
+
+    const pending = await this.prisma.lolAccount.findMany({
+      where: {
+        OR: [
+          { seasonBackfillDoneFor: null },
+          { seasonBackfillDoneFor: { not: seasonStart } },
+        ],
+      },
+      select: { id: true, summoner: true, tag: true },
+      // Furthest from done first: an account whose sweep hasn't started
+      // (null cursor) or is still up at recent games needs the budget more
+      // than one already down near the start of the season.
+      orderBy: { seasonBackfillCursor: { sort: 'desc', nulls: 'first' } },
+    });
+
+    const queue = [...pending];
+    let synced = 0;
+    let completed = 0;
+    let rounds = 0;
+
+    while (
+      queue.length > 0 &&
+      Date.now() - startedAt < BACKFILL_JOB_BUDGET_MS
+    ) {
+      const account = queue.shift();
+      if (!account) break;
+
+      try {
+        const result = await this.syncAccount(account.id);
+        rounds += 1;
+        synced += result.synced;
+        if (result.seasonBackfill.done) {
+          completed += 1;
+        } else {
+          queue.push(account);
+        }
+      } catch (error) {
+        // Dropped from this tick's rotation, not from the job: its cursor
+        // is untouched, so the next tick picks it up where it stopped.
+        this.logger.warn(
+          `No se pudo avanzar el backfill de ${account.summoner}#${account.tag}: ${error}`,
+        );
+      }
+    }
+
+    const stillPending = queue.length;
+    this.logger.log(
+      `Backfill automatico: ${rounds} ronda(s), ${synced} partida(s), ${completed} cuenta(s) completada(s), ${stillPending} pendiente(s).`,
+    );
+
+    return {
+      accounts: pending.length,
+      rounds,
+      synced,
+      completed,
+      stillPending,
     };
   }
 

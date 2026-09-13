@@ -113,3 +113,31 @@ jobs:
             --http-method=POST \
             --update-headers="X-Internal-Secret=${POLL_SECRET}" \
             --quiet
+
+      # Keeps a first full-season match backfill moving without anyone
+      # holding the sync button: each tick advances every account that still
+      # has season history missing, for as long as its own time budget
+      # allows (see MatchesService.continuePendingBackfills). The attempt
+      # deadline has to clear that budget plus the round in flight, or the
+      # scheduler would report a failure and retry a call that is still
+      # working fine.
+      - name: Schedule season match backfill
+        continue-on-error: true
+        run: |
+          POLL_SECRET=$(gcloud secrets versions access latest --secret=loc-internal-poll-secret)
+          gcloud scheduler jobs create http loc-match-backfill \
+            --location="${REGION}" \
+            --schedule="*/5 * * * *" \
+            --uri="${{ steps.backend_url.outputs.url }}/internal/continue-backfills" \
+            --http-method=POST \
+            --headers="X-Internal-Secret=${POLL_SECRET}" \
+            --attempt-deadline=300s \
+            --quiet \
+          || gcloud scheduler jobs update http loc-match-backfill \
+            --location="${REGION}" \
+            --schedule="*/5 * * * *" \
+            --uri="${{ steps.backend_url.outputs.url }}/internal/continue-backfills" \
+            --http-method=POST \
+            --update-headers="X-Internal-Secret=${POLL_SECRET}" \
+            --attempt-deadline=300s \
+            --quiet
