@@ -29,6 +29,7 @@ import {
   roleMatchesProfile,
   RoleProfile,
 } from '../common/role-profile';
+import { getCurrentSeasonStart } from '../common/season';
 
 // The match history view only ever shows ranked Solo/Duo and Flex games,
 // regardless of what other queues get synced. Copied into a plain mutable
@@ -38,15 +39,26 @@ const HISTORY_QUEUE_IDS: number[] = [...RANKED_QUEUE_IDS];
 
 // Riot's match-ids endpoint accepts up to 20 per page.
 const PAGE_SIZE = 20;
-// How many pages of history we're willing to page back through in one sync
-// call, as a safety cap against runaway loops for brand-new accounts with a
-// long ranked history (normal top-ups stop far sooner, see hasCaughtUp
-// below).
-const MAX_BACKFILL_PAGES = 5;
+// How many pages the top-up phase pages back through in one call. It only
+// has to reach the history we already had, so this is just a guard against a
+// runaway loop — anything deeper than this is the season backfill's job (see
+// backfillSeason below), which resumes across calls instead of stretching a
+// single HTTP request past its timeout.
+const MAX_TOPUP_PAGES = 5;
 // Initial backfill depth for a brand-new account link, matching the "20
 // partidas por análisis" the app promises. Irrelevant once an account
 // already has some history — see hasCaughtUp below.
 const DEFAULT_TARGET_MATCH_COUNT = 20;
+// Budget for the season backfill in a single sync call. Riot's development
+// key allows ~95 requests per 2 minutes and each new match costs one match
+// fetch (plus, sometimes, a timeline fetch), so a full season can't possibly
+// be fetched in one request — it's split across successive calls, with the
+// client re-calling until `seasonBackfill.done` comes back true.
+const MAX_BACKFILL_MATCHES_PER_SYNC = 20;
+// Pages of already-stored history the sweep is willing to re-verify in one
+// call. These cost a single cheap list request each (no match fetches), and
+// this cap only matters while re-verifying a long stretch of known games.
+const MAX_BACKFILL_PAGES_PER_SYNC = 20;
 // A single match can transiently 404 right after it finishes (Riot's match
 // details lag slightly behind the ids list). Retry with backoff instead of
 // giving up — we'd rather a sync take longer than silently skip a recent
@@ -76,6 +88,23 @@ export class MatchesService {
     private readonly puuidRefresh: PuuidRefreshService,
   ) {}
 
+  /**
+   * Brings this account's stored ranked history in line with Riot's, in two
+   * phases:
+   *
+   * 1. **Top-up** - pages from the newest game backwards until it reaches
+   *    history we already had, so games played since the last sync show up
+   *    right away.
+   * 2. **Season backfill** - keeps paging further back, in budgeted chunks
+   *    spread across successive calls, until every ranked game of the
+   *    current season is stored (see `backfillSeason`).
+   *
+   * Phase 2 is what makes Pool Champ and Aprendizaje agree with external
+   * trackers: those features scope themselves to the full season the same
+   * way League of Graphs or OP.GG do, so with only the last ~20 games ever
+   * stored, a champion the player actually has 60 season games on showed up
+   * with 3 games and a meaningless 100% winrate.
+   */
   async syncAccount(
     accountId: string,
     targetCount = DEFAULT_TARGET_MATCH_COUNT,
@@ -95,7 +124,7 @@ export class MatchesService {
     }
 
     // Counted as ranked-only so the backfill target below means "20 ranked
-    // matches", matching what the history view actually shows — not diluted
+    // matches", matching what the history view actually shows - not diluted
     // by older normal/ARAM games synced before ranked-only syncing.
     const storedCount = await this.prisma.matchParticipant.count({
       where: {
@@ -110,11 +139,20 @@ export class MatchesService {
     let relinked = 0;
     let totalFetched = 0;
     let start = 0;
+    // Whether the top-up reached history we already had (or the end of this
+    // account's ranked history). When it doesn't, more games were played
+    // between syncs than the page cap covers, which reopens a gap the season
+    // backfill has to close.
+    let caughtUp = false;
+    let reachedEndOfHistory = false;
+    // Oldest game the top-up confirmed stored, and therefore where the
+    // season backfill can pick up without re-checking anything newer.
+    let topUpCursor: Date | null = null;
 
     // Page 0 always runs first (even if we already have plenty stored) so
-    // newly played games get picked up; later pages only run if we're still
-    // short of the target depth, backfilling further into history.
-    for (let page = 0; page < MAX_BACKFILL_PAGES; page += 1) {
+    // newly played games get picked up; later pages only run while the
+    // top-up still hasn't met the history we already had.
+    for (let page = 0; page < MAX_TOPUP_PAGES; page += 1) {
       const isFirstPage = page === 0;
       const listAttempts = isFirstPage ? LIST_RECHECK_ATTEMPTS : 1;
       let matchIds: string[] = [];
@@ -150,115 +188,93 @@ export class MatchesService {
 
         if (matchIds.length === 0) break;
 
-        const existingMatches = await this.prisma.match.findMany({
-          where: { matchId: { in: matchIds } },
-          select: { id: true, matchId: true },
-        });
-        const internalIdByRiotId = new Map(
-          existingMatches.map((match) => [match.matchId, match.id]),
-        );
-
-        // A match already known globally (synced earlier via a different
-        // tracked account that shared the game) can still be missing THIS
-        // account's own participant row entirely — either it was never
-        // linked at the time (participant row exists with accountId: null)
-        // or this account was deleted and re-added since (deleting a
-        // LolAccount cascades its MatchParticipant rows, but the shared
-        // Match row stays). Both cases silently drop this account's most
-        // recent games unless we check for them here instead of just
-        // trusting "the match exists" and skipping it.
-        const ourParticipants = existingMatches.length
-          ? await this.prisma.matchParticipant.findMany({
-              where: {
-                matchId: { in: [...internalIdByRiotId.values()] },
-                puuid,
-              },
-              select: { matchId: true, accountId: true },
-            })
-          : [];
-        const ourParticipantByInternalId = new Map(
-          ourParticipants.map((p) => [p.matchId, p]),
-        );
-
-        newIds = matchIds.filter((id) => {
-          const internalId = internalIdByRiotId.get(id);
-          return !internalId || !ourParticipantByInternalId.has(internalId);
-        });
-
-        let relinkedThisAttempt = 0;
-        const orphanedInternalIds = ourParticipants
-          .filter((p) => p.accountId === null)
-          .map((p) => p.matchId);
-        if (orphanedInternalIds.length > 0) {
-          const result = await this.prisma.matchParticipant.updateMany({
-            where: {
-              matchId: { in: orphanedInternalIds },
-              puuid,
-              accountId: null,
-            },
-            data: { accountId: account.id },
-          });
-          relinkedThisAttempt = result.count;
-          relinked += relinkedThisAttempt;
-        }
+        const resolved = await this.resolvePageIds(account.id, puuid, matchIds);
+        newIds = resolved.newIds;
+        relinked += resolved.relinked;
 
         // Riot's match-ids list endpoint can itself serve a stale cached
-        // response for a short while right after a new game finishes —
+        // response for a short while right after a new game finishes -
         // only worth rechecking when this page looked like it found
         // nothing at all (no new match, nothing to relink either).
         const looksStale =
           isFirstPage &&
           newIds.length === 0 &&
-          relinkedThisAttempt === 0 &&
+          resolved.relinked === 0 &&
           listAttempt < listAttempts;
         if (!looksStale) break;
         await sleep(LIST_RECHECK_DELAY_MS);
       }
 
-      if (matchIds.length === 0) break;
+      if (matchIds.length === 0) {
+        caughtUp = true;
+        reachedEndOfHistory = true;
+        break;
+      }
+
       totalFetched += matchIds.length;
       skipped += matchIds.length - newIds.length;
 
-      for (const matchId of newIds) {
-        try {
-          const matchDto = await this.fetchMatchWithRetry(
-            account.server,
-            matchId,
-          );
-          await this.storeMatch(account.id, account.server, puuid, matchDto);
-          synced += 1;
-        } catch (error) {
-          this.logger.warn(
-            `No se pudo sincronizar la partida ${matchId} tras ${MATCH_FETCH_RETRIES} intentos: ${error}`,
-          );
-        }
+      const stored = await this.storeNewMatches(account, puuid, newIds);
+      synced += stored.synced;
+
+      // Only a page that stored cleanly may move the cursor: advancing past
+      // a match we never managed to fetch would leave a hole nothing ever
+      // goes back for.
+      if (stored.failed === 0) {
+        topUpCursor = await this.oldestGameCreation(matchIds);
       }
 
       // Once a page contains a match we already had stored, everything
-      // older than it is guaranteed to be already-synced too — stop right
-      // there instead of continuing to page back into history just to hit
-      // targetCount. That backfill target only matters for a brand-new
-      // account's very first sync (an all-new page keeps it paging) — it
-      // must NOT trigger for an account that already had history before
-      // this call, or a page 0 that's entirely new (more than targetCount
-      // games played since the last sync) stops backfilling right there,
-      // permanently skipping everything between the old known history and
-      // this new page. See user-reported bug: an account's Ekko stats
-      // showed 5 games in-app vs 60 on an external tracker, because
-      // `storedCount` alone already exceeded targetCount on every sync
-      // after the first.
+      // older than it was reached by an earlier sync too - stop paging here
+      // and let the season backfill decide whether that older history is
+      // actually complete.
       const hasCaughtUpToKnownHistory = newIds.length < matchIds.length;
-      const hasReachedTarget = storedCount === 0 && synced >= targetCount;
+      // Riot has nothing older to give: this account's entire ranked
+      // history is stored, so the current season certainly is.
       const hasReachedEndOfHistory = matchIds.length < PAGE_SIZE;
-      if (
-        hasCaughtUpToKnownHistory ||
-        hasReachedTarget ||
-        hasReachedEndOfHistory
-      )
+      // The 20-match target only applies to a brand-new account's very
+      // first sync; for an account that already had history it must not cut
+      // the top-up short, or a page that's entirely new (more games played
+      // than the target since the last sync) would stop the loop right
+      // there and strand everything in between.
+      const hasReachedTarget = storedCount === 0 && synced >= targetCount;
+
+      if (hasCaughtUpToKnownHistory || hasReachedEndOfHistory) {
+        caughtUp = true;
+        reachedEndOfHistory = hasReachedEndOfHistory;
         break;
+      }
+      if (hasReachedTarget || stored.failed > 0) break;
 
       start += PAGE_SIZE;
     }
+
+    const seasonStart = getCurrentSeasonStart();
+    let cursor = account.seasonBackfillCursor;
+    let doneFor = account.seasonBackfillDoneFor;
+    if (reachedEndOfHistory) {
+      // The top-up walked contiguously from the newest game to the oldest
+      // one Riot has, so there is nothing left to backfill for any season.
+      cursor = topUpCursor ?? cursor;
+      doneFor = seasonStart;
+    } else if (!caughtUp) {
+      // A gap opened up between the newest games and the history we had, so
+      // the sweep restarts from the deepest point this top-up confirmed.
+      cursor = topUpCursor;
+      doneFor = null;
+    }
+
+    const backfill = await this.backfillSeason(
+      account,
+      puuid,
+      seasonStart,
+      cursor,
+      doneFor,
+    );
+    synced += backfill.synced;
+    skipped += backfill.skipped;
+    relinked += backfill.relinked;
+    totalFetched += backfill.totalFetched;
 
     await this.rankSnapshots.refreshAccountRank({ ...account, puuid });
 
@@ -266,12 +282,240 @@ export class MatchesService {
       this.discord.notifySession(
         `🔄 Sync de **${account.summoner}#${account.tag}**: ${synced} partida(s) nueva(s)` +
           (relinked > 0
-            ? `, ${relinked} recuperada(s) de cuentas compartidas.`
-            : '.'),
+            ? `, ${relinked} recuperada(s) de cuentas compartidas`
+            : '') +
+          (backfill.done
+            ? '.'
+            : ' (historial de la temporada aún incompleto, continúa en el próximo sync).'),
       );
     }
 
-    return { synced, skipped, relinked, totalFetched };
+    return {
+      synced,
+      skipped,
+      relinked,
+      totalFetched,
+      seasonBackfill: {
+        // false means there is still season history left to fetch and the
+        // client should call sync again; the numbers Pool Champ and
+        // Aprendizaje show are partial until this turns true.
+        done: backfill.done,
+        seasonStart,
+        oldestSyncedAt: backfill.oldestSyncedAt,
+      },
+    };
+  }
+
+  /**
+   * Walks backwards through the current season's ranked history until every
+   * game of it is stored, a chunk at a time.
+   *
+   * Paging uses Riot's `endTime` filter rather than the `start` offset, so a
+   * sweep interrupted by this call's budget resumes exactly where it left
+   * off on the next call instead of re-walking from the newest game - the
+   * cursor (the oldest game confirmed stored) is persisted on the account.
+   * A sweep that has never completed for this season starts from "now" and
+   * re-verifies the already-stored pages on the way down, which costs one
+   * list request per page and no match fetches, and repairs any hole left
+   * behind by earlier versions of this sync.
+   */
+  private async backfillSeason(
+    account: { id: string; server: string },
+    puuid: string,
+    seasonStart: Date,
+    cursor: Date | null,
+    doneFor: Date | null,
+  ) {
+    const totals = { synced: 0, skipped: 0, relinked: 0, totalFetched: 0 };
+    let done = doneFor !== null && doneFor.getTime() === seasonStart.getTime();
+    let nextCursor = cursor;
+
+    if (!done) {
+      const seasonStartSeconds = Math.floor(seasonStart.getTime() / 1000);
+      let sweepFrom = cursor ?? new Date();
+
+      for (let page = 0; page < MAX_BACKFILL_PAGES_PER_SYNC; page += 1) {
+        if (sweepFrom.getTime() <= seasonStart.getTime()) {
+          done = true;
+          break;
+        }
+        // Checked with a whole page of room to spare, so a call fetches at
+        // most this many new matches instead of overshooting by a page and
+        // stretching the request past a proxy's timeout. Pages that turn out
+        // to be already stored cost no match fetches and no budget.
+        if (totals.synced + PAGE_SIZE > MAX_BACKFILL_MATCHES_PER_SYNC) break;
+
+        const matchIds = await this.riotApi.getMatchIdsByPuuid(
+          account.server,
+          puuid,
+          {
+            start: 0,
+            count: PAGE_SIZE,
+            type: 'ranked',
+            startTime: seasonStartSeconds,
+            // Rounded up so the cursor game itself comes back as a harmless
+            // one-match overlap instead of risking a skipped game right at
+            // the boundary; it is already stored, so it costs nothing.
+            endTime: Math.ceil(sweepFrom.getTime() / 1000),
+          },
+        );
+
+        if (matchIds.length === 0) {
+          done = true;
+          break;
+        }
+
+        totals.totalFetched += matchIds.length;
+        const resolved = await this.resolvePageIds(account.id, puuid, matchIds);
+        totals.relinked += resolved.relinked;
+        totals.skipped += matchIds.length - resolved.newIds.length;
+
+        const stored = await this.storeNewMatches(
+          account,
+          puuid,
+          resolved.newIds,
+        );
+        totals.synced += stored.synced;
+
+        if (stored.failed > 0) {
+          // Leave the cursor untouched so the next sync retries this exact
+          // page: a slower sweep beats one that pages past a match it never
+          // managed to store.
+          this.logger.warn(
+            `Backfill de temporada pausado para ${account.id}: ${stored.failed} partida(s) sin poder sincronizarse, se reintentan en el próximo sync.`,
+          );
+          break;
+        }
+
+        const oldest = await this.oldestGameCreation(matchIds);
+        if (!oldest || oldest.getTime() >= sweepFrom.getTime()) {
+          // The cursor is not moving, which `endTime` should make
+          // impossible; bail out instead of looping on the same page.
+          break;
+        }
+
+        sweepFrom = oldest;
+        nextCursor = oldest;
+
+        if (matchIds.length < PAGE_SIZE) {
+          done = true;
+          break;
+        }
+      }
+    }
+
+    await this.prisma.lolAccount.update({
+      where: { id: account.id },
+      data: {
+        seasonBackfillCursor: nextCursor,
+        seasonBackfillDoneFor: done ? seasonStart : null,
+      },
+    });
+
+    return { ...totals, done, oldestSyncedAt: nextCursor };
+  }
+
+  /**
+   * Splits a page of Riot match ids into the ones this account still needs
+   * stored, relinking along the way any participant row that is already in
+   * the database but not attached to this account.
+   *
+   * A match already known globally (synced earlier via a different tracked
+   * account that shared the game) can still be missing THIS account's own
+   * participant row entirely - either it was never linked at the time
+   * (participant row exists with accountId: null) or this account was
+   * deleted and re-added since (deleting a LolAccount cascades its
+   * MatchParticipant rows, but the shared Match row stays). Both cases
+   * silently drop games unless they are checked for here instead of just
+   * trusting "the match exists" and skipping it.
+   */
+  private async resolvePageIds(
+    accountId: string,
+    puuid: string,
+    matchIds: string[],
+  ): Promise<{ newIds: string[]; relinked: number }> {
+    const existingMatches = await this.prisma.match.findMany({
+      where: { matchId: { in: matchIds } },
+      select: { id: true, matchId: true },
+    });
+    const internalIdByRiotId = new Map(
+      existingMatches.map((match) => [match.matchId, match.id]),
+    );
+
+    const ourParticipants = existingMatches.length
+      ? await this.prisma.matchParticipant.findMany({
+          where: {
+            matchId: { in: [...internalIdByRiotId.values()] },
+            puuid,
+          },
+          select: { matchId: true, accountId: true },
+        })
+      : [];
+    const ourParticipantByInternalId = new Map(
+      ourParticipants.map((p) => [p.matchId, p]),
+    );
+
+    const newIds = matchIds.filter((id) => {
+      const internalId = internalIdByRiotId.get(id);
+      return !internalId || !ourParticipantByInternalId.has(internalId);
+    });
+
+    let relinked = 0;
+    const orphanedInternalIds = ourParticipants
+      .filter((p) => p.accountId === null)
+      .map((p) => p.matchId);
+    if (orphanedInternalIds.length > 0) {
+      const result = await this.prisma.matchParticipant.updateMany({
+        where: {
+          matchId: { in: orphanedInternalIds },
+          puuid,
+          accountId: null,
+        },
+        data: { accountId },
+      });
+      relinked = result.count;
+    }
+
+    return { newIds, relinked };
+  }
+
+  /** Fetches and stores a page's worth of missing matches. */
+  private async storeNewMatches(
+    account: { id: string; server: string },
+    puuid: string,
+    newIds: string[],
+  ): Promise<{ synced: number; failed: number }> {
+    let synced = 0;
+    let failed = 0;
+
+    for (const matchId of newIds) {
+      try {
+        const matchDto = await this.fetchMatchWithRetry(
+          account.server,
+          matchId,
+        );
+        await this.storeMatch(account.id, account.server, puuid, matchDto);
+        synced += 1;
+      } catch (error) {
+        failed += 1;
+        this.logger.warn(
+          `No se pudo sincronizar la partida ${matchId} tras ${MATCH_FETCH_RETRIES} intentos: ${error}`,
+        );
+      }
+    }
+
+    return { synced, failed };
+  }
+
+  /** Oldest gameCreation among the given Riot match ids already stored. */
+  private async oldestGameCreation(matchIds: string[]): Promise<Date | null> {
+    const oldest = await this.prisma.match.findFirst({
+      where: { matchId: { in: matchIds } },
+      orderBy: { gameCreation: 'asc' },
+      select: { gameCreation: true },
+    });
+
+    return oldest?.gameCreation ?? null;
   }
 
   private async fetchMatchWithRetry(

@@ -37,6 +37,14 @@ model LolAccount {
   userId            String
   user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt         DateTime           @default(now())
+
+  // Progress of the season-wide match backfill (see matches.service.ts).
+  // `seasonBackfillCursor` is the gameCreation of the oldest game already
+  // swept back to; `seasonBackfillDoneFor` holds the season start date for
+  // which that sweep reached the end, so a new season (or a gap that opens
+  // up when a lot of games are played between syncs) reopens it.
+  seasonBackfillCursor  DateTime?
+  seasonBackfillDoneFor DateTime?
   learnings         ChampionLearning[]
   goals             Goal[]
   matchParticipants MatchParticipant[]

@@ -67,6 +67,10 @@ function App() {
   const [ddragonVersion, setDdragonVersion] = useState<string | null>(null)
   const [timeRange, setTimeRange] = useState<TimeRange>('7d')
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null)
+  // True while the season backfill keeps re-calling sync in the background;
+  // the mutation itself is idle between rounds, so the button would
+  // otherwise flicker back to «Sincronizar ahora» mid-catch-up.
+  const [isCatchingUpSeason, setIsCatchingUpSeason] = useState(false)
 
   useEffect(() => {
     void getDdragonVersion().then(setDdragonVersion)
@@ -264,19 +268,48 @@ function App() {
     }
   }
 
+  // Each call only fetches as much history as Riot's rate limit allows, so a
+  // first sync of a full season needs several rounds. The cap is a safety
+  // net against an endless loop, not an expected stopping point: it covers
+  // far more games than a single season can hold.
+  const MAX_SYNC_ROUNDS = 60
+
   const handleSyncMatches = async () => {
     if (!currentAccountId) return
 
+    let syncedTotal = 0
+    let skippedTotal = 0
+    let relinkedTotal = 0
+
     try {
-      const payload = await syncMatchesMutation.mutateAsync(currentAccountId)
-      const relinkedNote = payload.relinked ? `, ${payload.relinked} recuperadas de cuentas compartidas` : ''
+      setIsCatchingUpSeason(true)
+
+      for (let round = 0; round < MAX_SYNC_ROUNDS; round += 1) {
+        const payload = await syncMatchesMutation.mutateAsync(currentAccountId)
+        syncedTotal += payload.synced ?? 0
+        skippedTotal += payload.skipped ?? 0
+        relinkedTotal += payload.relinked ?? 0
+        setLastSyncedAt(new Date())
+
+        // Refreshed every round so the numbers fill in while the season
+        // history keeps arriving, instead of only at the very end.
+        await queryClient.invalidateQueries({ queryKey: queryKeys.account(currentAccountId) })
+
+        if (payload.seasonBackfill?.done !== false) break
+
+        setStatus(
+          `Recuperando el historial de la temporada… ${syncedTotal} partidas recuperadas hasta ahora.`,
+        )
+      }
+
+      const relinkedNote = relinkedTotal ? `, ${relinkedTotal} recuperadas de cuentas compartidas` : ''
       setStatus(
-        `Se sincronizaron ${payload.synced ?? 0} partidas nuevas (${payload.skipped ?? 0} ya existían${relinkedNote}).`,
+        `Se sincronizaron ${syncedTotal} partidas nuevas (${skippedTotal} ya existían${relinkedNote}).`,
       )
-      setLastSyncedAt(new Date())
-      await queryClient.invalidateQueries({ queryKey: queryKeys.account(currentAccountId) })
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'No se pudieron sincronizar las partidas.')
+    } finally {
+      setIsCatchingUpSeason(false)
     }
   }
 
@@ -347,7 +380,7 @@ function App() {
       behaviorFlags={behaviorFlags}
       ddragonVersion={ddragonVersion}
       timeRange={timeRange}
-      isSyncing={syncMatchesMutation.isPending}
+      isSyncing={syncMatchesMutation.isPending || isCatchingUpSeason}
       lastSyncedLabel={lastSyncedLabel}
       championRoster={championRoster}
       poolView={poolQuery.data}

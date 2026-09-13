@@ -63,7 +63,16 @@ export function useSyncMatchesMutation() {
   return useMutation({
     mutationFn: async (accountId: string) => {
       const token = await getToken()
-      return apiFetch<{ synced?: number; skipped?: number; relinked?: number }>(`/matches/sync/${accountId}`, {
+      return apiFetch<{
+        synced?: number
+        skipped?: number
+        relinked?: number
+        // `seasonBackfill.done` is false while the backend still has season
+        // history left to fetch: Riot's rate limit makes a full season
+        // impossible to pull in one request, so the client keeps calling
+        // until it comes back true (see matches.service.ts).
+        seasonBackfill?: { done: boolean; oldestSyncedAt: string | null }
+      }>(`/matches/sync/${accountId}`, {
         method: 'POST',
         token,
         body: {},

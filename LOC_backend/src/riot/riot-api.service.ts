@@ -185,6 +185,12 @@ export function isStalePuuidError(error: unknown): boolean {
   return typeof riot === 'string' && riot.includes('Exception decrypting');
 }
 
+// How many times a 429 is waited out before giving up. Riot's own
+// Retry-After drives the wait, so these retries cost nothing but time.
+const RATE_LIMIT_RETRIES = 3;
+// Fallback when a 429 arrives without a Retry-After header; Riot's
+// shortest bucket is 2 minutes, so this always clears it.
+const DEFAULT_RATE_LIMIT_WAIT_MS = 125_000;
 const MAX_REQUESTS_PER_SECOND = 18;
 const MAX_REQUESTS_PER_TWO_MINUTES = 95;
 
@@ -261,7 +267,7 @@ export class RiotApiService {
     this.requestTimestamps.push(now);
   }
 
-  private async request<T>(url: string): Promise<T> {
+  private async request<T>(url: string, rateLimitAttempt = 1): Promise<T> {
     await this.throttle();
 
     const response = await fetch(url, {
@@ -271,6 +277,20 @@ export class RiotApiService {
     });
 
     if (!response.ok) {
+      // Our own throttle only knows about requests this process made, so a
+      // 429 still happens whenever something else is spending the same key's
+      // budget (another instance, a one-off script, a parallel sync). Riot
+      // tells us exactly how long to wait in Retry-After, so waiting it out
+      // is always better than failing the call and leaving a match unsynced.
+      if (response.status === 429 && rateLimitAttempt <= RATE_LIMIT_RETRIES) {
+        const retryAfterSeconds = Number(response.headers.get('retry-after'));
+        const waitMs = Number.isFinite(retryAfterSeconds)
+          ? Math.max(1, retryAfterSeconds) * 1000
+          : DEFAULT_RATE_LIMIT_WAIT_MS;
+        await new Promise((resolve) => setTimeout(resolve, waitMs));
+        return this.request<T>(url, rateLimitAttempt + 1);
+      }
+
       const payload = await response.text();
 
       // 404 is routine (a summoner search that doesn't match anything) and
@@ -370,6 +390,12 @@ export class RiotApiService {
       count?: number;
       queue?: number;
       type?: string;
+      /** Epoch SECONDS (not ms), as Riot's match-ids endpoint expects. */
+      startTime?: number;
+      /** Epoch SECONDS (not ms). Used to page back through history by time
+       * instead of by offset, so a backfill can resume exactly where the
+       * previous one stopped. */
+      endTime?: number;
     } = {},
   ): Promise<string[]> {
     const host = this.getRegionalHost(server);
@@ -381,6 +407,15 @@ export class RiotApiService {
     }
     if (options.type) {
       params.set('type', options.type);
+    }
+    if (options.startTime !== undefined) {
+      params.set(
+        'startTime',
+        String(Math.max(0, Math.floor(options.startTime))),
+      );
+    }
+    if (options.endTime !== undefined) {
+      params.set('endTime', String(Math.max(0, Math.floor(options.endTime))));
     }
 
     return this.request<string[]>(
