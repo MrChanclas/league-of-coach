@@ -17,7 +17,11 @@ export type ChampionPerformanceTip =
   | { status: 'good' }
   | {
       status: 'bad';
-      substitute: { championKey: string; name: string; role: PoolRoleKey } | null;
+      substitute: {
+        championKey: string;
+        name: string;
+        role: PoolRoleKey;
+      } | null;
     };
 
 /**
@@ -58,6 +62,14 @@ export function evaluateChampionPerformance(
     return rosterByKey.get(key)?.role ?? 'MIDDLE';
   };
 
+  // The substitute has to replace the champion in the lane the player
+  // actually takes it to, not in whichever pool slot it was filed under:
+  // the pool editor drops a clicked champion into the active slot, so a Nilah
+  // played only at bot can sit under Superior and would otherwise be told to
+  // make way for the account's best top laner (user-reported: Nilah -> Garen).
+  const playedRole = primaryRoleByChampion.get(championKey);
+  const laneRole = playedRole && isPoolRoleKey(playedRole) ? playedRole : role;
+
   // Prefer a proven alternative: someone else in the same role the player
   // already performs well on, excluding whatever is already in the pool.
   const bestPerformer = championStats
@@ -67,7 +79,7 @@ export function evaluateChampionPerformance(
         !excludeChampionKeys.has(candidate.champion) &&
         candidate.gamesPlayed >= MIN_GAMES_FOR_PERFORMANCE_TIP &&
         candidate.winrate > BAD_WINRATE_THRESHOLD &&
-        roleFor(candidate.champion) === role,
+        roleFor(candidate.champion) === laneRole,
     )
     .sort((a, b) => b.winrate - a.winrate || b.gamesPlayed - a.gamesPlayed)[0];
 
@@ -79,7 +91,7 @@ export function evaluateChampionPerformance(
     substituteKey = roster
       .filter(
         (candidate) =>
-          candidate.role === role &&
+          candidate.role === laneRole &&
           candidate.championKey !== championKey &&
           !excludeChampionKeys.has(candidate.championKey) &&
           (statsByChampion.get(candidate.championKey)?.gamesPlayed ?? 0) === 0,
@@ -91,7 +103,7 @@ export function evaluateChampionPerformance(
     ? {
         championKey: substituteKey,
         name: rosterByKey.get(substituteKey)?.name ?? substituteKey,
-        role,
+        role: laneRole,
       }
     : null;
 
