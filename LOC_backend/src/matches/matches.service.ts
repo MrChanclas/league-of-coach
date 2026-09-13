@@ -81,9 +81,23 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * True for Prisma's "unique constraint failed" (P2002), which for an upsert
+ * means somebody else inserted the very row it was about to create.
+ */
+function isUniqueConstraintError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    (error as { code?: unknown }).code === 'P2002'
+  );
+}
+
 @Injectable()
 export class MatchesService {
   private readonly logger = new Logger(MatchesService.name);
+  // Guards continuePendingBackfills against overlapping runs; see there.
+  private isBackfilling = false;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -333,6 +347,32 @@ export class MatchesService {
    * whatever is left simply continues on the next tick.
    */
   async continuePendingBackfills() {
+    // Both triggers land here - Cloud Scheduler in production and the
+    // in-process cron - and they run on the same five-minute beat, so
+    // without a guard shared by both they overlap by design: two runs
+    // walking the same accounts, spending the same rate limit twice and
+    // racing each other to insert the same matches.
+    if (this.isBackfilling) {
+      this.logger.log('Backfill automatico ya en curso; se omite este tick.');
+      return {
+        accounts: 0,
+        rounds: 0,
+        synced: 0,
+        completed: 0,
+        stillPending: 0,
+        skipped: true,
+      };
+    }
+
+    this.isBackfilling = true;
+    try {
+      return await this.runPendingBackfills();
+    } finally {
+      this.isBackfilling = false;
+    }
+  }
+
+  private async runPendingBackfills() {
     const seasonStart = getCurrentSeasonStart();
     const startedAt = Date.now();
 
@@ -391,6 +431,7 @@ export class MatchesService {
       synced,
       completed,
       stillPending,
+      skipped: false,
     };
   }
 
@@ -577,18 +618,27 @@ export class MatchesService {
     let failed = 0;
 
     for (const matchId of newIds) {
+      let matchDto: RiotMatchDto;
+
       try {
-        const matchDto = await this.fetchMatchWithRetry(
-          account.server,
-          matchId,
-        );
-        await this.storeMatch(account.id, account.server, puuid, matchDto);
-        synced += 1;
+        matchDto = await this.fetchMatchWithRetry(account.server, matchId);
       } catch (error) {
         failed += 1;
         this.logger.warn(
-          `No se pudo sincronizar la partida ${matchId} tras ${MATCH_FETCH_RETRIES} intentos: ${error}`,
+          `No se pudo descargar la partida ${matchId} tras ${MATCH_FETCH_RETRIES} intentos: ${error}`,
         );
+        continue;
+      }
+
+      try {
+        await this.storeMatch(account.id, account.server, puuid, matchDto);
+        synced += 1;
+      } catch (error) {
+        // Kept separate from the fetch failure above: this one is ours, not
+        // Riot's, and reporting it as a failed download sent the last
+        // investigation looking at the wrong system entirely.
+        failed += 1;
+        this.logger.warn(`No se pudo guardar la partida ${matchId}: ${error}`);
       }
     }
 
@@ -765,6 +815,44 @@ export class MatchesService {
     );
   }
 
+  /**
+   * Upsert of the shared Match row that tolerates losing a race for it.
+   *
+   * Two syncs can legitimately be storing the same game at the same time -
+   * two tracked accounts who played in the same lobby, or the scheduled
+   * backfill overlapping a manual sync - and an upsert is not atomic: both
+   * can find the row missing and both try to insert it. The loser gets a
+   * unique-constraint error describing exactly the state it wanted, so it
+   * reads the winner's row instead of failing the whole match.
+   */
+  private async upsertMatchRow(server: string, matchDto: RiotMatchDto) {
+    const create = {
+      matchId: matchDto.metadata.matchId,
+      server,
+      gameCreation: new Date(matchDto.info.gameCreation),
+      gameDuration: matchDto.info.gameDuration,
+      gameMode: matchDto.info.gameMode,
+      gameVersion: matchDto.info.gameVersion,
+      queueId: matchDto.info.queueId,
+    };
+
+    try {
+      return await this.prisma.match.upsert({
+        where: { matchId: matchDto.metadata.matchId },
+        create,
+        update: {},
+      });
+    } catch (error) {
+      if (!isUniqueConstraintError(error)) throw error;
+
+      const existing = await this.prisma.match.findUnique({
+        where: { matchId: matchDto.metadata.matchId },
+      });
+      if (!existing) throw error;
+      return existing;
+    }
+  }
+
   private async storeMatch(
     accountId: string,
     server: string,
@@ -785,19 +873,7 @@ export class MatchesService {
     // it first, or if this account was deleted and re-added — deleting a
     // LolAccount cascades its own MatchParticipant rows but never touches
     // the shared Match row.
-    const match = await this.prisma.match.upsert({
-      where: { matchId: matchDto.metadata.matchId },
-      create: {
-        matchId: matchDto.metadata.matchId,
-        server,
-        gameCreation: new Date(matchDto.info.gameCreation),
-        gameDuration: matchDto.info.gameDuration,
-        gameMode: matchDto.info.gameMode,
-        gameVersion: matchDto.info.gameVersion,
-        queueId: matchDto.info.queueId,
-      },
-      update: {},
-    });
+    const match = await this.upsertMatchRow(server, matchDto);
 
     const knownAccounts = await this.prisma.lolAccount.findMany({
       where: { puuid: { in: participants.map((entry) => entry.puuid) } },
