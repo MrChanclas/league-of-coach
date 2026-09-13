@@ -54,11 +54,40 @@ model LolAccount {
   // up when a lot of games are played between syncs) reopens it.
   seasonBackfillCursor  DateTime?
   seasonBackfillDoneFor DateTime?
+  // Fallback for when Riot's match list for this account ends well after the
+  // season start while its ranked wins + losses say games are still missing:
+  // those games are looked for in the match lists of frequent teammates
+  // instead (see recoverSeasonGames in matches.service.ts). Holds the season
+  // start once that search has finished for the season.
+  seasonRecoveryDoneFor DateTime?
   learnings         ChampionLearning[]
   goals             Goal[]
   matchParticipants MatchParticipant[]
   rankSnapshots     RankSnapshot[]
   championPool      ChampionPool?
+  seasonRecoveryCandidates SeasonRecoveryCandidate[]
+}
+
+// One teammate whose match list is being searched for games missing from an
+// account's own list (see LolAccount.seasonRecoveryDoneFor). `cursor` is the
+// gameCreation of the oldest of their games already checked, so a search cut
+// short by a round's budget resumes exactly where it stopped.
+model SeasonRecoveryCandidate {
+  id          String     @id @default(cuid())
+  accountId   String
+  account     LolAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  season      DateTime
+  puuid       String
+  sharedGames Int
+  cursor      DateTime
+  lastMatchId String?
+  checked     Int        @default(0)
+  recovered   Int        @default(0)
+  done        Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([accountId, season, puuid])
 }
 
 model RankSnapshot {

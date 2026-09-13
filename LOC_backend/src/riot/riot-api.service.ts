@@ -13,6 +13,9 @@ export type RiotSummonerDto = {
   summonerLevel: number;
 };
 
+/** Most match ids Riot's by-puuid ids endpoint returns in one page. */
+export const MATCH_IDS_MAX_COUNT = 100;
+
 export type RiotLeagueEntryDto = {
   queueType: string;
   tier: string;
@@ -401,7 +404,10 @@ export class RiotApiService {
     const host = this.getRegionalHost(server);
     const params = new URLSearchParams();
     params.set('start', String(options.start ?? 0));
-    params.set('count', String(Math.min(options.count ?? 10, 20)));
+    params.set(
+      'count',
+      String(Math.min(options.count ?? 10, MATCH_IDS_MAX_COUNT)),
+    );
     if (options.queue) {
       params.set('queue', String(options.queue));
     }

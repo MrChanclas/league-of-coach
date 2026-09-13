@@ -65,6 +65,10 @@ export class RankSnapshotsService {
    * Re-fetches an account's current league entries from Riot, updates the
    * cached tier/division/LP on LolAccount, and records a snapshot row.
    * Shared by manual match sync and the periodic background poller.
+   *
+   * Returns the entries Riot sent (empty for an unranked account), or null
+   * when they couldn't be fetched - kept apart so a failed request is never
+   * mistaken for an account with no ranked games.
    */
   async refreshAccountRank(account: {
     id: string;
@@ -72,8 +76,8 @@ export class RankSnapshotsService {
     summoner: string;
     tag: string;
     puuid: string;
-  }) {
-    let entries: RiotLeagueEntryDto[];
+  }): Promise<RiotLeagueEntryDto[] | null> {
+    let entries: RiotLeagueEntryDto[] | null;
     try {
       entries = await this.riotApi.getLeagueEntriesByPuuid(
         account.server,
@@ -84,15 +88,15 @@ export class RankSnapshotsService {
         this.logger.warn(
           `No se pudo obtener el rango de la cuenta ${account.id}: ${error}`,
         );
-        return;
+        return null;
       }
       const freshPuuid = await this.puuidRefresh.refresh(account);
       entries = await this.riotApi
         .getLeagueEntriesByPuuid(account.server, freshPuuid)
-        .catch((): RiotLeagueEntryDto[] => []);
+        .catch(() => null);
     }
 
-    if (entries.length === 0) return;
+    if (!entries || entries.length === 0) return entries;
 
     const soloEntry = entries.find(
       (entry) => entry.queueType === RIOT_QUEUE_TYPE_BY_KEY.solo,
@@ -122,6 +126,7 @@ export class RankSnapshotsService {
     });
 
     await this.recordFromLeagueEntries(account.id, entries);
+    return entries;
   }
 
   /**
