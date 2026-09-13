@@ -27,7 +27,6 @@ export class LearningService {
   async listByAccount(accountId: string) {
     return this.prisma.championLearning.findMany({
       where: { accountId },
-      include: { sessions: true },
     });
   }
 }

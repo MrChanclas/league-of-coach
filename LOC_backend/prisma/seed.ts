@@ -7,7 +7,6 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  await prisma.learningSession.deleteMany();
   await prisma.goal.deleteMany();
   await prisma.championLearning.deleteMany();
   await prisma.lolAccount.deleteMany();

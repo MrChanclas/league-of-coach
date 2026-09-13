@@ -84,21 +84,9 @@ model ChampionLearning {
   csMin     Float             @default(0)
   accountId String
   account   LolAccount        @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  sessions  LearningSession[]
   createdAt DateTime          @default(now())
 
   @@unique([accountId, champion, role])
-}
-
-model LearningSession {
-  id         String           @id @default(cuid())
-  date       DateTime
-  duration   Int
-  focus      String
-  ratings    Json
-  learningId String
-  learning   ChampionLearning @relation(fields: [learningId], references: [id], onDelete: Cascade)
-  createdAt  DateTime         @default(now())
 }
 
 model Goal {
