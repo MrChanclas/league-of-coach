@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -21,6 +22,16 @@ import {
   type ReplacePoolInput,
   type UpdatePoolEntryInput,
 } from './champion-pools.service';
+import { isPoolSlotKey, type PoolSlotKey } from './pool-roles';
+
+// A champion can sit in several lines, so an entry is addressed by champion
+// and slot together.
+function parseSlot(slot: string): PoolSlotKey {
+  if (!isPoolSlotKey(slot)) {
+    throw new BadRequestException(`"${slot}" no es una línea del pool.`);
+  }
+  return slot;
+}
 
 @Controller('champion-pools')
 export class ChampionPoolsController {
@@ -73,25 +84,36 @@ export class ChampionPoolsController {
     return this.championPoolsService.addEntry(accountId, body);
   }
 
-  @Patch('account/:accountId/entries/:championKey')
+  @Patch('account/:accountId/entries/:championKey/:slot')
   async updateEntry(
     @Req() request: AuthenticatedRequest,
     @Param('accountId') accountId: string,
     @Param('championKey') championKey: string,
+    @Param('slot') slot: string,
     @Body(new ZodValidationPipe(UpdatePoolEntrySchema))
     body: UpdatePoolEntryInput,
   ) {
     await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
-    return this.championPoolsService.updateEntry(accountId, championKey, body);
+    return this.championPoolsService.updateEntry(
+      accountId,
+      championKey,
+      parseSlot(slot),
+      body,
+    );
   }
 
-  @Delete('account/:accountId/entries/:championKey')
+  @Delete('account/:accountId/entries/:championKey/:slot')
   async removeEntry(
     @Req() request: AuthenticatedRequest,
     @Param('accountId') accountId: string,
     @Param('championKey') championKey: string,
+    @Param('slot') slot: string,
   ) {
     await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
-    return this.championPoolsService.removeEntry(accountId, championKey);
+    return this.championPoolsService.removeEntry(
+      accountId,
+      championKey,
+      parseSlot(slot),
+    );
   }
 }

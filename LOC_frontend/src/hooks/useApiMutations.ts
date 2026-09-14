@@ -1,7 +1,7 @@
 import { useAuth } from '@clerk/clerk-react'
 import { useMutation } from '@tanstack/react-query'
 import { apiFetch } from '../lib/api'
-import type { GoalCreateInput, PoolEntryState, ReplacePoolInput } from '../types/dashboard'
+import type { GoalCreateInput, PoolEntryState, PoolSlotKey, ReplacePoolInput } from '../types/dashboard'
 
 // These hooks only perform the API call — they deliberately don't own cache
 // invalidation. That stays in App.tsx alongside the rest of each action's
@@ -104,12 +104,12 @@ export function useSavePoolMutation() {
 export function useAddPoolEntryMutation() {
   const { getToken } = useAuth()
   return useMutation({
-    mutationFn: async ({ accountId, championKey }: { accountId: string; championKey: string }) => {
+    mutationFn: async ({ accountId, championKey, role }: { accountId: string; championKey: string; role: PoolSlotKey }) => {
       const token = await getToken()
       return apiFetch(`/champion-pools/account/${accountId}/entries`, {
         method: 'POST',
         token,
-        body: { championKey },
+        body: { championKey, role },
       })
     },
   })
@@ -121,14 +121,16 @@ export function useUpdatePoolEntryMutation() {
     mutationFn: async ({
       accountId,
       championKey,
+      role,
       patch,
     }: {
       accountId: string
       championKey: string
+      role: PoolSlotKey
       patch: { state?: PoolEntryState; note?: string | null }
     }) => {
       const token = await getToken()
-      return apiFetch(`/champion-pools/account/${accountId}/entries/${championKey}`, {
+      return apiFetch(`/champion-pools/account/${accountId}/entries/${championKey}/${role}`, {
         method: 'PATCH',
         token,
         body: patch,
@@ -140,9 +142,9 @@ export function useUpdatePoolEntryMutation() {
 export function useRemovePoolEntryMutation() {
   const { getToken } = useAuth()
   return useMutation({
-    mutationFn: async ({ accountId, championKey }: { accountId: string; championKey: string }) => {
+    mutationFn: async ({ accountId, championKey, role }: { accountId: string; championKey: string; role: PoolSlotKey }) => {
       const token = await getToken()
-      await apiFetch(`/champion-pools/account/${accountId}/entries/${championKey}`, {
+      await apiFetch(`/champion-pools/account/${accountId}/entries/${championKey}/${role}`, {
         method: 'DELETE',
         token,
         parseJson: false,

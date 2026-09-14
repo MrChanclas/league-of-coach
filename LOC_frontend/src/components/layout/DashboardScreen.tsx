@@ -27,6 +27,7 @@ import type {
   LessonCard,
   MatchParticipantEntry,
   PoolRecommendation,
+  PoolSlotKey,
   PoolView,
   RankSnapshotEntry,
   ReplacePoolEntryInput,
@@ -66,7 +67,7 @@ type DashboardScreenProps = {
   isPoolRecommendationLoading: boolean
   isSavingPool: boolean
   onSavePool: (entries: ReplacePoolEntryInput[]) => Promise<boolean>
-  onAddPoolOutsider: (championKey: string) => void
+  onAddPoolOutsider: (championKey: string, role: PoolSlotKey) => void
   // undefined = todavía no se resolvió el usuario (no auto-abrir); null = resuelto
   // y nunca vio el onboarding (auto-abrir); string = ya lo vio/saltó.
   onboardingCompletedAt: string | null | undefined
@@ -144,8 +145,10 @@ export function DashboardScreen({
     onTabChange('aprendizaje')
   }
 
-  const handleOpenChampionLesson = (championKey: string) => {
-    const index = lessons.findIndex((lesson) => lesson.kind === 'champion' && lesson.championKey === championKey)
+  const handleOpenChampionLesson = (championKey: string, role: PoolSlotKey) => {
+    const index = lessons.findIndex(
+      (lesson) => lesson.kind === 'champion' && lesson.championKey === championKey && lesson.championRole === role,
+    )
     if (index >= 0) handleOpenLesson(index)
   }
 

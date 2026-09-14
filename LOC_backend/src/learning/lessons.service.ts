@@ -6,10 +6,12 @@ import { roleMatchesProfile, RoleProfile } from '../common/role-profile';
 import { isUnderperforming } from '../champion-pools/champion-performance';
 import {
   FILL_SLOT,
+  POOL_ROLE_LABELS,
   resolvePoolSlot,
   toPoolRoleProfile,
+  type PoolRoleKey,
 } from '../champion-pools/pool-roles';
-import type { ChampionStatEntry } from '../champion-pools/pool-types';
+import { PoolStatsIndex } from '../champion-pools/pool-stats';
 import {
   getRankBand,
   ROLE_BENCHMARKS,
@@ -110,9 +112,10 @@ type Metrics = {
   streak: { type: 'win' | 'loss' | 'none'; count: number };
   recentKda: number;
   // Every champion in the account's main-line pool slots that Pool Champ
-  // marks "Necesitas mejorar" — each one gets its own guide lesson.
+  // marks "Necesitas mejorar" — one guide lesson per champion per line.
   underperformingPoolChampions: Array<{
     champion: string;
+    role: PoolRoleKey;
     gamesPlayed: number;
     winrate: number;
     avgKda: number;
@@ -142,6 +145,8 @@ type LessonCard = {
   priority: number;
   kind?: 'champion';
   championKey?: string;
+  // The pool line the champion lesson is about — a champion can have one per line.
+  championRole?: PoolRoleKey;
   // Structured numbers behind a 'champion' lesson — the diagnosis band on the
   // lesson detail screen shows these against the account's overall averages
   // instead of re-deriving them from the rendered text.
@@ -250,6 +255,8 @@ const EVALUATORS: Record<string, Evaluator> = {
       matched: true,
       vars: {
         champion: hit.champion,
+        championRole: hit.role,
+        line: POOL_ROLE_LABELS[hit.role],
         championWinrate: Math.round(hit.winrate * 100),
         championGames: hit.gamesPlayed,
       },
@@ -417,12 +424,14 @@ export class LessonsService {
         let championFields: Partial<LessonCard> = {};
         if (entry.kind === 'champion') {
           const championKey = String(result.vars.champion);
+          const championRole = result.vars.championRole as PoolRoleKey;
           const stat = metrics.underperformingPoolChampions.find(
-            (c) => c.champion === championKey,
+            (c) => c.champion === championKey && c.role === championRole,
           );
           championFields = {
             kind: 'champion',
             championKey,
+            championRole,
             championGamesPlayed: stat?.gamesPlayed,
             championWinrate: stat?.winrate,
             championAvgKda: stat?.avgKda,
@@ -489,7 +498,7 @@ export class LessonsService {
     const [
       streak,
       lanes,
-      poolChampionStats,
+      poolPositionTotals,
       pool,
       visionRows,
       recentRows,
@@ -497,13 +506,14 @@ export class LessonsService {
     ] = await Promise.all([
       this.stats.getStreak(accountId, seasonStart),
       this.stats.getLaneDistribution(accountId, seasonStart),
-      // Same season + preferred-queue numbers Pool Champ shows, so a champion
-      // gets a guide here exactly when the board says "Necesitas mejorar".
-      this.stats.getByChampion(
+      // Same season + preferred-queue, per-line numbers Pool Champ shows, so a
+      // champion gets a guide here exactly when the board says "Necesitas
+      // mejorar" for that line.
+      this.stats.getChampionPositionTotals(
         accountId,
         seasonStart,
         preferredQueueId,
-      ) as Promise<ChampionStatEntry[]>,
+      ),
       this.prisma.championPool.findUnique({
         where: { accountId },
         include: { entries: true },
@@ -525,24 +535,27 @@ export class LessonsService {
     ]);
 
     const poolRoleProfile = toPoolRoleProfile(roleProfile);
-    const poolStatsByChampion = new Map(
-      poolChampionStats.map((stat) => [stat.champion, stat]),
-    );
-    const underperformingPoolChampions = (pool?.entries ?? [])
-      .filter(
-        (entry) => resolvePoolSlot(entry.role, poolRoleProfile) !== FILL_SLOT,
-      )
-      .map((entry) => poolStatsByChampion.get(entry.championKey))
-      .filter(
-        (stat): stat is ChampionStatEntry =>
-          stat != null && isUnderperforming(stat),
-      )
-      .map((stat) => ({
+    const poolStats = new PoolStatsIndex(poolPositionTotals, poolRoleProfile);
+    const seenPoolEntries = new Set<string>();
+    const underperformingPoolChampions: Metrics['underperformingPoolChampions'] =
+      [];
+    for (const entry of pool?.entries ?? []) {
+      const slot = resolvePoolSlot(entry.role, poolRoleProfile);
+      if (slot === FILL_SLOT) continue;
+      const key = `${entry.championKey}|${slot}`;
+      if (seenPoolEntries.has(key)) continue;
+      seenPoolEntries.add(key);
+
+      const stat = poolStats.statInSlot(entry.championKey, slot);
+      if (!stat || !isUnderperforming(stat)) continue;
+      underperformingPoolChampions.push({
         champion: stat.champion,
+        role: slot,
         gamesPlayed: stat.gamesPlayed,
         winrate: stat.winrate,
         avgKda: stat.avgKda,
-      }));
+      });
+    }
 
     // Solo Queue is the reference ladder for individual skill — only fall
     // back to Flex when Solo itself carries no rank, same precedent as

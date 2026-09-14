@@ -45,6 +45,12 @@ export function resolvePoolSlot(role: string, profile: PoolRoleProfile | undefin
   return role === profile?.primaryRole || role === profile?.secondaryRole ? (role as PoolRoleKey) : FILL_SLOT
 }
 
+// Un campeón puede estar en más de una línea, así que una entrada del pool se
+// identifica por campeón + línea.
+export function poolEntryKey(championKey: string, slot: PoolSlotKey): string {
+  return `${championKey}|${slot}`
+}
+
 export function getPoolSlotCaption(slot: PoolSlotKey, profile: PoolRoleProfile | undefined): string {
   if (slot === FILL_SLOT) return 'Campeones fuera de tus líneas main'
   return slot === profile?.primaryRole ? 'Línea principal' : 'Línea secundaria'

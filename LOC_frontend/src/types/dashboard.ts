@@ -218,6 +218,8 @@ export type LessonCard = {
   mediaType: 'CLIP' | 'HEATMAP' | 'GOLD_GRAPH' | 'MATCHUP_TABLE' | 'SESSION_REPORT'
   kind?: 'champion'
   championKey?: string
+  // Línea del pool a la que corresponde la lección: un campeón puede tener una por línea.
+  championRole?: PoolRoleKey
   championGamesPlayed?: number
   championWinrate?: number
   championAvgKda?: number
@@ -293,10 +295,12 @@ export type PoolEntry = {
   performance: ChampionPerformanceTip
 }
 
+// Partidas de un campeón en una línea del pool que el pool todavía no cubre —
+// el mismo campeón puede aparecer una vez por línea.
 export type PoolOutsider = {
   championKey: string
   name: string
-  role: PoolRoleKey
+  role: PoolSlotKey
   gamesPlayed: number
   winrate: number
   performance: ChampionPerformanceTip

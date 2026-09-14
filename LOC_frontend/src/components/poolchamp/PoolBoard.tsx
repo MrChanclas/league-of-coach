@@ -8,16 +8,18 @@ import {
   POOL_STATE_LABELS,
   getPoolSlotCaption,
   getPoolSlots,
+  poolEntryKey,
 } from '../../lib/poolLabels'
-import type { ChampionPerformanceTip, PoolView } from '../../types/dashboard'
+import type { ChampionPerformanceTip, PoolSlotKey, PoolView } from '../../types/dashboard'
 
 type PoolBoardProps = {
   poolView: PoolView
   ddragonVersion: string | null
+  // Claves de poolEntryKey (campeón + línea) con una lección abierta.
   championsWithOpenLesson: Set<string>
-  onOpenLesson: (championKey: string) => void
+  onOpenLesson: (championKey: string, role: PoolSlotKey) => void
   onEditPool: () => void
-  onAddOutsider: (championKey: string) => void
+  onAddOutsider: (championKey: string, role: PoolSlotKey) => void
 }
 
 const MIN_GAMES_FOR_WINRATE = 3
@@ -119,7 +121,7 @@ export function PoolBoard({
               <div className="pool-role-group-rows">
                 {group.entries.map((entry) => {
                   const wr = formatWinrate(entry.gamesPlayed, entry.winrate)
-                  const hasLesson = championsWithOpenLesson.has(entry.championKey)
+                  const hasLesson = championsWithOpenLesson.has(poolEntryKey(entry.championKey, entry.role))
                   return (
                     <div
                       key={entry.championKey}
@@ -148,14 +150,21 @@ export function PoolBoard({
                       </div>
 
                       {hasLesson ? (
-                        <button type="button" className="pool-guide-link" onClick={() => onOpenLesson(entry.championKey)}>
+                        <button
+                          type="button"
+                          className="pool-guide-link"
+                          onClick={() => onOpenLesson(entry.championKey, entry.role)}
+                        >
                           Ver guía ›
                         </button>
                       ) : (
                         <span className="pool-guide-link pool-guide-link--muted">Sin guía</span>
                       )}
 
-                      <PerformanceTip performance={entry.performance} onAddSubstitute={onAddOutsider} />
+                      <PerformanceTip
+                        performance={entry.performance}
+                        onAddSubstitute={(championKey) => onAddOutsider(championKey, entry.role)}
+                      />
                     </div>
                   )
                 })}
@@ -202,7 +211,7 @@ export function PoolBoard({
               {outsiders.map((outsider) => {
                 const wr = formatWinrate(outsider.gamesPlayed, outsider.winrate)
                 return (
-                  <div key={outsider.championKey} className="pool-outsider-block">
+                  <div key={poolEntryKey(outsider.championKey, outsider.role)} className="pool-outsider-block">
                     <div className="pool-outsider-row">
                       <div className="pool-champion-art pool-champion-art--sm">
                         {ddragonVersion ? (
@@ -214,14 +223,22 @@ export function PoolBoard({
                       <div className="pool-outsider-info">
                         <span className="pool-outsider-name">{outsider.name}</span>
                         <span className="pool-outsider-meta">
-                          <span className={wr.className}>{wr.label}</span> · {outsider.gamesPlayed} partidas
+                          {POOL_SLOT_LABELS[outsider.role]} · <span className={wr.className}>{wr.label}</span> ·{' '}
+                          {outsider.gamesPlayed} partidas
                         </span>
                       </div>
-                      <button type="button" className="pool-outsider-add" onClick={() => onAddOutsider(outsider.championKey)}>
+                      <button
+                        type="button"
+                        className="pool-outsider-add"
+                        onClick={() => onAddOutsider(outsider.championKey, outsider.role)}
+                      >
                         + Sumar
                       </button>
                     </div>
-                    <PerformanceTip performance={outsider.performance} onAddSubstitute={onAddOutsider} />
+                    <PerformanceTip
+                      performance={outsider.performance}
+                      onAddSubstitute={(championKey) => onAddOutsider(championKey, outsider.role)}
+                    />
                   </div>
                 )
               })}

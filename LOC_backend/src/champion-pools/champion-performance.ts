@@ -1,9 +1,7 @@
 import type { RosterChampion } from './champion-roster.service';
-import {
-  isPoolRoleKey,
-  type PoolRoleKey,
-  type PoolSlotKey,
-} from './pool-roles';
+import { primaryArchetype } from './champion-style';
+import type { PoolRoleKey, PoolSlotKey } from './pool-roles';
+import type { PoolStatsIndex } from './pool-stats';
 import type { ChampionStatEntry } from './pool-types';
 
 // Same "not enough games to mean anything" bar the rest of the pool uses
@@ -44,28 +42,22 @@ export function isUnderperforming(
 }
 
 /**
- * "Keep going or switch?" tip for a champion the player is actually using —
- * distinct from pool-recommendation's 5-champion pool suggestion, which only
- * runs when building/rebuilding the pool. This runs per champion, both while
- * building the pool (on outsiders, before adding one) and afterward (on
- * existing pool entries), so it needs its own read of the same stats/roster
- * rather than reusing recommendation picks.
+ * "Keep going or switch?" tip for a champion in one pool slot — distinct from
+ * pool-recommendation's 5-champion pool suggestion, which only runs when
+ * building/rebuilding the pool. Runs per champion per slot, both on existing
+ * pool entries and on outsiders, and only reads the games that slot stands
+ * for: Mel filed in Medio is judged on her mid games, not her support ones.
  */
 export function evaluateChampionPerformance(
   championKey: string,
-  role: PoolSlotKey,
+  slot: PoolSlotKey,
   roster: RosterChampion[],
-  championStats: ChampionStatEntry[],
-  primaryRoleByChampion: Map<string, string>,
+  stats: PoolStatsIndex,
+  // Champions already in this slot — never offered as the substitute.
   excludeChampionKeys: Set<string>,
 ): ChampionPerformanceTip {
-  const statsByChampion = new Map(
-    championStats.map((stat) => [stat.champion, stat]),
-  );
-  const stat = statsByChampion.get(championKey);
-  const gamesPlayed = stat?.gamesPlayed ?? 0;
-
-  if (gamesPlayed < MIN_GAMES_FOR_PERFORMANCE_TIP || !stat) {
+  const stat = stats.statInSlot(championKey, slot);
+  if (!stat || stat.gamesPlayed < MIN_GAMES_FOR_PERFORMANCE_TIP) {
     return { status: 'insufficient_data' };
   }
   if (!isUnderperforming(stat)) {
@@ -75,61 +67,58 @@ export function evaluateChampionPerformance(
   const rosterByKey = new Map(
     roster.map((champion) => [champion.championKey, champion]),
   );
-  const roleFor = (key: string): PoolRoleKey => {
-    const playedRole = primaryRoleByChampion.get(key);
-    if (playedRole && isPoolRoleKey(playedRole)) return playedRole;
-    return rosterByKey.get(key)?.role ?? 'MIDDLE';
-  };
+  // The substitute replaces the champion in the lane those games were played
+  // in: the slot's own lane, or for FILL the off-line lane it was taken to.
+  const lane =
+    stats.laneInSlot(championKey, slot) ??
+    rosterByKey.get(championKey)?.role ??
+    'MIDDLE';
 
-  // The substitute has to replace the champion in the lane the player
-  // actually takes it to, not in whichever pool slot it was filed under:
-  // the pool editor drops a clicked champion into the active slot, so a Nilah
-  // played only at bot can sit under Superior and would otherwise be told to
-  // make way for the account's best top laner (user-reported: Nilah -> Garen).
-  // A FILL entry has no lane of its own, so it falls back to the champion's
-  // roster role instead.
-  const playedRole = primaryRoleByChampion.get(championKey);
-  const laneRole: PoolRoleKey =
-    playedRole && isPoolRoleKey(playedRole)
-      ? playedRole
-      : isPoolRoleKey(role)
-        ? role
-        : (rosterByKey.get(championKey)?.role ?? 'MIDDLE');
-
-  // Prefer a proven alternative: someone else in the same role the player
-  // already performs well on, excluding whatever is already in the pool.
-  const bestPerformer = championStats
+  // Prefer a proven alternative: someone else the player already performs
+  // well on in that same lane, excluding whatever is already in the slot.
+  const bestPerformer = stats
+    .champions()
     .filter(
       (candidate) =>
-        candidate.champion !== championKey &&
-        !excludeChampionKeys.has(candidate.champion) &&
+        candidate !== championKey && !excludeChampionKeys.has(candidate),
+    )
+    .map((candidate) => stats.statAtLane(candidate, lane))
+    .filter(
+      (candidate): candidate is ChampionStatEntry =>
+        candidate != null &&
         candidate.gamesPlayed >= MIN_GAMES_FOR_PERFORMANCE_TIP &&
-        candidate.winrate > BAD_WINRATE_THRESHOLD &&
-        roleFor(candidate.champion) === laneRole,
+        candidate.winrate > BAD_WINRATE_THRESHOLD,
     )
     .sort((a, b) => b.winrate - a.winrate || b.gamesPlayed - a.gamesPlayed)[0];
 
-  let substituteKey = bestPerformer?.champion;
+  let substituteKey: string | undefined = bestPerformer?.champion;
   if (!substituteKey) {
-    // No proven alternative yet — offer an untried roster champion in the
-    // same role instead, same fallback idea as pool-recommendation's
-    // CUBRE_HUECO gap pick.
-    substituteKey = roster
-      .filter(
-        (candidate) =>
-          candidate.role === laneRole &&
-          candidate.championKey !== championKey &&
-          !excludeChampionKeys.has(candidate.championKey) &&
-          (statsByChampion.get(candidate.championKey)?.gamesPlayed ?? 0) === 0,
-      )
-      .sort((a, b) => a.name.localeCompare(b.name))[0]?.championKey;
+    // No proven alternative yet — offer an untried champion of that lane
+    // with the same playstyle. Only with a style match: picking the first
+    // name alphabetically put Alistar forward for any bad support/bot pick
+    // (user-reported: "recomendar Alistar para tirador").
+    const archetype = primaryArchetype(
+      rosterByKey.get(championKey)?.championClass,
+    );
+    substituteKey = archetype
+      ? roster
+          .filter(
+            (candidate) =>
+              candidate.role === lane &&
+              candidate.championKey !== championKey &&
+              !excludeChampionKeys.has(candidate.championKey) &&
+              primaryArchetype(candidate.championClass) === archetype &&
+              stats.statAtLane(candidate.championKey, lane) == null,
+          )
+          .sort((a, b) => a.name.localeCompare(b.name))[0]?.championKey
+      : undefined;
   }
 
   const substitute = substituteKey
     ? {
         championKey: substituteKey,
         name: rosterByKey.get(substituteKey)?.name ?? substituteKey,
-        role: laneRole,
+        role: lane,
       }
     : null;
 

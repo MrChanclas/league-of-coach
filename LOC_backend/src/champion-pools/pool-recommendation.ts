@@ -1,12 +1,13 @@
 import type { RosterChampion } from './champion-roster.service';
 import { primaryArchetype } from './champion-style';
 import {
-  isPoolRoleKey,
   MIN_CHAMPIONS_PER_ROLE,
   POOL_ROLE_LABELS,
   type PoolRoleKey,
   type PoolRoleProfile,
+  type PoolSlotKey,
 } from './pool-roles';
+import type { PoolStatsIndex } from './pool-stats';
 import type { ChampionStatEntry } from './pool-types';
 
 // Below this many total games on the account, any recommendation would be
@@ -35,26 +36,22 @@ export type PoolRecommendation =
 /**
  * The coach's pool suggestion. Fills the player's primary and secondary line
  * (the same ones the board offers as slots) up to MIN_CHAMPIONS_PER_ROLE:
- * proven performers first ("YA TE RINDE"), then champions sharing a
- * playstyle with what's already played in that same role ("TU ESTILO"),
+ * proven performers in that exact lane first ("YA TE RINDE"), then champions
+ * sharing a playstyle with what's already played in that lane ("TU ESTILO"),
  * then — only if a role still isn't full — any untried roster champion of
  * that role as a last resort, so the role reaches a valid pool on its own.
- * The FILL slot is left to the player: it has no lane to recommend for.
- * Pure function so it can be unit-tested without a database — see
- * handoff_loc/07-pool-champ.md.
+ * Lines are filled independently, so a champion that performs in both (Mel
+ * mid and support) is suggested in both. The FILL slot is left to the
+ * player: it has no lane to recommend for. Pure function so it can be
+ * unit-tested without a database — see handoff_loc/07-pool-champ.md.
  */
 export function computeRecommendation(
   roster: RosterChampion[],
-  championStats: ChampionStatEntry[],
-  primaryRoleByChampion: Map<string, string>,
-  existingPoolChampionKeys: Set<string>,
+  stats: PoolStatsIndex,
+  existingEntries: Array<{ championKey: string; slot: PoolSlotKey }>,
   roleProfile: PoolRoleProfile,
 ): PoolRecommendation {
-  const totalGames = championStats.reduce(
-    (sum, entry) => sum + entry.gamesPlayed,
-    0,
-  );
-  if (totalGames < MIN_TOTAL_GAMES_FOR_RECOMMENDATION) {
+  if (stats.totalGames() < MIN_TOTAL_GAMES_FOR_RECOMMENDATION) {
     return {
       available: false,
       reason:
@@ -65,20 +62,7 @@ export function computeRecommendation(
   const rosterByKey = new Map(
     roster.map((champion) => [champion.championKey, champion]),
   );
-  const statsByChampion = new Map(
-    championStats.map((stat) => [stat.champion, stat]),
-  );
-  const selected = new Set<string>(existingPoolChampionKeys);
   const picks: RecommendationEntry[] = [];
-
-  const roleFor = (championKey: string): PoolRoleKey => {
-    const playedRole = primaryRoleByChampion.get(championKey);
-    if (playedRole && isPoolRoleKey(playedRole)) return playedRole;
-    return rosterByKey.get(championKey)?.role ?? 'MIDDLE';
-  };
-
-  const countInRole = (role: PoolRoleKey) =>
-    picks.filter((pick) => pick.role === role).length;
 
   // 1) The player's main lines, as the board defines them.
   const mainRoles = [roleProfile.primaryRole, roleProfile.secondaryRole].filter(
@@ -87,19 +71,29 @@ export function computeRecommendation(
 
   // 2) Fill each main role up to MIN_CHAMPIONS_PER_ROLE.
   for (const role of mainRoles) {
-    // 2a) YA TE RINDE — real performance in this exact role, best winrate
+    const selected = new Set(
+      existingEntries
+        .filter((entry) => entry.slot === role)
+        .map((entry) => entry.championKey),
+    );
+    const countInRole = () => picks.filter((pick) => pick.role === role).length;
+    const gamesInRole = (championKey: string) =>
+      stats.statAtLane(championKey, role)?.gamesPlayed ?? 0;
+
+    // 2a) YA TE RINDE — real performance in this exact lane, best winrate
     // first among champions with enough games to mean something.
-    const performers = championStats
+    const performers = stats
+      .champions()
+      .filter((champion) => !selected.has(champion))
+      .map((champion) => stats.statAtLane(champion, role))
       .filter(
-        (stat) =>
-          !selected.has(stat.champion) &&
-          stat.gamesPlayed >= MIN_GAMES_FOR_PERFORMANCE_PICK &&
-          roleFor(stat.champion) === role,
+        (stat): stat is ChampionStatEntry =>
+          stat != null && stat.gamesPlayed >= MIN_GAMES_FOR_PERFORMANCE_PICK,
       )
       .sort((a, b) => b.winrate - a.winrate || b.gamesPlayed - a.gamesPlayed);
 
     for (const candidate of performers) {
-      if (countInRole(role) >= MIN_CHAMPIONS_PER_ROLE) break;
+      if (countInRole() >= MIN_CHAMPIONS_PER_ROLE) break;
       picks.push({
         championKey: candidate.champion,
         name: rosterByKey.get(candidate.champion)?.name ?? candidate.champion,
@@ -112,19 +106,20 @@ export function computeRecommendation(
     }
 
     // 2b) TU ESTILO — if the role isn't full yet, champions sharing the
-    // archetype of what's already played within this same role, preferring
-    // ones untried so it's a genuine suggestion rather than restating 2a.
-    if (countInRole(role) < MIN_CHAMPIONS_PER_ROLE) {
+    // archetype of what's already played in this lane, preferring ones
+    // untried so it's a genuine suggestion rather than restating 2a.
+    if (countInRole() < MIN_CHAMPIONS_PER_ROLE) {
       const roleArchetypeWeights = new Map<string, number>();
-      for (const stat of championStats) {
-        if (roleFor(stat.champion) !== role) continue;
+      for (const champion of stats.champions()) {
+        const games = gamesInRole(champion);
+        if (games === 0) continue;
         const archetype = primaryArchetype(
-          rosterByKey.get(stat.champion)?.championClass,
+          rosterByKey.get(champion)?.championClass,
         );
         if (!archetype) continue;
         roleArchetypeWeights.set(
           archetype,
-          (roleArchetypeWeights.get(archetype) ?? 0) + stat.gamesPlayed,
+          (roleArchetypeWeights.get(archetype) ?? 0) + games,
         );
       }
       const topArchetype =
@@ -140,14 +135,14 @@ export function computeRecommendation(
               !selected.has(champion.championKey) &&
               primaryArchetype(champion.championClass) === topArchetype,
           )
-          .sort((a, b) => {
-            const gamesA = statsByChampion.get(a.championKey)?.gamesPlayed ?? 0;
-            const gamesB = statsByChampion.get(b.championKey)?.gamesPlayed ?? 0;
-            return gamesA - gamesB || a.name.localeCompare(b.name);
-          });
+          .sort(
+            (a, b) =>
+              gamesInRole(a.championKey) - gamesInRole(b.championKey) ||
+              a.name.localeCompare(b.name),
+          );
 
         for (const candidate of styleCandidates) {
-          if (countInRole(role) >= MIN_CHAMPIONS_PER_ROLE) break;
+          if (countInRole() >= MIN_CHAMPIONS_PER_ROLE) break;
           picks.push({
             championKey: candidate.championKey,
             name: candidate.name,
@@ -164,7 +159,7 @@ export function computeRecommendation(
     // 2c) Still short (little played variety and few style matches in this
     // role) — pad with any untried roster champion of the role so it still
     // reaches a valid pool on its own.
-    if (countInRole(role) < MIN_CHAMPIONS_PER_ROLE) {
+    if (countInRole() < MIN_CHAMPIONS_PER_ROLE) {
       const fallbackCandidates = roster
         .filter(
           (champion) =>
@@ -173,7 +168,7 @@ export function computeRecommendation(
         .sort((a, b) => a.name.localeCompare(b.name));
 
       for (const candidate of fallbackCandidates) {
-        if (countInRole(role) >= MIN_CHAMPIONS_PER_ROLE) break;
+        if (countInRole() >= MIN_CHAMPIONS_PER_ROLE) break;
         picks.push({
           championKey: candidate.championKey,
           name: candidate.name,

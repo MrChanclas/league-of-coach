@@ -86,8 +86,8 @@
       "kind": "champion",
       "metric": "underperformingPoolChampions",
       "condition": {},
-      "title": "{{champion}} no te está funcionando",
-      "body": "Con {{champion}} tienes {{championWinrate}}% de winrate en {{championGames}} partidas. Puede ser un tema de matchups: revisar la tabla antes de lockear te ahorra partidas cuesta arriba.",
+      "title": "{{champion}} en {{line}} no te está funcionando",
+      "body": "Jugando {{champion}} en {{line}} tienes {{championWinrate}}% de winrate en {{championGames}} partidas. Puede ser un tema de matchups: revisar la tabla antes de lockear te ahorra partidas cuesta arriba.",
       "mediaType": "MATCHUP_TABLE"
     },
     {

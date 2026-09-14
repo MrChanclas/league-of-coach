@@ -20,6 +20,17 @@ type ParticipantWithMatchAndRole = ParticipantWithMatch & {
   teamPosition: string;
 };
 
+/** Raw totals for one champion in one teamPosition — see getChampionPositionTotals. */
+export type ChampionPositionTotals = {
+  champion: string;
+  teamPosition: string;
+  gamesPlayed: number;
+  wins: number;
+  kills: number;
+  deaths: number;
+  assists: number;
+};
+
 type ParticipantForRoleMetrics = {
   csTotal: number;
   visionScore: number;
@@ -152,6 +163,54 @@ export class StatsService {
     return Array.from(byChampion.entries())
       .map(([champion, entries]) => ({ champion, ...this.summarize(entries) }))
       .sort((a, b) => b.gamesPlayed - a.gamesPlayed);
+  }
+
+  /**
+   * Games, wins and K/D/A sums per champion per teamPosition. Pool Champ
+   * files a champion once per line, so its numbers have to be split by the
+   * lane the games were played in (Mel mid and Mel support are judged apart);
+   * totals rather than averages so several positions can be merged into FILL.
+   */
+  async getChampionPositionTotals(
+    accountId: string,
+    since?: Date,
+    queueId?: number,
+  ): Promise<ChampionPositionTotals[]> {
+    const rows = await this.prisma.matchParticipant.groupBy({
+      by: ['champion', 'teamPosition', 'win'],
+      where: {
+        accountId,
+        ...((since || queueId) && {
+          match: {
+            ...(since && { gameCreation: { gte: since } }),
+            ...(queueId && { queueId }),
+          },
+        }),
+      },
+      _count: { _all: true },
+      _sum: { kills: true, deaths: true, assists: true },
+    });
+
+    const totals = new Map<string, ChampionPositionTotals>();
+    for (const row of rows) {
+      const key = `${row.champion}|${row.teamPosition}`;
+      const current = totals.get(key) ?? {
+        champion: row.champion,
+        teamPosition: row.teamPosition,
+        gamesPlayed: 0,
+        wins: 0,
+        kills: 0,
+        deaths: 0,
+        assists: 0,
+      };
+      current.gamesPlayed += row._count._all;
+      if (row.win) current.wins += row._count._all;
+      current.kills += row._sum.kills ?? 0;
+      current.deaths += row._sum.deaths ?? 0;
+      current.assists += row._sum.assists ?? 0;
+      totals.set(key, current);
+    }
+    return [...totals.values()];
   }
 
   /**

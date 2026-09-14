@@ -1,10 +1,5 @@
 import type { ChampionPerformanceTip } from './champion-performance';
-import type {
-  PoolAddedBy,
-  PoolEntryState,
-  PoolRoleKey,
-  PoolSlotKey,
-} from './pool-roles';
+import type { PoolAddedBy, PoolEntryState, PoolSlotKey } from './pool-roles';
 
 export type EnrichedPoolEntry = {
   championKey: string;
@@ -20,10 +15,12 @@ export type EnrichedPoolEntry = {
   performance: ChampionPerformanceTip;
 };
 
+// A champion's games in one board slot that the pool doesn't cover yet — the
+// same champion can show up once per slot (in Medio but played at Soporte).
 export type PoolOutsider = {
   championKey: string;
   name: string;
-  role: PoolRoleKey;
+  role: PoolSlotKey;
   gamesPlayed: number;
   winrate: number;
   performance: ChampionPerformanceTip;

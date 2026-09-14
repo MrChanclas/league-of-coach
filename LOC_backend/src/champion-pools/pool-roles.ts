@@ -113,3 +113,7 @@ export function poolRoleFromGuideRole(role: string): PoolRoleKey {
 export function isPoolRoleKey(value: string): value is PoolRoleKey {
   return (POOL_ROLE_KEYS as readonly string[]).includes(value);
 }
+
+export function isPoolSlotKey(value: string): value is PoolSlotKey {
+  return (POOL_SLOT_KEYS as readonly string[]).includes(value);
+}

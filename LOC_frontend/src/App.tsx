@@ -30,7 +30,14 @@ import {
   useInternalUser,
 } from './hooks/useApiQueries'
 import { getDdragonVersion } from './lib/riotAssets'
-import type { AccountForm, GoalCreateInput, ReplacePoolEntryInput, TabKey, TimeRange } from './types/dashboard'
+import type {
+  AccountForm,
+  GoalCreateInput,
+  PoolSlotKey,
+  ReplacePoolEntryInput,
+  TabKey,
+  TimeRange,
+} from './types/dashboard'
 
 // Mirrors the tab in the URL hash so browser back/forward moves between
 // tabs instead of leaving the app — see readTabFromLocation below.
@@ -331,11 +338,11 @@ function App() {
     }
   }
 
-  const handleAddPoolOutsider = async (championKey: string) => {
+  const handleAddPoolOutsider = async (championKey: string, role: PoolSlotKey) => {
     if (!currentAccountId) return
 
     try {
-      await addPoolEntryMutation.mutateAsync({ accountId: currentAccountId, championKey })
+      await addPoolEntryMutation.mutateAsync({ accountId: currentAccountId, championKey, role })
       await queryClient.invalidateQueries({ queryKey: queryKeys.account(currentAccountId) })
       setStatus('Campeón sumado al pool.')
     } catch (error) {

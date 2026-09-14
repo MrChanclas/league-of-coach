@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { PoolBoard } from './PoolBoard'
 import { PoolSelector } from './PoolSelector'
+import { poolEntryKey } from '../../lib/poolLabels'
 import type {
   AccountCard,
   LessonCard,
   PoolRecommendation,
+  PoolSlotKey,
   PoolView,
   ReplacePoolEntryInput,
   RosterChampion,
@@ -20,8 +22,8 @@ type PoolChampTabPanelProps = {
   isRecommendationLoading: boolean
   isSavingPool: boolean
   onSavePool: (entries: ReplacePoolEntryInput[]) => Promise<boolean>
-  onAddOutsider: (championKey: string) => void
-  onOpenChampionLesson: (championKey: string) => void
+  onAddOutsider: (championKey: string, role: PoolSlotKey) => void
+  onOpenChampionLesson: (championKey: string, role: PoolSlotKey) => void
   onGoToAccounts: () => void
 }
 
@@ -74,7 +76,9 @@ export function PoolChampTabPanel({
   }
 
   const championsWithOpenLesson = new Set(
-    lessons.filter((lesson) => lesson.kind === 'champion' && lesson.championKey).map((lesson) => lesson.championKey!),
+    lessons
+      .filter((lesson) => lesson.kind === 'champion' && lesson.championKey && lesson.championRole)
+      .map((lesson) => poolEntryKey(lesson.championKey!, lesson.championRole!)),
   )
 
   const playedChampionKeys = new Set([

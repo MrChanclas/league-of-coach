@@ -175,14 +175,15 @@ model PoolEntry {
   poolId      String
   pool        ChampionPool @relation(fields: [poolId], references: [id], onDelete: Cascade)
   championKey String // Data Dragon champion id, e.g. "Nilah"
-  role        String // TOP | JUNGLE | MIDDLE | BOTTOM | UTILITY — the pool slot, not validated against the champion's "official" role
+  role        String // TOP | JUNGLE | MIDDLE | BOTTOM | UTILITY | FILL — the pool slot, not validated against the champion's "official" role
   state       String       @default("testing") // 'main' | 'secondary' | 'testing'
   note        String? // short, editable — why this champion is in the pool
   addedBy     String       @default("player") // 'player' | 'coach'
   position    Int          @default(0) // display order within the pool
   createdAt   DateTime     @default(now())
 
-  @@unique([poolId, championKey])
+  // A champion can sit in more than one line (Mel mid and support), once per line.
+  @@unique([poolId, championKey, role])
 }
 
 model Match {
