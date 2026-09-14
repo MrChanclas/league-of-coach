@@ -7,7 +7,8 @@ import { FeedbackService } from './feedback.service';
 
 const FeedbackSchema = z.object({
   message: z.string().trim().min(1).max(2000),
-  email: z.string().trim().email().optional().or(z.literal('')),
+  // Obligatorio: sin un correo no hay forma de responderle a quien reporta.
+  email: z.string().trim().email('Ingresa un correo válido.'),
 });
 
 @Controller('feedback')
@@ -22,7 +23,7 @@ export class FeedbackController {
     body: z.infer<typeof FeedbackSchema>,
   ) {
     const ip = request.ip ?? 'unknown';
-    this.feedbackService.submitFeedback(body.message, body.email || undefined, ip);
+    this.feedbackService.submitFeedback(body.message, body.email, ip);
     return { ok: true };
   }
 }

@@ -59,13 +59,14 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
             />
           </label>
           <label>
-            Email (opcional)
+            Email
             <input
               type="email"
               name="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="Para responderte, si quieres"
+              placeholder="Para poder responderte"
+              required
             />
           </label>
 

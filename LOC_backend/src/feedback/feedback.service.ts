@@ -9,18 +9,19 @@ export class FeedbackService {
 
   constructor(private readonly discord: DiscordService) {}
 
-  submitFeedback(message: string, email: string | undefined, ip: string) {
+  submitFeedback(message: string, email: string, ip: string) {
     const now = Date.now();
     const last = this.lastSubmittedAt.get(ip) ?? 0;
     if (now - last < COOLDOWN_MS) {
       throw new HttpException(
-        'Ya enviaste feedback hace poco, esperá un momento antes de enviar otro.',
+        'Ya enviaste feedback hace poco, espera un momento antes de enviar otro.',
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }
     this.lastSubmittedAt.set(ip, now);
 
-    const contact = email ? `— contacto: ${email}` : '— anónimo';
-    this.discord.notifyFeedback(`📝 **Nuevo feedback (login)**\n${message}\n${contact}`);
+    this.discord.notifyFeedback(
+      `📝 **Nuevo feedback (login)**\n${message}\n— contacto: ${email}`,
+    );
   }
 }
