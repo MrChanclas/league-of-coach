@@ -53,17 +53,18 @@ jobs:
           gcloud run jobs execute loc-migrate --region="${REGION}" --wait
 
       # --max-instances caps total database connections: each instance opens
-      # a pool of up to DATABASE_POOL_MAX (4, see PrismaService), and Cloud
-      # SQL db-f1-micro allows 25 connections with some reserved. 4 x 4 = 16
-      # leaves headroom for the migration job and manual sessions. Raise both
-      # numbers only together with a bigger database tier.
+      # a pool of up to DATABASE_POOL_MAX (8, see PrismaService), and Cloud
+      # SQL db-custom-1-3840 allows 100 connections with some reserved.
+      # 10 x 8 = 80 leaves headroom for the migration job and manual
+      # sessions. Raise both numbers only together with a bigger database
+      # tier.
       - name: Deploy backend to Cloud Run
         run: |
           gcloud run deploy loc-backend \
             --image="${BACKEND_IMAGE}" \
             --region="${REGION}" \
             --platform=managed \
-            --max-instances=4 \
+            --max-instances=10 \
             --service-account="${{ vars.RUNTIME_SA_EMAIL }}" \
             --add-cloudsql-instances="${{ vars.CLOUDSQL_CONNECTION_NAME }}" \
             --set-secrets="DATABASE_URL=loc-database-url:latest,CLERK_SECRET_KEY=loc-clerk-secret-key:latest,RIOT_API_KEY=loc-riot-api-key:latest,INTERNAL_POLL_SECRET=loc-internal-poll-secret:latest,DISCORD_SESSION_WEBHOOK_URL=loc-discord-session-webhook:latest,DISCORD_ISSUES_WEBHOOK_URL=loc-discord-issues-webhook:latest,DISCORD_DEPLOYS_WEBHOOK_URL=loc-discord-deploys-webhook:latest" \

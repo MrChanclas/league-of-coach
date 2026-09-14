@@ -3,11 +3,11 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 
 // Every Cloud Run instance opens its own pool, and the production database
-// (Cloud SQL db-f1-micro) only takes 25 connections in total, some of them
-// reserved. pg's default of 10 per pool lets a handful of instances cold
-// starting together exhaust it, so the pool size times the service's
-// --max-instances in the deploy workflow has to stay under that limit.
-const DEFAULT_POOL_MAX = 4;
+// (Cloud SQL db-custom-1-3840) takes 100 connections in total, some of them
+// reserved. Instances cold starting together each fill their pool, so the
+// pool size times the service's --max-instances in the deploy workflow has
+// to stay under that limit.
+const DEFAULT_POOL_MAX = 8;
 
 @Injectable()
 export class PrismaService
