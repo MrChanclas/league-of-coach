@@ -3,6 +3,7 @@ import { LessonDetailView } from './LessonDetailView'
 import { LessonMediaArt } from './LessonMediaArt'
 import { LockedTabState } from '../shared/LockedTabState'
 import { buildGoalPrefillFromFlag } from '../../lib/goalPrefill'
+import { POOL_ROLE_LABELS } from '../../lib/poolLabels'
 import type {
   AccountCard,
   AccountStatsSummary,
@@ -94,12 +95,20 @@ export function LearningTabPanel({
     )
   }
 
+  // Aprendizaje solo lee la línea principal y la secundaria (sin fill): el
+  // encabezado lo dice para que no se espere una lección de un rol autofill.
+  const mainLines = [poolView?.roleProfile.primaryRole, poolView?.roleProfile.secondaryRole]
+    .filter((role) => role != null)
+    .map((role) => POOL_ROLE_LABELS[role].toUpperCase())
+
   return (
     <div className="view-content">
       <div className="page-head">
         <div>
           <div className="page-head-eyebrow">
-            BASADO EN LAS ÚLTIMAS {gamesAnalyzed} PARTIDAS DE {activeAccount.summoner.toUpperCase()}
+            {mainLines.length > 0
+              ? `BASADO EN TUS PARTIDAS DE ${mainLines.join(' Y ')} (SIN FILL) · ${activeAccount.summoner.toUpperCase()}`
+              : `BASADO EN LAS ÚLTIMAS ${gamesAnalyzed} PARTIDAS DE ${activeAccount.summoner.toUpperCase()}`}
           </div>
           <h1>Aprendizaje</h1>
         </div>

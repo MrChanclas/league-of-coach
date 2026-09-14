@@ -2,11 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { getCurrentSeasonStart } from '../common/season';
 import { PrismaService } from '../prisma/prisma.service';
 import { StatsService } from '../stats/stats.service';
+import { roleMatchesProfile, RoleProfile } from '../common/role-profile';
+import { isUnderperforming } from '../champion-pools/champion-performance';
 import {
-  deriveRoleProfile,
-  roleMatchesProfile,
-  RoleProfile,
-} from '../common/role-profile';
+  FILL_SLOT,
+  resolvePoolSlot,
+  toPoolRoleProfile,
+} from '../champion-pools/pool-roles';
+import type { ChampionStatEntry } from '../champion-pools/pool-types';
 import {
   getRankBand,
   ROLE_BENCHMARKS,
@@ -37,7 +40,9 @@ function resolvePriority(tag: string, occurrences: number): number {
 }
 
 type LessonCondition = {
-  operator: 'lt' | 'lte' | 'gt' | 'gte' | 'eq';
+  // Omitted only by metrics whose verdict comes from elsewhere — e.g.
+  // underperformingPoolChampions defers to Pool Champ's own rule.
+  operator?: 'lt' | 'lte' | 'gt' | 'gte' | 'eq';
   value?: number;
   minGames?: number;
   streakType?: 'win' | 'loss';
@@ -104,7 +109,9 @@ type Metrics = {
   lanes: Array<{ lane: string; games: number; share: number }>;
   streak: { type: 'win' | 'loss' | 'none'; count: number };
   recentKda: number;
-  championStats: Array<{
+  // Every champion in the account's main-line pool slots that Pool Champ
+  // marks "Necesitas mejorar" — each one gets its own guide lesson.
+  underperformingPoolChampions: Array<{
     champion: string;
     gamesPlayed: number;
     winrate: number;
@@ -120,10 +127,12 @@ type EvaluatorResult = {
   // natural per-game repeat count, which just stay at the LOW baseline.
   occurrences?: number;
 };
+// A metric that can flag several independent subjects at once (one lesson per
+// champion, say) returns one result per subject.
 type Evaluator = (
   metrics: Metrics,
   entry: LessonKnowledgeEntry,
-) => EvaluatorResult;
+) => EvaluatorResult | EvaluatorResult[];
 
 type LessonCard = {
   tag: string;
@@ -236,19 +245,8 @@ const EVALUATORS: Record<string, Evaluator> = {
     vars: { avgKda: metrics.avgKda.toFixed(2) },
     occurrences: countMatches(metrics.kdaValues, entry.condition),
   }),
-  championWinrateWithMinGames: (metrics, entry): EvaluatorResult => {
-    const hit = metrics.championStats.find(
-      (champion) =>
-        champion.gamesPlayed >= (entry.condition.minGames ?? 0) &&
-        compare(champion.winrate, entry.condition),
-    );
-    if (!hit) {
-      return {
-        matched: false,
-        vars: {},
-      };
-    }
-    return {
+  underperformingPoolChampions: (metrics): EvaluatorResult[] =>
+    metrics.underperformingPoolChampions.map((hit) => ({
       matched: true,
       vars: {
         champion: hit.champion,
@@ -256,8 +254,7 @@ const EVALUATORS: Record<string, Evaluator> = {
         championGames: hit.gamesPlayed,
       },
       occurrences: hit.gamesPlayed,
-    };
-  },
+    })),
   currentStreak: (metrics, entry) => {
     const matched =
       metrics.streak.type === entry.condition.streakType &&
@@ -413,37 +410,46 @@ export class LessonsService {
       const evaluator = EVALUATORS[entry.metric];
       if (!evaluator) continue;
 
-      const result = evaluator(metrics, entry);
-      if (!result.matched) continue;
+      const outcome = evaluator(metrics, entry);
+      for (const result of Array.isArray(outcome) ? outcome : [outcome]) {
+        if (!result.matched) continue;
 
-      let championFields: Partial<LessonCard> = {};
-      if (entry.kind === 'champion') {
-        const championKey = String(result.vars.champion);
-        const stat = metrics.championStats.find(
-          (c) => c.champion === championKey,
-        );
-        championFields = {
-          kind: 'champion',
-          championKey,
-          championGamesPlayed: stat?.gamesPlayed,
-          championWinrate: stat?.winrate,
-          championAvgKda: stat?.avgKda,
-        };
+        let championFields: Partial<LessonCard> = {};
+        if (entry.kind === 'champion') {
+          const championKey = String(result.vars.champion);
+          const stat = metrics.underperformingPoolChampions.find(
+            (c) => c.champion === championKey,
+          );
+          championFields = {
+            kind: 'champion',
+            championKey,
+            championGamesPlayed: stat?.gamesPlayed,
+            championWinrate: stat?.winrate,
+            championAvgKda: stat?.avgKda,
+          };
+        }
+
+        cards.push({
+          tag: entry.tag,
+          title: interpolate(entry.title, result.vars),
+          body: interpolate(entry.body, result.vars),
+          mediaType: entry.mediaType,
+          priority: resolvePriority(entry.tag, result.occurrences ?? 0),
+          ...championFields,
+        });
       }
-
-      cards.push({
-        tag: entry.tag,
-        title: interpolate(entry.title, result.vars),
-        body: interpolate(entry.body, result.vars),
-        mediaType: entry.mediaType,
-        priority: resolvePriority(entry.tag, result.occurrences ?? 0),
-        ...championFields,
-      });
     }
 
-    return cards
+    // MAX_LESSONS caps the general lessons only: every pool champion Pool
+    // Champ flags must keep its guide here, however many there are.
+    const championCards = cards.filter((card) => card.kind === 'champion');
+    const generalCards = cards
+      .filter((card) => card.kind !== 'champion')
       .sort((a, b) => b.priority - a.priority)
-      .slice(0, MAX_LESSONS)
+      .slice(0, MAX_LESSONS);
+
+    return [...generalCards, ...championCards]
+      .sort((a, b) => b.priority - a.priority)
       .map((card) => {
         const { priority, ...rest } = card;
         void priority;
@@ -453,29 +459,90 @@ export class LessonsService {
 
   private async computeMetrics(accountId: string): Promise<Metrics | null> {
     const seasonStart = getCurrentSeasonStart();
-    const summary = await this.stats.getAccountSummary(accountId, seasonStart);
+    const [roleProfile, preferredQueueId] = await Promise.all([
+      this.stats.getMainRoleProfile(accountId),
+      this.stats.getPreferredQueueId(accountId),
+    ]);
+
+    // Aprendizaje only reads games in the account's primary/secondary line
+    // (same lines Pool Champ offers as slots) — autofilled games in any other
+    // role would otherwise drag every average toward a role they don't play.
+    // With no line detected yet there's nothing to call fill, so read it all.
+    const mainRoles = [
+      roleProfile.primaryRole,
+      roleProfile.secondaryRole,
+    ].filter((role): role is string => role != null);
+    const teamPositions = mainRoles.length > 0 ? mainRoles : undefined;
+    const participantWhere = {
+      accountId,
+      match: { gameCreation: { gte: seasonStart } },
+      ...(teamPositions && { teamPosition: { in: teamPositions } }),
+    };
+
+    const summary = await this.stats.getAccountSummary(
+      accountId,
+      seasonStart,
+      teamPositions,
+    );
     if (summary.gamesPlayed === 0) return null;
 
-    const [streak, lanes, championStats, visionRows, recentRows, account] =
-      await Promise.all([
-        this.stats.getStreak(accountId, seasonStart),
-        this.stats.getLaneDistribution(accountId, seasonStart),
-        this.stats.getByChampion(accountId, seasonStart),
-        this.prisma.matchParticipant.findMany({
-          where: { accountId, match: { gameCreation: { gte: seasonStart } } },
-          include: { match: true },
-        }),
-        this.prisma.matchParticipant.findMany({
-          where: { accountId, match: { gameCreation: { gte: seasonStart } } },
-          include: { match: true },
-          orderBy: { match: { gameCreation: 'desc' } },
-          take: RECENT_GAMES_WINDOW,
-        }),
-        this.prisma.lolAccount.findUnique({
-          where: { id: accountId },
-          select: { soloTier: true, flexTier: true },
-        }),
-      ]);
+    const [
+      streak,
+      lanes,
+      poolChampionStats,
+      pool,
+      visionRows,
+      recentRows,
+      account,
+    ] = await Promise.all([
+      this.stats.getStreak(accountId, seasonStart),
+      this.stats.getLaneDistribution(accountId, seasonStart),
+      // Same season + preferred-queue numbers Pool Champ shows, so a champion
+      // gets a guide here exactly when the board says "Necesitas mejorar".
+      this.stats.getByChampion(
+        accountId,
+        seasonStart,
+        preferredQueueId,
+      ) as Promise<ChampionStatEntry[]>,
+      this.prisma.championPool.findUnique({
+        where: { accountId },
+        include: { entries: true },
+      }),
+      this.prisma.matchParticipant.findMany({
+        where: participantWhere,
+        include: { match: true },
+      }),
+      this.prisma.matchParticipant.findMany({
+        where: participantWhere,
+        include: { match: true },
+        orderBy: { match: { gameCreation: 'desc' } },
+        take: RECENT_GAMES_WINDOW,
+      }),
+      this.prisma.lolAccount.findUnique({
+        where: { id: accountId },
+        select: { soloTier: true, flexTier: true },
+      }),
+    ]);
+
+    const poolRoleProfile = toPoolRoleProfile(roleProfile);
+    const poolStatsByChampion = new Map(
+      poolChampionStats.map((stat) => [stat.champion, stat]),
+    );
+    const underperformingPoolChampions = (pool?.entries ?? [])
+      .filter(
+        (entry) => resolvePoolSlot(entry.role, poolRoleProfile) !== FILL_SLOT,
+      )
+      .map((entry) => poolStatsByChampion.get(entry.championKey))
+      .filter(
+        (stat): stat is ChampionStatEntry =>
+          stat != null && isUnderperforming(stat),
+      )
+      .map((stat) => ({
+        champion: stat.champion,
+        gamesPlayed: stat.gamesPlayed,
+        winrate: stat.winrate,
+        avgKda: stat.avgKda,
+      }));
 
     // Solo Queue is the reference ladder for individual skill — only fall
     // back to Flex when Solo itself carries no rank, same precedent as
@@ -593,16 +660,11 @@ export class LessonsService {
       midRoamAwayRatioValues,
       recentKdaValues,
       rankBand,
-      roleProfile: deriveRoleProfile(lanes),
+      roleProfile,
       lanes,
       streak,
       recentKda,
-      championStats: championStats.map((champion) => ({
-        champion: champion.champion,
-        gamesPlayed: champion.gamesPlayed,
-        winrate: champion.winrate,
-        avgKda: champion.avgKda,
-      })),
+      underperformingPoolChampions,
     };
   }
 }

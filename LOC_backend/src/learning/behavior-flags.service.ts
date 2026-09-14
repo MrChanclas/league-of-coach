@@ -66,11 +66,25 @@ export class BehaviorFlagsService {
     const soloRanked = account.soloTier && account.soloTier !== 'Unranked';
     const band = getRankBand(soloRanked ? account.soloTier : account.flexTier);
 
+    // Only the account's primary/secondary line gets read — a role they only
+    // play when autofilled isn't a weakness worth coaching. With no line
+    // detected yet there's nothing to call fill, so every role stays in.
+    const profile = await this.stats.getMainRoleProfile(accountId);
+    const mainRoles = [profile.primaryRole, profile.secondaryRole].filter(
+      (role): role is string => role != null,
+    );
+    const isMainRole = (role: string) =>
+      mainRoles.length === 0 || mainRoles.includes(role);
+
     const flags: BehaviorFlag[] = [];
     if (!champion) {
-      flags.push(...(await this.getRoleWeaknesses(accountId, band)));
+      flags.push(
+        ...(await this.getRoleWeaknesses(accountId, band, isMainRole)),
+      );
     }
-    flags.push(...(await this.getChampionWeaknesses(accountId, champion)));
+    flags.push(
+      ...(await this.getChampionWeaknesses(accountId, isMainRole, champion)),
+    );
 
     return flags.sort((a, b) => a.score - b.score);
   }
@@ -78,10 +92,12 @@ export class BehaviorFlagsService {
   private async getRoleWeaknesses(
     accountId: string,
     band: ReturnType<typeof getRankBand>,
+    isMainRole: (role: string) => boolean,
   ): Promise<BehaviorFlag[]> {
     const flags: BehaviorFlag[] = [];
 
     for (const role of ROLE_KEYS) {
+      if (!isMainRole(role)) continue;
       const metrics = await this.stats.getRoleMetrics(accountId, role);
       if (metrics.gamesPlayed < MIN_GAMES_FOR_ROLE_FLAG) continue;
 
@@ -121,6 +137,7 @@ export class BehaviorFlagsService {
 
   private async getChampionWeaknesses(
     accountId: string,
+    isMainRole: (role: string) => boolean,
     champion?: string,
   ): Promise<BehaviorFlag[]> {
     const learnings = await this.prisma.championLearning.findMany({
@@ -134,7 +151,7 @@ export class BehaviorFlagsService {
     const flags: BehaviorFlag[] = [];
     for (const learning of learnings) {
       const role = learning.role as RoleKey;
-      if (!ROLE_KEYS.includes(role)) continue;
+      if (!ROLE_KEYS.includes(role) || !isMainRole(role)) continue;
 
       const [roleAverages, championValues] = await Promise.all([
         this.stats.getRoleMetrics(accountId, role),

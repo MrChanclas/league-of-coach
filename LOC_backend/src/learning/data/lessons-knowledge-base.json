@@ -84,8 +84,8 @@
       "id": "draft-champion-underperforming",
       "tag": "DRAFT",
       "kind": "champion",
-      "metric": "championWinrateWithMinGames",
-      "condition": { "operator": "lt", "value": 0.45, "minGames": 8 },
+      "metric": "underperformingPoolChampions",
+      "condition": {},
       "title": "{{champion}} no te está funcionando",
       "body": "Con {{champion}} tienes {{championWinrate}}% de winrate en {{championGames}} partidas. Puede ser un tema de matchups: revisar la tabla antes de lockear te ahorra partidas cuesta arriba.",
       "mediaType": "MATCHUP_TABLE"
