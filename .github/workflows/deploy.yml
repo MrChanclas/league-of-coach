@@ -67,7 +67,7 @@ jobs:
             --max-instances=10 \
             --service-account="${{ vars.RUNTIME_SA_EMAIL }}" \
             --add-cloudsql-instances="${{ vars.CLOUDSQL_CONNECTION_NAME }}" \
-            --set-secrets="DATABASE_URL=loc-database-url:latest,CLERK_SECRET_KEY=loc-clerk-secret-key:latest,RIOT_API_KEY=loc-riot-api-key:latest,INTERNAL_POLL_SECRET=loc-internal-poll-secret:latest,DISCORD_SESSION_WEBHOOK_URL=loc-discord-session-webhook:latest,DISCORD_ISSUES_WEBHOOK_URL=loc-discord-issues-webhook:latest,DISCORD_DEPLOYS_WEBHOOK_URL=loc-discord-deploys-webhook:latest" \
+            --set-secrets="DATABASE_URL=loc-database-url:latest,CLERK_SECRET_KEY=loc-clerk-secret-key:latest,RIOT_API_KEY=loc-riot-api-key:latest,INTERNAL_POLL_SECRET=loc-internal-poll-secret:latest,DISCORD_SESSION_WEBHOOK_URL=loc-discord-session-webhook:latest,DISCORD_ISSUES_WEBHOOK_URL=loc-discord-issues-webhook:latest,DISCORD_DEPLOYS_WEBHOOK_URL=loc-discord-deploys-webhook:latest,DISCORD_FEEDBACK_WEBHOOK_URL=loc-discord-feedback-webhook:latest" \
             --set-env-vars="^|^RIOT_DEFAULT_SERVER=LAS|FRONTEND_URL=https://leagueofcoach.pro,https://www.leagueofcoach.pro|SENTRY_DSN=${{ vars.BACKEND_SENTRY_DSN }}" \
             --port=8080 \
             --allow-unauthenticated \
