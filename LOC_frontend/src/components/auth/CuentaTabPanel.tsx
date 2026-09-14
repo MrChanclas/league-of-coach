@@ -672,11 +672,15 @@ export function CuentaTabPanel() {
           </span>
         </div>
 
+      </section>
+
+      {/* Fijo en la esquina (no al pie del formulario) para que se vea sin hacer scroll. */}
+      {!feedbackOpen && (
         <button type="button" className="feedback-fab" onClick={() => setFeedbackOpen(true)}>
           <span className="feedback-fab-icon" aria-hidden="true">💬</span>
-          <span>Danos tu feedback</span>
+          <span>¿Algo que mejorar? Danos tu feedback</span>
         </button>
-      </section>
+      )}
 
       <FeedbackModal isOpen={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </div>

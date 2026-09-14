@@ -3069,8 +3069,10 @@
 }
 
 .feedback-fab {
-  align-self: center;
-  margin-top: 22px;
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  z-index: 60;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -3096,10 +3098,34 @@
   line-height: 1;
 }
 
+/* Anillo que late alrededor del botón para que llame la atención. */
+.feedback-fab::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: inherit;
+  border: 2px solid rgba(216, 181, 106, 0.55);
+  animation: feedback-ring 2.4s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes feedback-ring {
+  0% { transform: scale(0.96); opacity: 0.9; }
+  70%, 100% { transform: scale(1.12); opacity: 0; }
+}
+
 @media (max-width: 720px) {
   .feedback-fab {
+    right: 16px;
+    bottom: 16px;
     padding: 12px 18px;
     font-size: 13px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feedback-fab::after {
+    animation: none;
   }
 }
 
