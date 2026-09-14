@@ -7,6 +7,9 @@ export type CoachStep = {
   title: string
   body: string
   note: string | null
+  // Reemplaza a `note` cuando el ancla todavía no existe en pantalla (p. ej. el
+  // panel de la cuenta si el recorrido se hace antes de registrar una).
+  missingAnchorNote?: string
   placement: 'right-start' | 'bottom-start' | 'bottom-end'
 }
 
@@ -33,6 +36,7 @@ export const COACH_STEPS: CoachStep[] = [
     title: 'Tu semana en cinco números',
     body: 'Rango y progreso a la izquierda; a la derecha tu winrate y las cuatro métricas que más mueven la aguja: KDA, CS por minuto, racha y la línea que más juegas.',
     note: 'El verde significa que estás por encima de la media de tu elo. El azul es victoria, el rojo derrota. El dorado nunca es «bueno»: es «accionable».',
+    missingAnchorNote: 'Este panel aparece en cuanto registras tu primera cuenta.',
     placement: 'bottom-start',
   },
   {

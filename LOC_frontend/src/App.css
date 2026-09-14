@@ -3649,6 +3649,14 @@
   z-index: 9999;
 }
 
+/* Paso cuyo elemento todavía no existe en pantalla: tooltip centrado, sin hueco. */
+.onboard-tooltip--centered {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: calc(100vw - 32px);
+}
+
 .onboard-tooltip-head {
   display: flex;
   align-items: center;

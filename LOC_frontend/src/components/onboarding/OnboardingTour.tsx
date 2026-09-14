@@ -62,6 +62,7 @@ export function OnboardingTour({ onClose, onLoadMatches }: OnboardingTourProps) 
   const tooltipRef = useRef<HTMLDivElement>(null)
   const [holeRect, setHoleRect] = useState<DOMRect | null>(null)
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null)
+  const [isAnchorMissing, setIsAnchorMissing] = useState(false)
   // Debajo de 640px el tooltip flotante se vuelve una hoja fija al fondo
   // (ver handoff_loc/05-movil.md) en vez de perseguir el ancla real, que
   // muchas veces ni siquiera está en el viewport en una pantalla angosta.
@@ -71,15 +72,18 @@ export function OnboardingTour({ onClose, onLoadMatches }: OnboardingTourProps) 
   const isDone = step === DONE_STEP
   const isCoach = step >= 1 && step <= LAST_COACH_STEP
   const coach = isCoach ? COACH_STEPS[step - 1] : null
+  const tooltipNote = isAnchorMissing && coach?.missingAnchorNote ? coach.missingAnchorNote : coach?.note
 
   const next = () => setStep((current) => Math.min(DONE_STEP, current + 1))
   const prev = () => setStep((current) => Math.max(0, current - 1))
   const skipToDone = () => setStep(DONE_STEP)
 
   // Posiciona el hueco del spotlight y el tooltip contra el elemento real
-  // (data-tour) — o, si todavía no existe porque el usuario avanzó el
-  // recorrido sin hacer la acción real, contra el contenido principal como
-  // referencia de respaldo (sin hueco, solo tooltip).
+  // (data-tour). Si todavía no existe porque el usuario avanzó el recorrido
+  // sin hacer la acción real (p. ej. el panel de la cuenta antes de registrar
+  // una), el tooltip queda centrado en pantalla, sin hueco. Anclarlo al
+  // contenido principal lo dejaba fuera del viewport — ese contenedor es más
+  // alto que la pantalla — y solo se veía el fondo oscuro, sin botones.
   useEffect(() => {
     // Nada que posicionar en el modal de bienvenida/cierre — y si se vuelve
     // a un paso coach después, este efecto corre de nuevo con un `coach`
@@ -90,9 +94,19 @@ export function OnboardingTour({ onClose, onLoadMatches }: OnboardingTourProps) 
     const realAnchor = findVisibleAnchor(coach.anchorSelector)
     if (!floating) return
 
-    const anchor = realAnchor ?? document.querySelector<HTMLElement>('.forge-main') ?? document.body
+    if (!realAnchor) {
+      const frame = requestAnimationFrame(() => {
+        setHoleRect(null)
+        setIsAnchorMissing(true)
+        floating.focus({ preventScroll: true })
+      })
+      return () => cancelAnimationFrame(frame)
+    }
+
+    const anchor = realAnchor
     const update = () => {
-      setHoleRect(realAnchor ? realAnchor.getBoundingClientRect() : null)
+      setIsAnchorMissing(false)
+      setHoleRect(anchor.getBoundingClientRect())
 
       // En mobile el tooltip vive fijo al fondo (ver CSS .onboard-tooltip--sheet):
       // solo hace falta el hueco del spotlight, no una posición flotante.
@@ -159,9 +173,15 @@ export function OnboardingTour({ onClose, onLoadMatches }: OnboardingTourProps) 
             aria-live="polite"
             aria-label={coach?.title}
             tabIndex={-1}
-            className={isMobile ? 'onboard-tooltip onboard-tooltip--sheet' : 'onboard-tooltip'}
-            style={
+            className={
               isMobile
+                ? 'onboard-tooltip onboard-tooltip--sheet'
+                : isAnchorMissing
+                  ? 'onboard-tooltip onboard-tooltip--centered'
+                  : 'onboard-tooltip'
+            }
+            style={
+              isMobile || isAnchorMissing
                 ? undefined
                 : {
                     top: tooltipPos?.y ?? 0,
@@ -176,10 +196,10 @@ export function OnboardingTour({ onClose, onLoadMatches }: OnboardingTourProps) 
             </div>
             <div className="onboard-tooltip-title">{coach?.title}</div>
             <div className="onboard-tooltip-body">{coach?.body}</div>
-            {coach?.note && (
+            {tooltipNote && (
               <div className="onboard-tooltip-note">
                 <span className="onboard-note-dot" />
-                <span>{coach.note}</span>
+                <span>{tooltipNote}</span>
               </div>
             )}
             <div className="onboard-progress">
