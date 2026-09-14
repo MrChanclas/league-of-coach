@@ -7,7 +7,6 @@ import { PoolChampPromoCard } from '../poolchamp/PoolChampPromoCard'
 import { WeeklyActivityCard } from './WeeklyActivityCard'
 import { FirstStepsChecklist } from '../onboarding/FirstStepsChecklist'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
-import { POOL_ROLE_KEYS } from '../../lib/poolLabels'
 import type {
   AccountCard,
   AccountStatsSummary,
@@ -15,17 +14,12 @@ import type {
   GoalItem,
   LaneEntry,
   LessonCard,
-  PoolRoleKey,
   PoolView,
   RankSnapshotEntry,
   RosterChampion,
   StreakInfo,
   TimeRange,
 } from '../../types/dashboard'
-
-function asPoolRoleKey(lane: string | undefined): PoolRoleKey | undefined {
-  return lane && (POOL_ROLE_KEYS as string[]).includes(lane) ? (lane as PoolRoleKey) : undefined
-}
 
 type AccountTabPanelProps = {
   userAccounts: AccountCard[]
@@ -154,7 +148,7 @@ export function AccountTabPanel({
             {hasChampionPool ? (
               <PoolChampMiniCard
                 entries={poolView?.entries ?? []}
-                mainRole={asPoolRoleKey(lanes[0]?.lane)}
+                mainRole={poolView?.roleProfile.primaryRole ?? undefined}
                 ddragonVersion={ddragonVersion}
                 onGoToPoolChamp={onGoToPoolChamp}
               />

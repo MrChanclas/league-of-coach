@@ -1,5 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
+import { QUEUE_IDS } from '../common/queue';
+import { rankScore } from '../common/rank-order';
+import { deriveRoleProfile, type RoleProfile } from '../common/role-profile';
+import { getCurrentSeasonStart } from '../common/season';
 import { PrismaService } from '../prisma/prisma.service';
 
 type ParticipantWithMatch = {
@@ -46,16 +50,73 @@ export class StatsService {
     return { totalAccountsAnalyzed };
   }
 
-  async getAccountSummary(accountId: string, since?: Date) {
+  async getAccountSummary(
+    accountId: string,
+    since?: Date,
+    teamPositions?: string[],
+  ) {
     const participants = await this.prisma.matchParticipant.findMany({
       where: {
         accountId,
         ...(since && { match: { gameCreation: { gte: since } } }),
+        ...(teamPositions && { teamPosition: { in: teamPositions } }),
       },
       include: { match: true },
     });
 
     return this.summarize(participants);
+  }
+
+  /**
+   * Which ranked queue best reflects how the account really plays: its
+   * higher-elo one. A player often plays off-role in whichever queue they
+   * take less seriously (duo/fill in Flex, say), so blending both queues can
+   * dilute the "what's your main role" signal — see user-reported bug where a
+   * mid main got recommended mostly top/adc. Undefined (= no queue filter)
+   * when there's no real elo difference to go on, e.g. both unranked or tied.
+   */
+  async getPreferredQueueId(accountId: string): Promise<number | undefined> {
+    const account = await this.prisma.lolAccount.findUnique({
+      where: { id: accountId },
+      select: {
+        soloTier: true,
+        soloDivision: true,
+        soloLp: true,
+        flexTier: true,
+        flexDivision: true,
+        flexLp: true,
+      },
+    });
+    if (!account) return undefined;
+
+    const soloScore = rankScore(
+      account.soloTier,
+      account.soloDivision,
+      account.soloLp,
+    );
+    const flexScore = rankScore(
+      account.flexTier,
+      account.flexDivision,
+      account.flexLp,
+    );
+    if (soloScore === flexScore) return undefined;
+    return flexScore > soloScore ? QUEUE_IDS.FLEX : QUEUE_IDS.SOLO;
+  }
+
+  /**
+   * The account's primary and secondary line for the season, read from the
+   * preferred queue. Single source of truth for Pool Champ's slots and for
+   * which roles Aprendizaje reads — both must agree on what "fill" is, or a
+   * champion could get a lesson in one tab while sitting in FILL in the other.
+   */
+  async getMainRoleProfile(accountId: string): Promise<RoleProfile> {
+    const queueId = await this.getPreferredQueueId(accountId);
+    const lanes = await this.getLaneDistribution(
+      accountId,
+      getCurrentSeasonStart(),
+      queueId,
+    );
+    return deriveRoleProfile(lanes);
   }
 
   async getAccountSummaryByQueue(accountId: string, queueId: number) {
@@ -382,11 +443,16 @@ export class StatsService {
     return { type, count };
   }
 
-  async getLaneDistribution(accountId: string, since?: Date) {
+  async getLaneDistribution(accountId: string, since?: Date, queueId?: number) {
     const participants = await this.prisma.matchParticipant.findMany({
       where: {
         accountId,
-        ...(since && { match: { gameCreation: { gte: since } } }),
+        ...((since || queueId) && {
+          match: {
+            ...(since && { gameCreation: { gte: since } }),
+            ...(queueId && { queueId }),
+          },
+        }),
       },
       select: { teamPosition: true },
     });

@@ -88,6 +88,7 @@ export function PoolChampTabPanel({
         roster={roster}
         ddragonVersion={ddragonVersion}
         initialEntries={poolView.entries}
+        roleProfile={poolView.roleProfile}
         playedChampionKeys={playedChampionKeys}
         championsWithOpenLesson={championsWithOpenLesson}
         recommendation={recommendation}

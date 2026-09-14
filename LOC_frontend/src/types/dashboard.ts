@@ -261,6 +261,9 @@ export type GoalPace = { action: string; context: string }
 // Pool Champ (handoff_loc/07-pool-champ.md)
 
 export type PoolRoleKey = 'TOP' | 'JUNGLE' | 'MIDDLE' | 'BOTTOM' | 'UTILITY'
+// El pool solo ofrece las líneas main del jugador + FILL (todo lo demás).
+export type PoolSlotKey = PoolRoleKey | 'FILL'
+export type PoolRoleProfile = { primaryRole: PoolRoleKey | null; secondaryRole: PoolRoleKey | null }
 export type PoolEntryState = 'main' | 'secondary' | 'testing'
 export type PoolAddedBy = 'player' | 'coach'
 export type PoolSource = 'manual' | 'coach'
@@ -280,7 +283,7 @@ export type ChampionPerformanceTip =
 export type PoolEntry = {
   championKey: string
   name: string
-  role: PoolRoleKey
+  role: PoolSlotKey
   state: PoolEntryState
   note: string | null
   addedBy: PoolAddedBy
@@ -310,6 +313,7 @@ export type PoolHealth = {
 
 export type PoolView = {
   pool: { id: string; source: PoolSource; createdAt: string; updatedAt: string } | null
+  roleProfile: PoolRoleProfile
   entries: PoolEntry[]
   outsiders: PoolOutsider[]
   health: PoolHealth
@@ -332,7 +336,7 @@ export type PoolRecommendation =
 
 export type ReplacePoolEntryInput = {
   championKey: string
-  role: PoolRoleKey
+  role: PoolSlotKey
   state: PoolEntryState
   note?: string
   addedBy: PoolAddedBy

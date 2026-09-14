@@ -5,8 +5,6 @@ import {
 } from '@nestjs/common';
 import { z } from 'zod';
 import { getCurrentSeasonStart } from '../common/season';
-import { QUEUE_IDS } from '../common/queue';
-import { rankScore } from '../common/rank-order';
 import { PrismaService } from '../prisma/prisma.service';
 import { StatsService } from '../stats/stats.service';
 import { evaluateChampionPerformance } from './champion-performance';
@@ -21,10 +19,15 @@ import {
   MIN_CHAMPIONS_PER_ROLE,
   POOL_ADDED_BY,
   POOL_ENTRY_STATES,
-  POOL_ROLE_KEYS,
-  POOL_ROLE_LABELS,
+  POOL_SLOT_KEYS,
+  POOL_SLOT_LABELS,
+  getPoolSlots,
   isPoolRoleKey,
   isRoleCountValid,
+  resolvePoolSlot,
+  toPoolRoleProfile,
+  type PoolRoleProfile,
+  type PoolSlotKey,
 } from './pool-roles';
 import type {
   ChampionStatEntry,
@@ -38,13 +41,13 @@ export const ReplacePoolSchema = z.object({
     .array(
       z.object({
         championKey: z.string().min(1),
-        role: z.enum(POOL_ROLE_KEYS),
+        role: z.enum(POOL_SLOT_KEYS),
         state: z.enum(POOL_ENTRY_STATES).default('testing'),
         note: z.string().max(140).optional(),
         addedBy: z.enum(POOL_ADDED_BY).default('player'),
       }),
     )
-    .max(POOL_ROLE_KEYS.length * MAX_CHAMPIONS_PER_ROLE)
+    .max(POOL_SLOT_KEYS.length * MAX_CHAMPIONS_PER_ROLE)
     .superRefine((entries, ctx) => {
       const seenKeys = new Set<string>();
       for (const entry of entries) {
@@ -56,23 +59,6 @@ export const ReplacePoolSchema = z.object({
         }
         seenKeys.add(entry.championKey);
       }
-
-      const countByRole = new Map<string, number>();
-      for (const entry of entries) {
-        countByRole.set(entry.role, (countByRole.get(entry.role) ?? 0) + 1);
-      }
-      for (const role of POOL_ROLE_KEYS) {
-        const count = countByRole.get(role) ?? 0;
-        if (!isRoleCountValid(count)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message:
-              count < MIN_CHAMPIONS_PER_ROLE
-                ? `${POOL_ROLE_LABELS[role]} tiene ${count} campeón${count === 1 ? '' : 'es'}: hacen falta al menos ${MIN_CHAMPIONS_PER_ROLE} para que el rol sea válido.`
-                : `${POOL_ROLE_LABELS[role]} tiene ${count} campeones: el máximo es ${MAX_CHAMPIONS_PER_ROLE}.`,
-          });
-        }
-      }
     }),
 });
 export type ReplacePoolInput = z.infer<typeof ReplacePoolSchema>;
@@ -83,7 +69,7 @@ export type AddPoolEntryInput = z.infer<typeof AddPoolEntrySchema>;
 export const UpdatePoolEntrySchema = z.object({
   state: z.enum(POOL_ENTRY_STATES).optional(),
   note: z.string().max(140).nullable().optional(),
-  role: z.enum(POOL_ROLE_KEYS).optional(),
+  role: z.enum(POOL_SLOT_KEYS).optional(),
 });
 export type UpdatePoolEntryInput = z.infer<typeof UpdatePoolEntrySchema>;
 
@@ -99,61 +85,32 @@ export class ChampionPoolsService {
     return this.roster.getRoster();
   }
 
-  /**
-   * Which ranked queue's games should count for Pool Champ's stats and role
-   * detection: the account's higher-elo queue. A player often plays off-role
-   * in whichever queue they take less seriously (duo/fill in Flex, say), so
-   * blending both queues can dilute the "what's your main role" signal —
-   * see user-reported bug where a mid main got recommended mostly top/adc.
-   * Falls back to combining both queues (undefined = no queue filter) when
-   * there's no real elo difference to go on, e.g. both unranked or tied.
-   */
-  private async getPreferredQueueId(
-    accountId: string,
-  ): Promise<number | undefined> {
-    const account = await this.prisma.lolAccount.findUnique({
-      where: { id: accountId },
-      select: {
-        soloTier: true,
-        soloDivision: true,
-        soloLp: true,
-        flexTier: true,
-        flexDivision: true,
-        flexLp: true,
-      },
-    });
-    if (!account) return undefined;
-
-    const soloScore = rankScore(
-      account.soloTier,
-      account.soloDivision,
-      account.soloLp,
-    );
-    const flexScore = rankScore(
-      account.flexTier,
-      account.flexDivision,
-      account.flexLp,
-    );
-    if (soloScore === flexScore) return undefined;
-    return flexScore > soloScore ? QUEUE_IDS.FLEX : QUEUE_IDS.SOLO;
+  private async getRoleProfile(accountId: string): Promise<PoolRoleProfile> {
+    return toPoolRoleProfile(await this.stats.getMainRoleProfile(accountId));
   }
 
   async getPoolView(accountId: string) {
     const seasonStart = getCurrentSeasonStart();
-    const preferredQueueId = await this.getPreferredQueueId(accountId);
-    const [pool, championStats, roster, roleMap] = await Promise.all([
-      this.prisma.championPool.findUnique({
-        where: { accountId },
-        include: { entries: { orderBy: { position: 'asc' } } },
-      }),
-      this.stats.getByChampion(
-        accountId,
-        seasonStart,
-        preferredQueueId,
-      ) as Promise<ChampionStatEntry[]>,
-      this.roster.getRoster(),
-      this.stats.getPrimaryRoleByChampion(accountId, seasonStart, preferredQueueId),
-    ]);
+    const preferredQueueId = await this.stats.getPreferredQueueId(accountId);
+    const [pool, championStats, roster, roleMap, roleProfile] =
+      await Promise.all([
+        this.prisma.championPool.findUnique({
+          where: { accountId },
+          include: { entries: { orderBy: { position: 'asc' } } },
+        }),
+        this.stats.getByChampion(
+          accountId,
+          seasonStart,
+          preferredQueueId,
+        ) as Promise<ChampionStatEntry[]>,
+        this.roster.getRoster(),
+        this.stats.getPrimaryRoleByChampion(
+          accountId,
+          seasonStart,
+          preferredQueueId,
+        ),
+        this.getRoleProfile(accountId),
+      ]);
 
     const rosterByKey = new Map(
       roster.map((champion) => [champion.championKey, champion]),
@@ -167,7 +124,12 @@ export class ChampionPoolsService {
     );
 
     const entries: EnrichedPoolEntry[] = (pool?.entries ?? []).map((entry) => {
-      const base = this.enrichEntry(entry, rosterByKey, statsByChampion);
+      const base = this.enrichEntry(
+        entry,
+        resolvePoolSlot(entry.role, roleProfile),
+        rosterByKey,
+        statsByChampion,
+      );
       // A champion already in the pool is never its own substitute.
       const excludeKeys = new Set(poolChampionKeys);
       excludeKeys.delete(entry.championKey);
@@ -221,36 +183,56 @@ export class ChampionPoolsService {
             updatedAt: pool.updatedAt,
           }
         : null,
+      roleProfile,
       entries,
       outsiders,
-      health: computePoolHealth(entries),
+      health: computePoolHealth(entries, getPoolSlots(roleProfile)),
     };
   }
 
   async getRecommendation(accountId: string) {
     const seasonStart = getCurrentSeasonStart();
-    const preferredQueueId = await this.getPreferredQueueId(accountId);
-    const [championStats, roleMap, roster, existingPool] = await Promise.all([
-      this.stats.getByChampion(
-        accountId,
-        seasonStart,
-        preferredQueueId,
-      ) as Promise<ChampionStatEntry[]>,
-      this.stats.getPrimaryRoleByChampion(accountId, seasonStart, preferredQueueId),
-      this.roster.getRoster(),
-      this.prisma.championPool.findUnique({
-        where: { accountId },
-        include: { entries: true },
-      }),
-    ]);
+    const preferredQueueId = await this.stats.getPreferredQueueId(accountId);
+    const [championStats, roleMap, roster, existingPool, roleProfile] =
+      await Promise.all([
+        this.stats.getByChampion(
+          accountId,
+          seasonStart,
+          preferredQueueId,
+        ) as Promise<ChampionStatEntry[]>,
+        this.stats.getPrimaryRoleByChampion(
+          accountId,
+          seasonStart,
+          preferredQueueId,
+        ),
+        this.roster.getRoster(),
+        this.prisma.championPool.findUnique({
+          where: { accountId },
+          include: { entries: true },
+        }),
+        this.getRoleProfile(accountId),
+      ]);
 
     const existingKeys = new Set(
       (existingPool?.entries ?? []).map((entry) => entry.championKey),
     );
-    return computeRecommendation(roster, championStats, roleMap, existingKeys);
+    return computeRecommendation(
+      roster,
+      championStats,
+      roleMap,
+      existingKeys,
+      roleProfile,
+    );
   }
 
   async replacePool(accountId: string, input: ReplacePoolInput) {
+    const roleProfile = await this.getRoleProfile(accountId);
+    const entries = input.entries.map((entry) => ({
+      ...entry,
+      role: resolvePoolSlot(entry.role, roleProfile),
+    }));
+    this.assertSlotCounts(entries.map((entry) => entry.role));
+
     await this.prisma.$transaction(async (tx) => {
       const pool = await tx.championPool.upsert({
         where: { accountId },
@@ -260,9 +242,9 @@ export class ChampionPoolsService {
 
       await tx.poolEntry.deleteMany({ where: { poolId: pool.id } });
 
-      if (input.entries.length > 0) {
+      if (entries.length > 0) {
         await tx.poolEntry.createMany({
-          data: input.entries.map((entry, index) => ({
+          data: entries.map((entry, index) => ({
             poolId: pool.id,
             championKey: entry.championKey,
             role: entry.role,
@@ -279,9 +261,10 @@ export class ChampionPoolsService {
   }
 
   async addEntry(accountId: string, input: AddPoolEntryInput) {
-    const [roleMap, roster] = await Promise.all([
+    const [roleMap, roster, roleProfile] = await Promise.all([
       this.stats.getPrimaryRoleByChampion(accountId),
       this.roster.getRoster(),
+      this.getRoleProfile(accountId),
     ]);
     const rosterInfo = roster.find(
       (champion) => champion.championKey === input.championKey,
@@ -291,6 +274,7 @@ export class ChampionPoolsService {
       playedRole && isPoolRoleKey(playedRole)
         ? playedRole
         : (rosterInfo?.role ?? 'MIDDLE');
+    const slot = resolvePoolSlot(role, roleProfile);
 
     const pool = await this.prisma.championPool.upsert({
       where: { accountId },
@@ -298,15 +282,16 @@ export class ChampionPoolsService {
       create: { accountId, source: 'manual' },
     });
 
-    const position = await this.prisma.poolEntry.count({
+    const existingEntries = await this.prisma.poolEntry.findMany({
       where: { poolId: pool.id },
+      select: { role: true },
     });
-    const roleCount = await this.prisma.poolEntry.count({
-      where: { poolId: pool.id, role },
-    });
-    if (roleCount >= MAX_CHAMPIONS_PER_ROLE) {
+    const slotCount = existingEntries.filter(
+      (entry) => resolvePoolSlot(entry.role, roleProfile) === slot,
+    ).length;
+    if (slotCount >= MAX_CHAMPIONS_PER_ROLE) {
       throw new BadRequestException(
-        `${POOL_ROLE_LABELS[role]} ya tiene el máximo de ${MAX_CHAMPIONS_PER_ROLE} campeones.`,
+        `${POOL_SLOT_LABELS[slot]} ya tiene el máximo de ${MAX_CHAMPIONS_PER_ROLE} campeones.`,
       );
     }
 
@@ -318,10 +303,10 @@ export class ChampionPoolsService {
       create: {
         poolId: pool.id,
         championKey: input.championKey,
-        role,
+        role: slot,
         state: 'testing',
         addedBy: 'player',
-        position,
+        position: existingEntries.length,
       },
     });
 
@@ -334,12 +319,16 @@ export class ChampionPoolsService {
     patch: UpdatePoolEntryInput,
   ) {
     const pool = await this.findPoolOrThrow(accountId);
+    const role =
+      patch.role !== undefined
+        ? resolvePoolSlot(patch.role, await this.getRoleProfile(accountId))
+        : undefined;
     await this.prisma.poolEntry.update({
       where: { poolId_championKey: { poolId: pool.id, championKey } },
       data: {
         ...(patch.state !== undefined && { state: patch.state }),
         ...(patch.note !== undefined && { note: patch.note }),
-        ...(patch.role !== undefined && { role: patch.role }),
+        ...(role !== undefined && { role }),
       },
     });
     return this.getPoolView(accountId);
@@ -351,6 +340,31 @@ export class ChampionPoolsService {
       where: { poolId_championKey: { poolId: pool.id, championKey } },
     });
     return this.getPoolView(accountId);
+  }
+
+  /**
+   * Runs after roles are resolved to slots, not in the zod schema: a request
+   * naming two off-lines (say JUNGLE and TOP for a mid/adc player) lands both
+   * in FILL, so only the merged count says whether the pool is valid.
+   */
+  private assertSlotCounts(slots: PoolSlotKey[]) {
+    const countBySlot = new Map<PoolSlotKey, number>();
+    for (const slot of slots) {
+      countBySlot.set(slot, (countBySlot.get(slot) ?? 0) + 1);
+    }
+
+    const issues: string[] = [];
+    for (const [slot, count] of countBySlot) {
+      if (isRoleCountValid(count)) continue;
+      issues.push(
+        count < MIN_CHAMPIONS_PER_ROLE
+          ? `${POOL_SLOT_LABELS[slot]} tiene ${count} campeón${count === 1 ? '' : 'es'}: hacen falta al menos ${MIN_CHAMPIONS_PER_ROLE} para que la línea sea válida.`
+          : `${POOL_SLOT_LABELS[slot]} tiene ${count} campeones: el máximo es ${MAX_CHAMPIONS_PER_ROLE}.`,
+      );
+    }
+    if (issues.length > 0) {
+      throw new BadRequestException(issues.join(' '));
+    }
   }
 
   private async findPoolOrThrow(accountId: string) {
@@ -368,12 +382,12 @@ export class ChampionPoolsService {
   private enrichEntry(
     entry: {
       championKey: string;
-      role: string;
       state: string;
       note: string | null;
       addedBy: string;
       position: number;
     },
+    slot: PoolSlotKey,
     rosterByKey: Map<string, RosterChampion>,
     statsByChampion: Map<string, ChampionStatEntry>,
   ): Omit<EnrichedPoolEntry, 'performance'> {
@@ -381,13 +395,14 @@ export class ChampionPoolsService {
     return {
       championKey: entry.championKey,
       name: rosterByKey.get(entry.championKey)?.name ?? entry.championKey,
-      role: isPoolRoleKey(entry.role) ? entry.role : 'MIDDLE',
+      role: slot,
       state: entry.state as EnrichedPoolEntry['state'],
       note: entry.note,
       addedBy: entry.addedBy as EnrichedPoolEntry['addedBy'],
       position: entry.position,
       gamesPlayed: stat?.gamesPlayed ?? 0,
       winrate: stat?.winrate ?? 0,
+      avgKda: stat?.avgKda ?? 0,
     };
   }
 }

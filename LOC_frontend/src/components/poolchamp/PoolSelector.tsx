@@ -1,10 +1,22 @@
 import { useMemo, useState } from 'react'
 import { getChampionIconUrl } from '../../lib/riotAssets'
-import { MAX_CHAMPIONS_PER_ROLE, MIN_CHAMPIONS_PER_ROLE, POOL_ROLE_KEYS, POOL_ROLE_LABELS } from '../../lib/poolLabels'
+import {
+  FILL_SLOT,
+  MAX_CHAMPIONS_PER_ROLE,
+  MIN_CHAMPIONS_PER_ROLE,
+  POOL_ROLE_KEYS,
+  POOL_ROLE_LABELS,
+  POOL_SLOT_LABELS,
+  getPoolSlotCaption,
+  getPoolSlots,
+  resolvePoolSlot,
+} from '../../lib/poolLabels'
 import type {
   PoolEntry,
   PoolRecommendation,
   PoolRoleKey,
+  PoolRoleProfile,
+  PoolSlotKey,
   ReplacePoolEntryInput,
   RosterChampion,
 } from '../../types/dashboard'
@@ -15,7 +27,7 @@ type SlotValue = {
   note?: string
   addedBy: 'player' | 'coach'
 }
-type SlotMap = Record<PoolRoleKey, SlotValue[]>
+type SlotMap = Record<PoolSlotKey, SlotValue[]>
 type RoleStatus = 'empty' | 'incomplete' | 'valid'
 
 type SuggestedChampion = {
@@ -27,6 +39,7 @@ type PoolSelectorProps = {
   roster: RosterChampion[]
   ddragonVersion: string | null
   initialEntries: PoolEntry[]
+  roleProfile: PoolRoleProfile
   playedChampionKeys: Set<string>
   championsWithOpenLesson: Set<string>
   recommendation: PoolRecommendation | undefined
@@ -40,13 +53,13 @@ const ROLE_FILTERS: ('ALL' | PoolRoleKey)[] = ['ALL', ...POOL_ROLE_KEYS]
 const SUGGESTED_LIMIT = 8
 
 function emptySlotMap(): SlotMap {
-  return { TOP: [], JUNGLE: [], MIDDLE: [], BOTTOM: [], UTILITY: [] }
+  return { TOP: [], JUNGLE: [], MIDDLE: [], BOTTOM: [], UTILITY: [], FILL: [] }
 }
 
-function buildInitialSlots(entries: PoolEntry[]): SlotMap {
+function buildInitialSlots(entries: PoolEntry[], roleProfile: PoolRoleProfile): SlotMap {
   const slots = emptySlotMap()
   for (const entry of [...entries].sort((a, b) => a.position - b.position)) {
-    slots[entry.role].push({
+    slots[resolvePoolSlot(entry.role, roleProfile)].push({
       championKey: entry.championKey,
       state: entry.state,
       note: entry.note ?? undefined,
@@ -62,14 +75,15 @@ function roleStatus(count: number): RoleStatus {
   return 'valid'
 }
 
-function pickInitialActiveRole(slots: SlotMap): PoolRoleKey {
-  return POOL_ROLE_KEYS.find((role) => slots[role].length === 0) ?? POOL_ROLE_KEYS[0]
+function pickInitialActiveRole(slots: SlotMap, slotKeys: PoolSlotKey[]): PoolSlotKey {
+  return slotKeys.find((role) => slots[role].length === 0) ?? slotKeys[0]
 }
 
 export function PoolSelector({
   roster,
   ddragonVersion,
   initialEntries,
+  roleProfile,
   playedChampionKeys,
   championsWithOpenLesson,
   recommendation,
@@ -78,8 +92,11 @@ export function PoolSelector({
   onSave,
   onCancel,
 }: PoolSelectorProps) {
-  const [slots, setSlots] = useState<SlotMap>(() => buildInitialSlots(initialEntries))
-  const [activeRole, setActiveRole] = useState<PoolRoleKey>(() => pickInitialActiveRole(buildInitialSlots(initialEntries)))
+  const slotKeys = useMemo(() => getPoolSlots(roleProfile), [roleProfile])
+  const [slots, setSlots] = useState<SlotMap>(() => buildInitialSlots(initialEntries, roleProfile))
+  const [activeRole, setActiveRole] = useState<PoolSlotKey>(() =>
+    pickInitialActiveRole(buildInitialSlots(initialEntries, roleProfile), getPoolSlots(roleProfile)),
+  )
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<'ALL' | PoolRoleKey>('ALL')
   const [onlyPlayed, setOnlyPlayed] = useState(false)
@@ -88,20 +105,20 @@ export function PoolSelector({
 
   const rosterByKey = useMemo(() => new Map(roster.map((champion) => [champion.championKey, champion])), [roster])
   const assignedKeys = useMemo(
-    () => new Set(POOL_ROLE_KEYS.flatMap((role) => slots[role].map((slot) => slot.championKey))),
-    [slots],
+    () => new Set(slotKeys.flatMap((role) => slots[role].map((slot) => slot.championKey))),
+    [slots, slotKeys],
   )
 
-  function assignChampion(championKey: string, targetRole?: PoolRoleKey) {
+  function assignChampion(championKey: string, targetRole?: PoolSlotKey) {
     const role = targetRole ?? activeRole
     if (slots[role].some((slot) => slot.championKey === championKey)) return
     if (slots[role].length >= MAX_CHAMPIONS_PER_ROLE) {
-      setRoleLimitMessage(`${POOL_ROLE_LABELS[role]} ya tiene el máximo de ${MAX_CHAMPIONS_PER_ROLE} campeones.`)
+      setRoleLimitMessage(`${POOL_SLOT_LABELS[role]} ya tiene el máximo de ${MAX_CHAMPIONS_PER_ROLE} campeones.`)
       return
     }
 
     const next: SlotMap = emptySlotMap()
-    for (const key of POOL_ROLE_KEYS) {
+    for (const key of slotKeys) {
       next[key] = slots[key].filter((slot) => slot.championKey !== championKey)
     }
     next[role] = [...next[role], { championKey, state: 'testing', addedBy: 'player' }]
@@ -109,12 +126,12 @@ export function PoolSelector({
     setRoleLimitMessage(null)
 
     if (!targetRole && next[role].length >= MAX_CHAMPIONS_PER_ROLE) {
-      const nextRole = POOL_ROLE_KEYS.find((candidate) => next[candidate].length < MAX_CHAMPIONS_PER_ROLE)
+      const nextRole = slotKeys.find((candidate) => next[candidate].length < MAX_CHAMPIONS_PER_ROLE)
       if (nextRole) setActiveRole(nextRole)
     }
   }
 
-  function removeChampion(role: PoolRoleKey, championKey: string) {
+  function removeChampion(role: PoolSlotKey, championKey: string) {
     setSlots((previous) => ({ ...previous, [role]: previous[role].filter((slot) => slot.championKey !== championKey) }))
   }
 
@@ -126,14 +143,12 @@ export function PoolSelector({
     }
     const next = emptySlotMap()
     for (const entry of recommendation.entries) {
-      next[entry.role] = [
-        ...next[entry.role],
-        { championKey: entry.championKey, state: entry.state, addedBy: 'coach', note: entry.reason },
-      ]
+      const slot = resolvePoolSlot(entry.role, roleProfile)
+      next[slot] = [...next[slot], { championKey: entry.championKey, state: entry.state, addedBy: 'coach', note: entry.reason }]
     }
     setSlots(next)
     setCoachMessage(
-      `Precargamos una base por rol. Todavía necesitas llegar a ${MIN_CHAMPIONS_PER_ROLE} campeones en cada rol que quieras dejar activo.`,
+      `Precargamos una base para tus líneas main. Todavía necesitas llegar a ${MIN_CHAMPIONS_PER_ROLE} campeones en cada línea que quieras dejar activa.`,
     )
   }
 
@@ -180,16 +195,12 @@ export function PoolSelector({
       .sort((a, b) => a.name.localeCompare(b.name))
   }, [roster, roleFilter, onlyPlayed, playedChampionKeys, search])
 
-  const roleCounts = useMemo(
-    () => Object.fromEntries(POOL_ROLE_KEYS.map((role) => [role, slots[role].length])) as Record<PoolRoleKey, number>,
-    [slots],
-  )
   const filledCount = assignedKeys.size
-  const hasIncompleteRole = POOL_ROLE_KEYS.some((role) => roleStatus(roleCounts[role]) === 'incomplete')
+  const hasIncompleteRole = slotKeys.some((role) => roleStatus(slots[role].length) === 'incomplete')
   const canSave = filledCount > 0 && !hasIncompleteRole && !isSaving
 
   async function handleSave() {
-    const entries: ReplacePoolEntryInput[] = POOL_ROLE_KEYS.flatMap((role) =>
+    const entries: ReplacePoolEntryInput[] = slotKeys.flatMap((role) =>
       slots[role].map((slot) => ({ championKey: slot.championKey, role, state: slot.state, note: slot.note, addedBy: slot.addedBy })),
     )
     await onSave(entries)
@@ -224,13 +235,20 @@ export function PoolSelector({
 
       <div className="pool-selector-body">
         <div className="pool-slots-panel">
-          <div className="pool-panel-eyebrow">TUS ROLES</div>
+          <div className="pool-panel-eyebrow">TUS LÍNEAS</div>
           <p className="pool-panel-hint">
-            Haz clic en un retrato para sumarlo al rol activo, o arrástralo al rol que quieras.
+            Haz clic en un retrato para sumarlo a la línea activa, o arrástralo a la que quieras. Los campeones que no
+            son de tus líneas main van en Fill.
           </p>
+          {!roleProfile.primaryRole && (
+            <p className="pool-coach-message pool-coach-message--warn">
+              Todavía no detectamos tus líneas main. Sincroniza partidas para habilitarlas; mientras tanto puedes armar tu
+              Fill.
+            </p>
+          )}
 
           <div className="pool-slots-list">
-            {POOL_ROLE_KEYS.map((role) => {
+            {slotKeys.map((role) => {
               const entries = slots[role]
               const count = entries.length
               const status = roleStatus(count)
@@ -249,22 +267,21 @@ export function PoolSelector({
                 >
                   <div className="pool-role-bucket-head">
                     <span className={isActive ? 'pool-slot-role pool-slot-role--active' : 'pool-slot-role'}>
-                      {POOL_ROLE_LABELS[role].slice(0, 3).toUpperCase()}
+                      {role === FILL_SLOT ? 'FILL' : POOL_SLOT_LABELS[role].slice(0, 3).toUpperCase()}
                     </span>
-                    <span className="pool-role-bucket-name">{POOL_ROLE_LABELS[role]}</span>
+                    <span className="pool-role-bucket-name">{POOL_SLOT_LABELS[role]}</span>
                     <span className={`pool-role-count pool-role-count--${status}`}>
                       {count}/{MAX_CHAMPIONS_PER_ROLE}
                     </span>
                   </div>
 
-                  {count === 0 && (
-                    <p className="pool-role-bucket-hint">
-                      {isActive ? 'Rol activo · elige de la grilla' : 'Sin campeones todavía'}
-                    </p>
-                  )}
+                  <p className="pool-role-bucket-hint">
+                    {getPoolSlotCaption(role, roleProfile)}
+                    {count === 0 && (isActive ? ' · activa, elige de la grilla' : ' · sin campeones todavía')}
+                  </p>
                   {status === 'incomplete' && (
                     <p className="pool-role-bucket-hint pool-role-bucket-hint--warn">
-                      Faltan {MIN_CHAMPIONS_PER_ROLE - count} para que este rol sea válido.
+                      Faltan {MIN_CHAMPIONS_PER_ROLE - count} para que esta línea sea válida.
                     </p>
                   )}
 
@@ -299,8 +316,8 @@ export function PoolSelector({
           {roleLimitMessage && <p className="pool-coach-message pool-coach-message--warn">{roleLimitMessage}</p>}
 
           <div className="pool-panel-footer">
-            Cada rol necesita entre {MIN_CHAMPIONS_PER_ROLE} y {MAX_CHAMPIONS_PER_ROLE} campeones para ser válido. Puedes dejar
-            roles sin tocar — quedan abiertos hasta que quieras completarlos.
+            Cada línea necesita entre {MIN_CHAMPIONS_PER_ROLE} y {MAX_CHAMPIONS_PER_ROLE} campeones para ser válida. Puedes
+            dejar líneas sin tocar — quedan abiertas hasta que quieras completarlas.
           </div>
         </div>
 

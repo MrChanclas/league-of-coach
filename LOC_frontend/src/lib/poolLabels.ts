@@ -1,4 +1,10 @@
-import type { PoolEntryState, PoolRecommendationLabel, PoolRoleKey } from '../types/dashboard'
+import type {
+  PoolEntryState,
+  PoolRecommendationLabel,
+  PoolRoleKey,
+  PoolRoleProfile,
+  PoolSlotKey,
+} from '../types/dashboard'
 
 // Distinct wording from goalLabels.ts's ROLE_LABELS — see handoff_loc/07-pool-champ.md
 // ("Superior, Jungla, Medio, Tirador, Soporte" for the five fixed pool slots).
@@ -16,6 +22,32 @@ export const POOL_ROLE_LABELS: Record<PoolRoleKey, string> = {
   MIDDLE: 'Medio',
   BOTTOM: 'Tirador',
   UTILITY: 'Soporte',
+}
+
+export const FILL_SLOT = 'FILL' as const
+
+export const POOL_SLOT_LABELS: Record<PoolSlotKey, string> = {
+  ...POOL_ROLE_LABELS,
+  FILL: 'Fill',
+}
+
+// Mismas reglas que champion-pools/pool-roles.ts en el backend: el pool solo
+// ofrece la línea principal, la secundaria y un slot FILL para todo lo demás.
+export function getPoolSlots(profile: PoolRoleProfile | undefined): PoolSlotKey[] {
+  const slots: PoolSlotKey[] = []
+  if (profile?.primaryRole) slots.push(profile.primaryRole)
+  if (profile?.secondaryRole) slots.push(profile.secondaryRole)
+  slots.push(FILL_SLOT)
+  return slots
+}
+
+export function resolvePoolSlot(role: string, profile: PoolRoleProfile | undefined): PoolSlotKey {
+  return role === profile?.primaryRole || role === profile?.secondaryRole ? (role as PoolRoleKey) : FILL_SLOT
+}
+
+export function getPoolSlotCaption(slot: PoolSlotKey, profile: PoolRoleProfile | undefined): string {
+  if (slot === FILL_SLOT) return 'Campeones fuera de tus líneas main'
+  return slot === profile?.primaryRole ? 'Línea principal' : 'Línea secundaria'
 }
 
 export const POOL_STATE_LABELS: Record<PoolEntryState, string> = {

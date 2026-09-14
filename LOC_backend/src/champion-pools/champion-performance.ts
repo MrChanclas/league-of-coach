@@ -1,5 +1,9 @@
 import type { RosterChampion } from './champion-roster.service';
-import { isPoolRoleKey, type PoolRoleKey } from './pool-roles';
+import {
+  isPoolRoleKey,
+  type PoolRoleKey,
+  type PoolSlotKey,
+} from './pool-roles';
 import type { ChampionStatEntry } from './pool-types';
 
 // Same "not enough games to mean anything" bar the rest of the pool uses
@@ -25,6 +29,21 @@ export type ChampionPerformanceTip =
     };
 
 /**
+ * The "Necesitas mejorar" verdict on its own, without the substitute search —
+ * Aprendizaje uses it to attach a guide to every pool champion Pool Champ
+ * flags, so both tabs have to share this exact rule.
+ */
+export function isUnderperforming(
+  stat: Pick<ChampionStatEntry, 'gamesPlayed' | 'winrate'> | undefined,
+): boolean {
+  return (
+    stat != null &&
+    stat.gamesPlayed >= MIN_GAMES_FOR_PERFORMANCE_TIP &&
+    stat.winrate <= BAD_WINRATE_THRESHOLD
+  );
+}
+
+/**
  * "Keep going or switch?" tip for a champion the player is actually using —
  * distinct from pool-recommendation's 5-champion pool suggestion, which only
  * runs when building/rebuilding the pool. This runs per champion, both while
@@ -34,7 +53,7 @@ export type ChampionPerformanceTip =
  */
 export function evaluateChampionPerformance(
   championKey: string,
-  role: PoolRoleKey,
+  role: PoolSlotKey,
   roster: RosterChampion[],
   championStats: ChampionStatEntry[],
   primaryRoleByChampion: Map<string, string>,
@@ -49,7 +68,7 @@ export function evaluateChampionPerformance(
   if (gamesPlayed < MIN_GAMES_FOR_PERFORMANCE_TIP || !stat) {
     return { status: 'insufficient_data' };
   }
-  if (stat.winrate > BAD_WINRATE_THRESHOLD) {
+  if (!isUnderperforming(stat)) {
     return { status: 'good' };
   }
 
@@ -67,8 +86,15 @@ export function evaluateChampionPerformance(
   // the pool editor drops a clicked champion into the active slot, so a Nilah
   // played only at bot can sit under Superior and would otherwise be told to
   // make way for the account's best top laner (user-reported: Nilah -> Garen).
+  // A FILL entry has no lane of its own, so it falls back to the champion's
+  // roster role instead.
   const playedRole = primaryRoleByChampion.get(championKey);
-  const laneRole = playedRole && isPoolRoleKey(playedRole) ? playedRole : role;
+  const laneRole: PoolRoleKey =
+    playedRole && isPoolRoleKey(playedRole)
+      ? playedRole
+      : isPoolRoleKey(role)
+        ? role
+        : (rosterByKey.get(championKey)?.role ?? 'MIDDLE');
 
   // Prefer a proven alternative: someone else in the same role the player
   // already performs well on, excluding whatever is already in the pool.

@@ -22,6 +22,59 @@ export const POOL_ROLE_LABELS: Record<PoolRoleKey, string> = {
   UTILITY: 'Soporte',
 };
 
+// The pool board only offers the player's own lines — their primary and
+// secondary role (common/role-profile.ts) — plus one FILL slot that holds
+// every champion outside those lines, for games where they get autofilled.
+export const FILL_SLOT = 'FILL' as const;
+export const POOL_SLOT_KEYS = [...POOL_ROLE_KEYS, FILL_SLOT] as const;
+export type PoolSlotKey = (typeof POOL_SLOT_KEYS)[number];
+
+export const POOL_SLOT_LABELS: Record<PoolSlotKey, string> = {
+  ...POOL_ROLE_LABELS,
+  FILL: 'Fill',
+};
+
+export type PoolRoleProfile = {
+  primaryRole: PoolRoleKey | null;
+  secondaryRole: PoolRoleKey | null;
+};
+
+export function toPoolRoleProfile(profile: {
+  primaryRole: string | null;
+  secondaryRole: string | null;
+}): PoolRoleProfile {
+  const asRole = (role: string | null) =>
+    role && isPoolRoleKey(role) ? role : null;
+  return {
+    primaryRole: asRole(profile.primaryRole),
+    secondaryRole: asRole(profile.secondaryRole),
+  };
+}
+
+/** Primary line first, then secondary, then FILL — the slots the board shows. */
+export function getPoolSlots(profile: PoolRoleProfile): PoolSlotKey[] {
+  const slots: PoolSlotKey[] = [];
+  if (profile.primaryRole) slots.push(profile.primaryRole);
+  if (profile.secondaryRole) slots.push(profile.secondaryRole);
+  slots.push(FILL_SLOT);
+  return slots;
+}
+
+/**
+ * Where a stored or requested role lands on the board: its own slot when it's
+ * one of the player's lines, FILL otherwise. Pools saved before the board was
+ * limited to main lines (or whose main lines shifted since) still hold
+ * entries under other roles, so this runs on read as well as on write.
+ */
+export function resolvePoolSlot(
+  role: string,
+  profile: PoolRoleProfile,
+): PoolSlotKey {
+  return role === profile.primaryRole || role === profile.secondaryRole
+    ? role
+    : FILL_SLOT;
+}
+
 // A role is either untouched (0) or a real pool: at least MIN champions so a
 // score/recommendation has something to work with, at most MAX so the board
 // stays a "pool", not a copy of the whole roster — see user request to gate

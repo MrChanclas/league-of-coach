@@ -4,9 +4,10 @@ import {
   MIN_CHAMPIONS_PER_ROLE,
   PERFORMANCE_TIP_BAD_MESSAGE,
   PERFORMANCE_TIP_GOOD_MESSAGE,
-  POOL_ROLE_KEYS,
-  POOL_ROLE_LABELS,
+  POOL_SLOT_LABELS,
   POOL_STATE_LABELS,
+  getPoolSlotCaption,
+  getPoolSlots,
 } from '../../lib/poolLabels'
 import type { ChampionPerformanceTip, PoolView } from '../../types/dashboard'
 
@@ -71,9 +72,9 @@ export function PoolBoard({
   onEditPool,
   onAddOutsider,
 }: PoolBoardProps) {
-  const { pool, entries, outsiders, health } = poolView
+  const { pool, roleProfile, entries, outsiders, health } = poolView
 
-  const groups = POOL_ROLE_KEYS.map((role) => ({
+  const groups = getPoolSlots(roleProfile).map((role) => ({
     role,
     entries: entries.filter((entry) => entry.role === role).sort((a, b) => a.position - b.position),
   })).filter((group) => group.entries.length > 0)
@@ -101,7 +102,9 @@ export function PoolBoard({
           {groups.map((group) => (
             <div key={group.role} className="pool-role-group">
               <div className="pool-role-group-head">
-                <span className="pool-role-group-title">{POOL_ROLE_LABELS[group.role].toUpperCase()}</span>
+                <span className="pool-role-group-title">
+                  {POOL_SLOT_LABELS[group.role].toUpperCase()} · {getPoolSlotCaption(group.role, roleProfile).toUpperCase()}
+                </span>
                 <span className="pool-role-group-hairline" />
                 {group.entries.length < MIN_CHAMPIONS_PER_ROLE && (
                   <span className="pool-role-group-warn">

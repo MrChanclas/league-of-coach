@@ -3,9 +3,9 @@ import { primaryArchetype } from './champion-style';
 import {
   isPoolRoleKey,
   MIN_CHAMPIONS_PER_ROLE,
-  POOL_ROLE_KEYS,
   POOL_ROLE_LABELS,
   type PoolRoleKey,
+  type PoolRoleProfile,
 } from './pool-roles';
 import type { ChampionStatEntry } from './pool-types';
 
@@ -16,13 +16,6 @@ const MIN_TOTAL_GAMES_FOR_RECOMMENDATION = 10;
 // A champion needs at least this many games to count as "real performance"
 // for the YA TE RINDE slot — one lucky game isn't a signal.
 const MIN_GAMES_FOR_PERFORMANCE_PICK = 3;
-// How many of the player's most-played roles the coach tries to fill all the
-// way to MIN_CHAMPIONS_PER_ROLE — see user-reported bug: a mid main was
-// getting a scattershot of 1-2 picks spread across roles they barely play,
-// instead of enough picks in their actual main line(s) to reach a valid
-// pool there. Two, not one, since plenty of accounts genuinely split their
-// games across two roles (autofill, or a real dual-main).
-const MAIN_ROLES_COUNT = 2;
 
 export type RecommendationLabel = 'YA_TE_RINDE' | 'TU_ESTILO' | 'CUBRE_HUECO';
 
@@ -40,21 +33,22 @@ export type PoolRecommendation =
   | { available: false; reason: string };
 
 /**
- * The coach's pool suggestion. Finds the player's 1-2 most-played roles from
- * their actual games and fills each one up to MIN_CHAMPIONS_PER_ROLE:
+ * The coach's pool suggestion. Fills the player's primary and secondary line
+ * (the same ones the board offers as slots) up to MIN_CHAMPIONS_PER_ROLE:
  * proven performers first ("YA TE RINDE"), then champions sharing a
  * playstyle with what's already played in that same role ("TU ESTILO"),
  * then — only if a role still isn't full — any untried roster champion of
  * that role as a last resort, so the role reaches a valid pool on its own.
- * A completely untouched role outside those main ones also gets one starter
- * pick ("CUBRE HUECO") so nothing is left at zero. Pure function so it can
- * be unit-tested without a database — see handoff_loc/07-pool-champ.md.
+ * The FILL slot is left to the player: it has no lane to recommend for.
+ * Pure function so it can be unit-tested without a database — see
+ * handoff_loc/07-pool-champ.md.
  */
 export function computeRecommendation(
   roster: RosterChampion[],
   championStats: ChampionStatEntry[],
   primaryRoleByChampion: Map<string, string>,
   existingPoolChampionKeys: Set<string>,
+  roleProfile: PoolRoleProfile,
 ): PoolRecommendation {
   const totalGames = championStats.reduce(
     (sum, entry) => sum + entry.gamesPlayed,
@@ -86,19 +80,10 @@ export function computeRecommendation(
   const countInRole = (role: PoolRoleKey) =>
     picks.filter((pick) => pick.role === role).length;
 
-  // 1) Which role(s) does the player actually main? Every champion's games
-  // count toward whichever role that champion is actually played in for
-  // this account (roleFor), not that champion's "official" role.
-  const gamesByRole = new Map<PoolRoleKey, number>();
-  for (const stat of championStats) {
-    const role = roleFor(stat.champion);
-    gamesByRole.set(role, (gamesByRole.get(role) ?? 0) + stat.gamesPlayed);
-  }
-  const mainRoles = [...gamesByRole.entries()]
-    .filter(([, games]) => games > 0)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, MAIN_ROLES_COUNT)
-    .map(([role]) => role);
+  // 1) The player's main lines, as the board defines them.
+  const mainRoles = [roleProfile.primaryRole, roleProfile.secondaryRole].filter(
+    (role): role is PoolRoleKey => role != null,
+  );
 
   // 2) Fill each main role up to MIN_CHAMPIONS_PER_ROLE.
   for (const role of mainRoles) {
@@ -143,8 +128,9 @@ export function computeRecommendation(
         );
       }
       const topArchetype =
-        [...roleArchetypeWeights.entries()].sort((a, b) => b[1] - a[1])[0]
-          ?.[0] ?? null;
+        [...roleArchetypeWeights.entries()].sort(
+          (a, b) => b[1] - a[1],
+        )[0]?.[0] ?? null;
 
       if (topArchetype) {
         const styleCandidates = roster
@@ -198,37 +184,6 @@ export function computeRecommendation(
         });
         selected.add(candidate.championKey);
       }
-    }
-  }
-
-  // 3) One starter pick for a role that's completely untouched and isn't
-  // already one of the main roles above, so nothing is left at zero.
-  const coveredRoles = new Set(picks.map((pick) => pick.role));
-  const missingRole = POOL_ROLE_KEYS.find(
-    (role) => !coveredRoles.has(role) && !mainRoles.includes(role),
-  );
-  if (missingRole) {
-    const gapCandidate = roster
-      .filter(
-        (champion) =>
-          !selected.has(champion.championKey) && champion.role === missingRole,
-      )
-      .sort((a, b) => {
-        const gamesA = statsByChampion.get(a.championKey)?.gamesPlayed ?? 0;
-        const gamesB = statsByChampion.get(b.championKey)?.gamesPlayed ?? 0;
-        return gamesB - gamesA || a.name.localeCompare(b.name);
-      })[0];
-
-    if (gapCandidate) {
-      picks.push({
-        championKey: gapCandidate.championKey,
-        name: gapCandidate.name,
-        role: missingRole,
-        state: 'testing',
-        label: 'CUBRE_HUECO',
-        reason: `Te falta ${POOL_ROLE_LABELS[missingRole]} en el pool`,
-      });
-      selected.add(gapCandidate.championKey);
     }
   }
 
