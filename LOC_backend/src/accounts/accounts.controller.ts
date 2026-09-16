@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { z } from 'zod';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { AuthzService } from '../auth/authz.service';
@@ -47,7 +56,10 @@ export class AccountsController {
   }
 
   @Get('user/:userId')
-  async listByUser(@Req() request: AuthenticatedRequest, @Param('userId') userId: string) {
+  async listByUser(
+    @Req() request: AuthenticatedRequest,
+    @Param('userId') userId: string,
+  ) {
     await this.authz.assertUserOwnership(userId, request.clerkUserId);
     return this.accountsService.listByUser(userId);
   }

@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -20,14 +24,20 @@ export class AuthzService {
     return user.id;
   }
 
-  async assertUserOwnership(targetUserId: string, clerkUserId: string): Promise<void> {
+  async assertUserOwnership(
+    targetUserId: string,
+    clerkUserId: string,
+  ): Promise<void> {
     const userId = await this.resolveUserId(clerkUserId);
     if (userId !== targetUserId) {
       throw new ForbiddenException('No tenés acceso a este usuario.');
     }
   }
 
-  async assertAccountOwnership(accountId: string, clerkUserId: string): Promise<void> {
+  async assertAccountOwnership(
+    accountId: string,
+    clerkUserId: string,
+  ): Promise<void> {
     const userId = await this.resolveUserId(clerkUserId);
     const account = await this.prisma.lolAccount.findUnique({
       where: { id: accountId },
@@ -39,7 +49,10 @@ export class AuthzService {
     }
   }
 
-  async assertMatchParticipant(matchId: string, clerkUserId: string): Promise<void> {
+  async assertMatchParticipant(
+    matchId: string,
+    clerkUserId: string,
+  ): Promise<void> {
     const userId = await this.resolveUserId(clerkUserId);
     const participant = await this.prisma.matchParticipant.findFirst({
       where: { match: { matchId }, account: { userId } },

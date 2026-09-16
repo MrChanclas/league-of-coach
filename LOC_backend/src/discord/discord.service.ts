@@ -31,7 +31,11 @@ export class DiscordService {
   }
 
   /** Same as notifyIssue, but skips sending if the same `key` fired within `cooldownMs` — keeps a flapping dependency (e.g. an expired Riot key) from flooding the channel. */
-  notifyIssueThrottled(key: string, content: string, cooldownMs = 5 * 60 * 1000) {
+  notifyIssueThrottled(
+    key: string,
+    content: string,
+    cooldownMs = 5 * 60 * 1000,
+  ) {
     const now = Date.now();
     const last = this.lastSentAt.get(key) ?? 0;
     if (now - last < cooldownMs) return;

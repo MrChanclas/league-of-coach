@@ -17,7 +17,9 @@ export class RankSnapshotsController {
     const expectedSecret = process.env.INTERNAL_POLL_SECRET;
 
     if (!expectedSecret || providedSecret !== expectedSecret) {
-      throw new ForbiddenException('Secreto interno inválido o no configurado.');
+      throw new ForbiddenException(
+        'Secreto interno inválido o no configurado.',
+      );
     }
 
     return this.rankSnapshots.pollAllAccounts();

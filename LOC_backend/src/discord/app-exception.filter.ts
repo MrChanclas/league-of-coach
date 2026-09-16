@@ -1,4 +1,9 @@
-import { ArgumentsHost, Catch, HttpException, Injectable } from '@nestjs/common';
+import {
+  ArgumentsHost,
+  Catch,
+  HttpException,
+  Injectable,
+} from '@nestjs/common';
 import { SentryGlobalFilter } from '@sentry/nestjs/setup';
 import { DiscordService } from './discord.service';
 
