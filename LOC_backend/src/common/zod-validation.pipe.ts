@@ -1,16 +1,14 @@
-import {
-  ArgumentMetadata,
-  BadRequestException,
-  Injectable,
-  PipeTransform,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
 import type { ZodSchema } from 'zod';
 
 @Injectable()
 export class ZodValidationPipe implements PipeTransform {
   constructor(private readonly schema: ZodSchema) {}
 
-  transform(value: unknown, metadata: ArgumentMetadata) {
+  // Sin el segundo parámetro (ArgumentMetadata) de PipeTransform: este pipe
+  // valida contra un esquema fijo, así que no necesita saber si el valor
+  // viene del body, de la query o de un parámetro de ruta.
+  transform(value: unknown) {
     const result = this.schema.safeParse(value);
 
     if (!result.success) {

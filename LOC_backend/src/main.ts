@@ -13,7 +13,7 @@ async function bootstrap() {
   const frontendUrl = process.env.FRONTEND_URL;
   if (!frontendUrl) {
     new Logger('Bootstrap').warn(
-      `FRONTEND_URL no está definida; usando "${DEFAULT_DEV_FRONTEND_URL}" para CORS. Definila explícitamente en producción.`,
+      `FRONTEND_URL no está definida; usando "${DEFAULT_DEV_FRONTEND_URL}" para CORS. Defínela explícitamente en producción.`,
     );
   }
 
@@ -42,4 +42,10 @@ async function bootstrap() {
     );
   });
 }
-bootstrap();
+// Sin el catch, un fallo al arrancar (puerto ocupado, base inalcanzable)
+// terminaba como unhandled rejection: Node mata el proceso igual, pero sin
+// decir qué pasó, que es lo único útil cuando el contenedor no levanta.
+bootstrap().catch((error) => {
+  new Logger('Bootstrap').error(`El backend no pudo arrancar: ${error}`);
+  process.exit(1);
+});

@@ -111,13 +111,13 @@ export class UsersService {
     );
     const goals = goalsByAccount.flat();
 
-    const accountsWithDetails = await Promise.all(
-      accounts.map(async (account) => ({
-        ...account,
-        learnings: learnings.filter((item) => item.accountId === account.id),
-        goals: goals.filter((item) => item.accountId === account.id),
-      })),
-    );
+    // Armado sincrónico: solo filtra en memoria lo ya consultado arriba, así
+    // que no necesita ser async ni pasar por Promise.all.
+    const accountsWithDetails = accounts.map((account) => ({
+      ...account,
+      learnings: learnings.filter((item) => item.accountId === account.id),
+      goals: goals.filter((item) => item.accountId === account.id),
+    }));
 
     return {
       user,
