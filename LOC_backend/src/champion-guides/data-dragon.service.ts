@@ -1,6 +1,14 @@
 import { Injectable } from '@nestjs/common';
 
-const FALLBACK_VERSION = '15.19.1';
+// Solo se usa si Data Dragon no responde. Con este valor se sella el
+// patchVersion de las guías guardadas, así que uno viejo etiqueta mal los
+// datos. Mantener igual a FALLBACK_DDRAGON_VERSION en el frontend
+// (LOC_frontend/src/lib/riotAssets.ts): son paquetes separados y no pueden
+// compartir la constante.
+const FALLBACK_VERSION = '16.18.1';
+
+// Un solo lugar para el host de Data Dragon, el CDN público de Riot.
+const DDRAGON_HOST = 'https://ddragon.leagueoflegends.com';
 
 export type DDragonChampion = {
   championKey: string; // Data Dragon id, e.g. "MonkeyKing" — matches Riot's championName field
@@ -15,9 +23,7 @@ export class DataDragonService {
 
   async getVersion(): Promise<string> {
     if (!this.versionPromise) {
-      this.versionPromise = fetch(
-        'https://ddragon.leagueoflegends.com/api/versions.json',
-      )
+      this.versionPromise = fetch(`${DDRAGON_HOST}/api/versions.json`)
         .then((res) => res.json() as Promise<string[]>)
         .then((versions) => versions[0] ?? FALLBACK_VERSION)
         .catch(() => FALLBACK_VERSION);
@@ -30,9 +36,7 @@ export class DataDragonService {
     if (!this.rosterPromise) {
       this.rosterPromise = this.getVersion()
         .then((version) =>
-          fetch(
-            `https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion.json`,
-          ),
+          fetch(`${DDRAGON_HOST}/cdn/${version}/data/en_US/champion.json`),
         )
         .then(
           (res) =>
