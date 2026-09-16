@@ -1,6 +1,6 @@
 import { Controller, ForbiddenException, Headers, Post } from '@nestjs/common';
 import { Public } from '../auth/public.decorator';
-import { MatchesService } from './matches.service';
+import { BackfillRunnerService } from './backfill-runner.service';
 
 /**
  * Triggered by Cloud Scheduler in production (Cloud Run scales to zero, so
@@ -10,7 +10,7 @@ import { MatchesService } from './matches.service';
  */
 @Controller('internal')
 export class MatchesInternalController {
-  constructor(private readonly matches: MatchesService) {}
+  constructor(private readonly backfillRunner: BackfillRunnerService) {}
 
   @Public()
   @Post('continue-backfills')
@@ -25,6 +25,6 @@ export class MatchesInternalController {
       );
     }
 
-    return this.matches.continuePendingBackfills();
+    return this.backfillRunner.continuePendingBackfills();
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { MatchesService } from './matches.service';
+import { BackfillRunnerService } from './backfill-runner.service';
 
 /**
  * Keeps the season backfill moving on its own in local dev, where the Nest
@@ -17,7 +17,7 @@ import { MatchesService } from './matches.service';
 export class BackfillPollerService {
   private readonly logger = new Logger(BackfillPollerService.name);
 
-  constructor(private readonly matches: MatchesService) {}
+  constructor(private readonly backfillRunner: BackfillRunnerService) {}
 
   @Cron(CronExpression.EVERY_5_MINUTES)
   async handlePeriodicBackfill() {
@@ -28,7 +28,7 @@ export class BackfillPollerService {
     try {
       // Overlapping ticks are already handled inside the service, which has
       // to guard against the scheduler anyway.
-      await this.matches.continuePendingBackfills();
+      await this.backfillRunner.continuePendingBackfills();
     } catch (error) {
       this.logger.warn(`Backfill automatico fallido: ${error}`);
     }

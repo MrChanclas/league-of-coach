@@ -6,11 +6,22 @@ import { BackfillPollerService } from './backfill-poller.service';
 import { MatchesController } from './matches.controller';
 import { MatchesInternalController } from './matches-internal.controller';
 import { MatchesService } from './matches.service';
+import { MatchHistoryService } from './match-history.service';
+import { MatchIngestService } from './match-ingest.service';
+import { SeasonRecoveryService } from './season-recovery.service';
+import { BackfillRunnerService } from './backfill-runner.service';
 
 @Module({
   imports: [RiotModule, RankSnapshotsModule, AuthModule],
   controllers: [MatchesController, MatchesInternalController],
-  providers: [MatchesService, BackfillPollerService],
-  exports: [MatchesService],
+  providers: [
+    MatchesService,
+    MatchHistoryService,
+    MatchIngestService,
+    SeasonRecoveryService,
+    BackfillRunnerService,
+    BackfillPollerService,
+  ],
+  exports: [MatchesService, MatchHistoryService],
 })
 export class MatchesModule {}

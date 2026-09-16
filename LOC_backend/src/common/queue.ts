@@ -10,6 +10,13 @@ export const QUEUE_IDS = {
 
 export const RANKED_QUEUE_IDS = [QUEUE_IDS.SOLO, QUEUE_IDS.FLEX] as const;
 
+/**
+ * Las mismas dos colas rankeadas, pero como arreglo mutable: los filtros `in`
+ * de Prisma piden number[], no la tupla readonly compartida. Es el alcance
+ * del historial de partidas, sin importar qué otras colas se sincronicen.
+ */
+export const HISTORY_QUEUE_IDS: number[] = [...RANKED_QUEUE_IDS];
+
 export type QueueKey = 'solo' | 'flex';
 
 export const QUEUE_KEY_BY_ID: Record<number, QueueKey> = {

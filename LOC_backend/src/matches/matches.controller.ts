@@ -4,6 +4,7 @@ import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { AuthzService } from '../auth/authz.service';
 import type { AuthenticatedRequest } from '../auth/clerk-auth.guard';
 import { MatchesService } from './matches.service';
+import { MatchHistoryService } from './match-history.service';
 
 const SyncMatchesSchema = z.object({
   count: z.number().int().min(1).max(100).optional(),
@@ -18,6 +19,7 @@ const ListMatchesQuerySchema = z.object({
 export class MatchesController {
   constructor(
     private readonly matchesService: MatchesService,
+    private readonly matchHistory: MatchHistoryService,
     private readonly authz: AuthzService,
   ) {}
 
@@ -40,7 +42,7 @@ export class MatchesController {
     query: z.infer<typeof ListMatchesQuerySchema>,
   ) {
     await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
-    return this.matchesService.listByAccount(
+    return this.matchHistory.listByAccount(
       accountId,
       query.page,
       query.pageSize,
@@ -48,8 +50,11 @@ export class MatchesController {
   }
 
   @Get(':matchId')
-  async findOne(@Req() request: AuthenticatedRequest, @Param('matchId') matchId: string) {
+  async findOne(
+    @Req() request: AuthenticatedRequest,
+    @Param('matchId') matchId: string,
+  ) {
     await this.authz.assertMatchParticipant(matchId, request.clerkUserId);
-    return this.matchesService.findOne(matchId);
+    return this.matchHistory.findOne(matchId);
   }
 }
