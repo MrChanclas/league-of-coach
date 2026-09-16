@@ -3,6 +3,7 @@ import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { AuthzService } from '../auth/authz.service';
 import { DiscordService } from '../discord/discord.service';
+import { GoalsService } from '../goals/goals.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 describe('UsersController', () => {
@@ -20,6 +21,10 @@ describe('UsersController', () => {
         },
         {
           provide: DiscordService,
+          useValue: {},
+        },
+        {
+          provide: GoalsService,
           useValue: {},
         },
       ],

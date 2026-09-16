@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { DiscordService } from '../discord/discord.service';
+import { GoalsService } from '../goals/goals.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 describe('UsersService', () => {
@@ -19,9 +20,12 @@ describe('UsersService', () => {
     championLearning: {
       findMany: jest.fn(),
     },
-    goal: {
-      findMany: jest.fn(),
-    },
+  };
+
+  // UsersService delega los objetivos en GoalsService (que les calcula el
+  // progreso), así que el dashboard ya no lee la tabla goal directamente.
+  const goalsMock = {
+    listByAccount: jest.fn(),
   };
 
   const discordMock = {
@@ -42,6 +46,10 @@ describe('UsersService', () => {
         {
           provide: DiscordService,
           useValue: discordMock,
+        },
+        {
+          provide: GoalsService,
+          useValue: goalsMock,
         },
       ],
     }).compile();
@@ -194,7 +202,7 @@ describe('UsersService', () => {
       },
     ]);
 
-    prismaMock.goal.findMany.mockResolvedValue([
+    goalsMock.listByAccount.mockResolvedValue([
       {
         id: 'goal-1',
         type: 'rank',
@@ -207,6 +215,11 @@ describe('UsersService', () => {
 
     const result = await service.getUserDashboard('user-1');
 
+    if (!result) {
+      throw new Error(
+        'El dashboard de un usuario existente no debería ser null.',
+      );
+    }
     expect(result.user).toMatchObject({
       id: 'user-1',
       name: 'Cris',
