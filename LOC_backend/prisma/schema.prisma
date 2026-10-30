@@ -21,51 +21,53 @@ model User {
 }
 
 model LolAccount {
-  id                String             @id @default(cuid())
-  summoner          String
-  tag               String
-  server            String
-  puuid             String             @unique
-  profileIconId     Int                @default(0)
-  summonerLevel     Int                @default(0)
-  soloTier          String             @default("Unranked")
-  soloDivision      String             @default("Unranked")
-  soloLp            Int                @default(0)
-  flexTier          String             @default("Unranked")
-  flexDivision      String             @default("Unranked")
-  flexLp            Int                @default(0)
+  id            String   @id @default(cuid())
+  summoner      String
+  tag           String
+  server        String
+  puuid         String   @unique
+  profileIconId Int      @default(0)
+  summonerLevel Int      @default(0)
+  soloTier      String   @default("Unranked")
+  soloDivision  String   @default("Unranked")
+  soloLp        Int      @default(0)
+  flexTier      String   @default("Unranked")
+  flexDivision  String   @default("Unranked")
+  flexLp        Int      @default(0)
   // Ranked wins/losses as Riot's league-v4 reports them. Unlike anything
   // counted from stored matches, these don't depend on the match list Riot
   // serves for this account, which can stop well short of the season start
   // even though the games exist — so they are what reveals that the stored
   // history is still missing games.
-  soloWins          Int                @default(0)
-  soloLosses        Int                @default(0)
-  flexWins          Int                @default(0)
-  flexLosses        Int                @default(0)
-  userId            String
-  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt         DateTime           @default(now())
+  soloWins      Int      @default(0)
+  soloLosses    Int      @default(0)
+  flexWins      Int      @default(0)
+  flexLosses    Int      @default(0)
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
 
   // Progress of the season-wide match backfill (see matches.service.ts).
   // `seasonBackfillCursor` is the gameCreation of the oldest game already
   // swept back to; `seasonBackfillDoneFor` holds the season start date for
   // which that sweep reached the end, so a new season (or a gap that opens
   // up when a lot of games are played between syncs) reopens it.
-  seasonBackfillCursor  DateTime?
-  seasonBackfillDoneFor DateTime?
+  seasonBackfillCursor     DateTime?
+  seasonBackfillDoneFor    DateTime?
   // Fallback for when Riot's match list for this account ends well after the
   // season start while its ranked wins + losses say games are still missing:
   // those games are looked for in the match lists of frequent teammates
   // instead (see recoverSeasonGames in matches.service.ts). Holds the season
   // start once that search has finished for the season.
-  seasonRecoveryDoneFor DateTime?
-  learnings         ChampionLearning[]
-  goals             Goal[]
-  matchParticipants MatchParticipant[]
-  rankSnapshots     RankSnapshot[]
-  championPool      ChampionPool?
+  seasonRecoveryDoneFor    DateTime?
+  learnings                ChampionLearning[]
+  goals                    Goal[]
+  matchParticipants        MatchParticipant[]
+  rankSnapshots            RankSnapshot[]
+  championPool             ChampionPool?
   seasonRecoveryCandidates SeasonRecoveryCandidate[]
+
+  @@index([userId])
 }
 
 // One teammate whose match list is being searched for games missing from an
@@ -99,21 +101,23 @@ model RankSnapshot {
   accountId  String
   account    LolAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
   capturedAt DateTime   @default(now())
+
+  @@index([accountId, queueType, capturedAt])
 }
 
 model ChampionLearning {
-  id        String            @id @default(cuid())
+  id        String     @id @default(cuid())
   champion  String
   role      String
-  games     Int               @default(0)
-  wins      Int               @default(0)
-  kdaK      Float             @default(0)
-  kdaD      Float             @default(0)
-  kdaA      Float             @default(0)
-  csMin     Float             @default(0)
+  games     Int        @default(0)
+  wins      Int        @default(0)
+  kdaK      Float      @default(0)
+  kdaD      Float      @default(0)
+  kdaA      Float      @default(0)
+  csMin     Float      @default(0)
   accountId String
-  account   LolAccount        @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  createdAt DateTime          @default(now())
+  account   LolAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
 
   @@unique([accountId, champion, role])
 }
@@ -139,6 +143,8 @@ model Goal {
   targetWinrate  Float? // 0..1
   targetChampion String?
   targetKda      Float?
+
+  @@index([accountId])
 }
 
 // Per-champion strategy guide (build/runes-agnostic identity + playstyle
@@ -197,6 +203,8 @@ model Match {
   queueId      Int
   participants MatchParticipant[]
   createdAt    DateTime           @default(now())
+
+  @@index([gameCreation])
 }
 
 model MatchParticipant {
@@ -269,4 +277,8 @@ model MatchParticipant {
   teleportCasts Int?
 
   @@unique([matchId, puuid])
+  // Postgres doesn't index foreign keys on its own, and nearly every stats
+  // query filters participants by account (or by puuid for shared accounts).
+  @@index([accountId])
+  @@index([puuid])
 }
