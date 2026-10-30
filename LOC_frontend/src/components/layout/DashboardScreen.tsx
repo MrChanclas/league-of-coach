@@ -33,6 +33,8 @@ export function DashboardScreen({
   isLoadingDashboard,
   accountForm,
   matches,
+  hasOlderMatches,
+  historyWindowDays,
   statsSummary,
   streak,
   lanes,
@@ -202,6 +204,8 @@ export function DashboardScreen({
           <MatchesTabPanel
             activeAccount={activeAccount}
             matches={matches}
+            hasOlderMatches={hasOlderMatches}
+            historyWindowDays={historyWindowDays}
             rankHistory={rankHistory}
             ddragonVersion={ddragonVersion}
           />

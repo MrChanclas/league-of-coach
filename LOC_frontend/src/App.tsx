@@ -261,6 +261,8 @@ function App() {
       isLoadingDashboard={dashboardQuery.isLoading}
       accountForm={accountForm}
       matches={matches}
+      hasOlderMatches={matchesQuery.data?.hasOlderMatches ?? false}
+      historyWindowDays={matchesQuery.data?.windowDays ?? null}
       statsSummary={statsSummary}
       streak={streak}
       lanes={lanes}

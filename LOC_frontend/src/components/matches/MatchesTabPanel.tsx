@@ -8,6 +8,8 @@ import type { MatchesTabPanelProps, QueueFilter } from '../../types/components'
 export function MatchesTabPanel({
   activeAccount,
   matches,
+  hasOlderMatches,
+  historyWindowDays,
   rankHistory,
   ddragonVersion,
 }: MatchesTabPanelProps) {
@@ -116,7 +118,12 @@ export function MatchesTabPanel({
       </div>
 
       <section className="matches-panel">
-        {filteredMatches.length === 0 ? (
+        {matches.length === 0 && hasOlderMatches ? (
+          <p className="matches-empty">
+            No existen partidas recientes. El historial muestra tus partidas clasificatorias de los últimos{' '}
+            {historyWindowDays} días; tus estadísticas siguen contando toda la temporada.
+          </p>
+        ) : filteredMatches.length === 0 ? (
           <p className="matches-empty">No hay partidas sincronizadas que coincidan con este filtro.</p>
         ) : (
           filteredMatches.map((entry) => (

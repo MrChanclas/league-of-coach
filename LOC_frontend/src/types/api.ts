@@ -27,6 +27,10 @@ export type PlatformStatsResponse = {
 
 export type MatchPageResponse = {
   items: MatchParticipantEntry[]
+  /** How many days back the history list reaches (the sync still covers the whole season). */
+  windowDays: number
+  /** True when the window is empty but the account does have older ranked games stored. */
+  hasOlderMatches: boolean
 }
 
 export type SavePoolMutationInput = {

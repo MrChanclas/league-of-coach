@@ -17,6 +17,13 @@ export const RANKED_QUEUE_IDS = [QUEUE_IDS.SOLO, QUEUE_IDS.FLEX] as const;
  */
 export const HISTORY_QUEUE_IDS: number[] = [...RANKED_QUEUE_IDS];
 
+/**
+ * Cuánto hacia atrás llega el historial de partidas (pestaña Partidas y
+ * preview del home). Solo recorta la lista: la sync sigue trayendo la
+ * temporada completa, porque las stats de Pool Champ y Aprendizaje la usan.
+ */
+export const HISTORY_WINDOW_DAYS = 90;
+
 export type QueueKey = 'solo' | 'flex';
 
 export const QUEUE_KEY_BY_ID: Record<number, QueueKey> = {

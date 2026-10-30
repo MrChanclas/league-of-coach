@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RankSnapshotsService } from '../rank-snapshots/rank-snapshots.service';
 import {
   HISTORY_QUEUE_IDS,
+  HISTORY_WINDOW_DAYS,
   QUEUE_KEY_BY_ID,
   type QueueKey,
 } from '../common/queue';
@@ -21,7 +22,17 @@ export class MatchHistoryService {
   ) {}
 
   async listByAccount(accountId: string, page: number, pageSize: number) {
-    const where = { accountId, match: { queueId: { in: HISTORY_QUEUE_IDS } } };
+    const since = new Date(
+      Date.now() - HISTORY_WINDOW_DAYS * 24 * 60 * 60 * 1000,
+    );
+    const rankedWhere = {
+      accountId,
+      match: { queueId: { in: HISTORY_QUEUE_IDS } },
+    };
+    const where = {
+      accountId,
+      match: { ...rankedWhere.match, gameCreation: { gte: since } },
+    };
 
     const [items, total] = await Promise.all([
       this.prisma.matchParticipant.findMany({
@@ -60,7 +71,21 @@ export class MatchHistoryService {
       lpDelta: lpDeltaByItemId.get(item.id) ?? null,
     }));
 
-    return { items: enrichedItems, total, page, pageSize };
+    // Only worth a second query when the window came back empty: it tells
+    // "no recent games" apart from "nothing synced yet" for the empty state.
+    const hasOlderMatches =
+      total === 0
+        ? (await this.prisma.matchParticipant.count({ where: rankedWhere })) > 0
+        : false;
+
+    return {
+      items: enrichedItems,
+      total,
+      page,
+      pageSize,
+      windowDays: HISTORY_WINDOW_DAYS,
+      hasOlderMatches,
+    };
   }
 
   private computeDamagePercentile(value: number, all: number[]) {

@@ -124,6 +124,8 @@ export type DashboardScreenProps = {
   isLoadingDashboard: boolean
   accountForm: AccountForm
   matches: MatchParticipantEntry[]
+  hasOlderMatches: boolean
+  historyWindowDays: number | null
   statsSummary: AccountStatsSummary | null
   streak: StreakInfo | null
   lanes: LaneEntry[]
@@ -267,6 +269,8 @@ export type PoolChampMiniCardProps = {
 export type MatchesTabPanelProps = {
   activeAccount?: AccountCard
   matches: MatchParticipantEntry[]
+  hasOlderMatches: boolean
+  historyWindowDays: number | null
   rankHistory: RankSnapshotEntry[]
   ddragonVersion: string | null
 }
