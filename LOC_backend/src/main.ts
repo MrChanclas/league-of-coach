@@ -2,13 +2,16 @@ import './instrument';
 
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
+import { TRUSTED_PROXY_HOPS } from './common/rate-limit';
 import { DiscordService } from './discord/discord.service';
 
 const DEFAULT_DEV_FRONTEND_URL = 'http://localhost:5173';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.set('trust proxy', TRUSTED_PROXY_HOPS);
 
   const frontendUrl = process.env.FRONTEND_URL;
   if (!frontendUrl) {
