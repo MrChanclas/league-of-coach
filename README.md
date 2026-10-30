@@ -73,5 +73,5 @@ Para correr lo mismo en local:
 
 ```bash
 cd LOC_backend  && pnpm exec eslint "{src,test}/**/*.ts" && pnpm run test && pnpm run build
-cd LOC_frontend && pnpm run lint && pnpm run build
+cd LOC_frontend && pnpm run lint && pnpm run test && pnpm run build
 ```

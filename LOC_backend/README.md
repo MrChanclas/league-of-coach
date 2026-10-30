@@ -1,98 +1,73 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# League of Coach: backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST de League of Coach, hecha con NestJS 11, Prisma 7 y PostgreSQL. Gestiona las cuentas de Riot de cada usuario, sincroniza su historial de partidas desde la API de Riot y calcula las estadísticas, lecciones, objetivos y recomendaciones de pool que muestra el frontend.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+## Puesta en marcha
 
 ```bash
-$ pnpm install
+cp .env.example .env          # completar los valores (ver abajo)
+docker compose up -d          # Postgres local, con las credenciales POSTGRES_* del .env
+pnpm install
+pnpm exec prisma migrate dev  # aplica las migraciones y genera el cliente
+pnpm run start:dev            # http://localhost:4100 con el .env de ejemplo
 ```
 
-## Compile and run the project
+## Variables de entorno
+
+[.env.example](.env.example) documenta cada variable. Las imprescindibles para levantar la API en local son:
+
+| Variable | Para qué |
+|---|---|
+| `DATABASE_URL` | Conexión a Postgres. `DATABASE_POOL_MAX` ajusta las conexiones por instancia. |
+| `CLERK_SECRET_KEY` | Verifica el token de sesión que manda el frontend. |
+| `RIOT_API_KEY`, `RIOT_DEFAULT_SERVER` | Llamadas a la API de Riot. |
+| `CURRENT_SEASON_START_DATE` | Inicio de la temporada actual. Riot no lo publica, así que se actualiza a mano una vez por año. |
+| `FRONTEND_URL` | Orígenes permitidos por CORS, separados por coma. |
+| `INTERNAL_POLL_SECRET` | Secreto de los endpoints que llama Cloud Scheduler. |
+
+`SENTRY_DSN` y los webhooks de Discord son opcionales en local.
+
+## Scripts
+
+| Comando | Qué hace |
+|---|---|
+| `pnpm run start:dev` | API con recarga automática. |
+| `pnpm run test` | Tests unitarios con Jest (`src/**/*.spec.ts`). |
+| `pnpm run test:e2e` | Test end-to-end de `test/`. Necesita una base de datos. |
+| `pnpm exec eslint "{src,test}/**/*.ts"` | Lint sin autocorregir, igual que en CI. `pnpm run lint` corrige solo. |
+| `pnpm run build` | Compila a `dist/`. |
+| `pnpm exec prisma migrate dev --name <cambio>` | Crea una migración después de editar `prisma/schema.prisma`. |
+
+## Estructura
+
+Cada carpeta de `src/` es un módulo de Nest con su controlador, servicio y módulo:
+
+| Módulo | Responsabilidad |
+|---|---|
+| `auth` | Guard global de Clerk (`@Public()` lo omite), `AuthzService` para validar la propiedad de las cuentas y `InternalSecretGuard`. |
+| `users` | Usuario interno asociado a la identidad de Clerk, y el payload del dashboard. |
+| `accounts` | Cuentas de Riot vinculadas: búsqueda, alta, baja e historial de rango. |
+| `riot` | Cliente de la API de Riot con throttle propio y reintentos ante 429. |
+| `matches` | Sincronización de partidas: ingesta, backfill de la temporada, recuperación de partidas compartidas e historial (últimos 90 días). |
+| `rank-snapshots` | Registro periódico del rango de cada cuenta. |
+| `stats` | Estadísticas por cuenta, rol, campeón y cola. |
+| `learning` | Lecciones generadas desde `data/lessons-knowledge-base.json` y errores detectados. |
+| `goals` | Objetivos con progreso, brecha y ritmo. |
+| `champion-pools` | Pool Champ: pool por línea, recomendación y rendimiento por campeón. |
+| `champion-guides` | Guías por campeón (`data/manual-guides/`) y versión de Data Dragon. |
+| `feedback`, `discord` | Feedback del login y alertas a Discord. Además, el filtro global de excepciones. |
+| `common` | Lógica pura y constantes compartidas: colas, temporada, orden de rangos, benchmarks por rol, rate limit. |
+
+## Seguridad y límites
+
+- Todas las rutas exigen un token de Clerk, salvo las marcadas con `@Public()`.
+- Un throttle global limita a 120 solicitudes por minuto por IP (`common/rate-limit.ts`). La app confía en un salto de proxy, el de Cloud Run, para obtener la IP real del cliente.
+- `POST /internal/poll-ranks` y `POST /internal/continue-backfills` solo los llama Cloud Scheduler: requieren el header `X-Internal-Secret` y no tienen throttle.
+
+## Scripts de mantenimiento
+
+`scripts/backfill-role-metrics.ts` vuelve a descargar las partidas ya guardadas para completar campos de rendimiento que se agregaron después. Solo actualiza filas existentes, así que se puede correr más de una vez:
 
 ```bash
-# development
-$ pnpm run dev
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+npx ts-node -r tsconfig-paths/register scripts/backfill-role-metrics.ts
 ```
-
-## Run tests
-
-```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
