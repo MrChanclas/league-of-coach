@@ -1,25 +1,7 @@
 import { getChampionIconUrl, getItemIconUrl } from '../../lib/riotAssets'
 import { formatGameDuration, formatRelativeTime } from '../../lib/hexforge'
-import { QUEUE_IDS } from '../../lib/constants'
-import type { MatchParticipantEntry } from '../../types/dashboard'
-
-type MatchRowProps = {
-  entry: MatchParticipantEntry
-  ddragonVersion: string | null
-  showAgo?: boolean
-}
-
-const QUEUE_LABELS: Record<number, string> = {
-  [QUEUE_IDS.SOLO]: 'CLASIF. SOLO',
-  [QUEUE_IDS.FLEX]: 'CLASIF. FLEXIBLE',
-  400: 'NORMAL',
-  430: 'NORMAL',
-  450: 'ARAM',
-}
-
-function getQueueLabel(queueId: number) {
-  return QUEUE_LABELS[queueId] ?? 'PARTIDA'
-}
+import { getQueueLabel } from '../../lib/matches'
+import type { MatchRowProps } from '../../types/components'
 
 export function MatchRow({ entry, ddragonVersion, showAgo = false }: MatchRowProps) {
   const color = entry.win ? 'var(--hf-win-blue)' : 'var(--hf-loss)'

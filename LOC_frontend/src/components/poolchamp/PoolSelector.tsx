@@ -4,82 +4,15 @@ import {
   FILL_SLOT,
   MAX_CHAMPIONS_PER_ROLE,
   MIN_CHAMPIONS_PER_ROLE,
-  POOL_ROLE_KEYS,
+  POOL_ROLE_FILTERS,
   POOL_ROLE_LABELS,
   POOL_SLOT_LABELS,
-  getPoolSlotCaption,
-  getPoolSlots,
-  poolEntryKey,
-  resolvePoolSlot,
-} from '../../lib/poolLabels'
-import type {
-  PoolEntry,
-  PoolRecommendation,
-  PoolRoleKey,
-  PoolRoleProfile,
-  PoolSlotKey,
-  ReplacePoolEntryInput,
-  RosterChampion,
-} from '../../types/dashboard'
-
-type SlotValue = {
-  championKey: string
-  state: 'main' | 'secondary' | 'testing'
-  note?: string
-  addedBy: 'player' | 'coach'
-}
-type SlotMap = Record<PoolSlotKey, SlotValue[]>
-type RoleStatus = 'empty' | 'incomplete' | 'valid'
-
-type SuggestedChampion = {
-  champion: RosterChampion
-  ribbon: 'CUBRE HUECO' | 'TU ESTILO' | 'LECCIÓN ABIERTA' | null
-}
-
-type PoolSelectorProps = {
-  roster: RosterChampion[]
-  ddragonVersion: string | null
-  initialEntries: PoolEntry[]
-  roleProfile: PoolRoleProfile
-  playedChampionKeys: Set<string>
-  // Claves de poolEntryKey (campeón + línea) con una lección abierta.
-  championsWithOpenLesson: Set<string>
-  recommendation: PoolRecommendation | undefined
-  isRecommendationLoading: boolean
-  isSaving: boolean
-  onSave: (entries: ReplacePoolEntryInput[]) => Promise<boolean>
-  onCancel: () => void
-}
-
-const ROLE_FILTERS: ('ALL' | PoolRoleKey)[] = ['ALL', ...POOL_ROLE_KEYS]
-const SUGGESTED_LIMIT = 8
-
-function emptySlotMap(): SlotMap {
-  return { TOP: [], JUNGLE: [], MIDDLE: [], BOTTOM: [], UTILITY: [], FILL: [] }
-}
-
-function buildInitialSlots(entries: PoolEntry[], roleProfile: PoolRoleProfile): SlotMap {
-  const slots = emptySlotMap()
-  for (const entry of [...entries].sort((a, b) => a.position - b.position)) {
-    slots[resolvePoolSlot(entry.role, roleProfile)].push({
-      championKey: entry.championKey,
-      state: entry.state,
-      note: entry.note ?? undefined,
-      addedBy: entry.addedBy,
-    })
-  }
-  return slots
-}
-
-function roleStatus(count: number): RoleStatus {
-  if (count === 0) return 'empty'
-  if (count < MIN_CHAMPIONS_PER_ROLE) return 'incomplete'
-  return 'valid'
-}
-
-function pickInitialActiveRole(slots: SlotMap, slotKeys: PoolSlotKey[]): PoolSlotKey {
-  return slotKeys.find((role) => slots[role].length === 0) ?? slotKeys[0]
-}
+  POOL_SUGGESTED_LIMIT,
+} from '../../constants'
+import { getPoolSlotCaption, getPoolSlots, poolEntryKey, resolvePoolSlot } from '../../lib/poolLabels'
+import { buildInitialSlots, emptySlotMap, getRoleStatus, pickInitialActiveRole } from '../../lib/poolSlots'
+import type { PoolRoleKey, PoolSlotKey, ReplacePoolEntryInput } from '../../types/dashboard'
+import type { PoolSelectorProps, SlotMap, SuggestedChampion } from '../../types/components'
 
 export function PoolSelector({
   roster,
@@ -170,7 +103,7 @@ export function PoolSelector({
     }
 
     for (const champion of roster) {
-      if (list.length >= SUGGESTED_LIMIT) break
+      if (list.length >= POOL_SUGGESTED_LIMIT) break
       if (!championsWithOpenLesson.has(poolEntryKey(champion.championKey, activeRole))) continue
       if (!isAvailable(champion.championKey)) continue
       list.push({ champion, ribbon: 'LECCIÓN ABIERTA' })
@@ -183,13 +116,13 @@ export function PoolSelector({
       .filter((champion) => resolvePoolSlot(champion.role, roleProfile) === activeRole)
       .sort((a, b) => Number(playedChampionKeys.has(b.championKey)) - Number(playedChampionKeys.has(a.championKey)))
     for (const champion of fillers) {
-      if (list.length >= SUGGESTED_LIMIT) break
+      if (list.length >= POOL_SUGGESTED_LIMIT) break
       if (!isAvailable(champion.championKey)) continue
       list.push({ champion, ribbon: null })
       seen.add(champion.championKey)
     }
 
-    return list.slice(0, SUGGESTED_LIMIT)
+    return list.slice(0, POOL_SUGGESTED_LIMIT)
   }, [recommendation, championsWithOpenLesson, roster, rosterByKey, activeKeys, activeRole, roleProfile, playedChampionKeys])
 
   const filteredRoster = useMemo(() => {
@@ -202,7 +135,7 @@ export function PoolSelector({
   }, [roster, roleFilter, onlyPlayed, playedChampionKeys, search])
 
   const filledCount = slotKeys.reduce((sum, role) => sum + slots[role].length, 0)
-  const hasIncompleteRole = slotKeys.some((role) => roleStatus(slots[role].length) === 'incomplete')
+  const hasIncompleteRole = slotKeys.some((role) => getRoleStatus(slots[role].length) === 'incomplete')
   const canSave = filledCount > 0 && !hasIncompleteRole && !isSaving
 
   async function handleSave() {
@@ -258,7 +191,7 @@ export function PoolSelector({
             {slotKeys.map((role) => {
               const entries = slots[role]
               const count = entries.length
-              const status = roleStatus(count)
+              const status = getRoleStatus(count)
               const isActive = activeRole === role
               return (
                 <div
@@ -340,7 +273,7 @@ export function PoolSelector({
           </div>
 
           <div className="pool-filter-chips">
-            {ROLE_FILTERS.map((filter) => (
+            {POOL_ROLE_FILTERS.map((filter) => (
               <button
                 key={filter}
                 type="button"

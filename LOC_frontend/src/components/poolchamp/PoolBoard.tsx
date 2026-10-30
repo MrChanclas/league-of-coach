@@ -6,38 +6,21 @@ import {
   PERFORMANCE_TIP_GOOD_MESSAGE,
   POOL_SLOT_LABELS,
   POOL_STATE_LABELS,
+} from '../../constants'
+import {
   getPoolSlotCaption,
   getPoolSlots,
+  formatPoolProvenance,
+  formatPoolWinrate,
   poolEntryKey,
 } from '../../lib/poolLabels'
-import type { ChampionPerformanceTip, PoolSlotKey, PoolView } from '../../types/dashboard'
-
-type PoolBoardProps = {
-  poolView: PoolView
-  ddragonVersion: string | null
-  // Claves de poolEntryKey (campeón + línea) con una lección abierta.
-  championsWithOpenLesson: Set<string>
-  onOpenLesson: (championKey: string, role: PoolSlotKey) => void
-  onEditPool: () => void
-  onAddOutsider: (championKey: string, role: PoolSlotKey) => void
-}
-
-const MIN_GAMES_FOR_WINRATE = 3
-
-function formatWinrate(gamesPlayed: number, winrate: number) {
-  if (gamesPlayed < MIN_GAMES_FOR_WINRATE) return { label: '—', className: 'pool-wr pool-wr--muted' }
-  const pct = Math.round(winrate * 100)
-  return { label: `${pct}%`, className: pct >= 50 ? 'pool-wr pool-wr--win' : 'pool-wr pool-wr--loss' }
-}
+import type { PerformanceTipProps, PoolBoardProps } from '../../types/components'
 
 /** Per-champion "seguí así o cambiá" note — null once there isn't enough data yet to say either way. */
 function PerformanceTip({
   performance,
   onAddSubstitute,
-}: {
-  performance: ChampionPerformanceTip
-  onAddSubstitute: (championKey: string) => void
-}) {
+}: PerformanceTipProps) {
   if (performance.status === 'insufficient_data') return null
   if (performance.status === 'good') {
     return <span className="pool-performance-tip pool-performance-tip--good">✓ {PERFORMANCE_TIP_GOOD_MESSAGE}</span>
@@ -56,14 +39,6 @@ function PerformanceTip({
       )}
     </div>
   )
-}
-
-function formatProvenance(pool: PoolView['pool']) {
-  if (!pool) return ''
-  const date = new Date(pool.createdAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })
-  return pool.source === 'coach'
-    ? `Armada con la recomendación del coach el ${date}`
-    : `Armada a mano el ${date}`
 }
 
 export function PoolBoard({
@@ -87,7 +62,7 @@ export function PoolBoard({
         <div>
           <div className="page-head-eyebrow">POOL CHAMP · {entries.length} CAMPEONES</div>
           <h1>Tu pool</h1>
-          <p>{formatProvenance(pool)}</p>
+          <p>{formatPoolProvenance(pool)}</p>
         </div>
         <div className="pool-board-actions">
           <button type="button" className="secondary-btn" onClick={onEditPool}>
@@ -120,7 +95,7 @@ export function PoolBoard({
 
               <div className="pool-role-group-rows">
                 {group.entries.map((entry) => {
-                  const wr = formatWinrate(entry.gamesPlayed, entry.winrate)
+                  const wr = formatPoolWinrate(entry.gamesPlayed, entry.winrate)
                   const hasLesson = championsWithOpenLesson.has(poolEntryKey(entry.championKey, entry.role))
                   return (
                     <div
@@ -209,7 +184,7 @@ export function PoolBoard({
             <div className="pool-outsiders-card">
               <div className="pool-outsiders-title">FUERA DEL POOL</div>
               {outsiders.map((outsider) => {
-                const wr = formatWinrate(outsider.gamesPlayed, outsider.winrate)
+                const wr = formatPoolWinrate(outsider.gamesPlayed, outsider.winrate)
                 return (
                   <div key={poolEntryKey(outsider.championKey, outsider.role)} className="pool-outsider-block">
                     <div className="pool-outsider-row">

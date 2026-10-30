@@ -1,35 +1,5 @@
-import type {
-  PoolEntryState,
-  PoolRecommendationLabel,
-  PoolRoleKey,
-  PoolRoleProfile,
-  PoolSlotKey,
-} from '../types/dashboard'
-
-// Distinct wording from goalLabels.ts's ROLE_LABELS — see handoff_loc/07-pool-champ.md
-// ("Superior, Jungla, Medio, Tirador, Soporte" for the five fixed pool slots).
-export const POOL_ROLE_KEYS: PoolRoleKey[] = ['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY']
-
-// A role counts as a valid pool once it has at least this many champions, and
-// tops out at this many so the "pool" stays a shortlist, not the whole
-// roster. A role can also stay untouched (0) without invalidating the rest.
-export const MIN_CHAMPIONS_PER_ROLE = 5
-export const MAX_CHAMPIONS_PER_ROLE = 10
-
-export const POOL_ROLE_LABELS: Record<PoolRoleKey, string> = {
-  TOP: 'Superior',
-  JUNGLE: 'Jungla',
-  MIDDLE: 'Medio',
-  BOTTOM: 'Tirador',
-  UTILITY: 'Soporte',
-}
-
-export const FILL_SLOT = 'FILL' as const
-
-export const POOL_SLOT_LABELS: Record<PoolSlotKey, string> = {
-  ...POOL_ROLE_LABELS,
-  FILL: 'Fill',
-}
+import { FILL_SLOT, POOL_MIN_GAMES_FOR_WINRATE } from '../constants'
+import type { PoolRoleKey, PoolRoleProfile, PoolSlotKey, PoolView } from '../types/dashboard'
 
 // Mismas reglas que champion-pools/pool-roles.ts en el backend: el pool solo
 // ofrece la línea principal, la secundaria y un slot FILL para todo lo demás.
@@ -56,20 +26,16 @@ export function getPoolSlotCaption(slot: PoolSlotKey, profile: PoolRoleProfile |
   return slot === profile?.primaryRole ? 'Línea principal' : 'Línea secundaria'
 }
 
-export const POOL_STATE_LABELS: Record<PoolEntryState, string> = {
-  main: 'MAIN',
-  secondary: 'SECUNDARIO',
-  testing: 'EN PRUEBA',
+export function formatPoolWinrate(gamesPlayed: number, winrate: number) {
+  if (gamesPlayed < POOL_MIN_GAMES_FOR_WINRATE) return { label: '—', className: 'pool-wr pool-wr--muted' }
+  const pct = Math.round(winrate * 100)
+  return { label: `${pct}%`, className: pct >= 50 ? 'pool-wr pool-wr--win' : 'pool-wr pool-wr--loss' }
 }
 
-export const RECOMMENDATION_LABELS: Record<PoolRecommendationLabel, string> = {
-  YA_TE_RINDE: 'YA TE RINDE',
-  TU_ESTILO: 'TU ESTILO',
-  CUBRE_HUECO: 'CUBRE HUECO',
+export function formatPoolProvenance(pool: PoolView['pool']) {
+  if (!pool) return ''
+  const date = new Date(pool.createdAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })
+  return pool.source === 'coach'
+    ? `Armada con la recomendación del coach el ${date}`
+    : `Armada a mano el ${date}`
 }
-
-// Copy for the per-champion "seguí así o cambiá" tip (winrate > 49% = bien,
-// <= 49% = mal) — kept in sync with BAD_WINRATE_THRESHOLD in the backend's
-// champion-performance.ts.
-export const PERFORMANCE_TIP_GOOD_MESSAGE = 'Sigue utilizándolo'
-export const PERFORMANCE_TIP_BAD_MESSAGE = 'Necesitas mejorar'

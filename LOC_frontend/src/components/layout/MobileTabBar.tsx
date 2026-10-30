@@ -1,24 +1,11 @@
+import { MOBILE_TAB_ITEMS } from '../../constants'
 import { LockGlyph } from '../shared/LockGlyph'
-import type { TabKey } from '../../types/dashboard'
-
-type MobileTabBarProps = {
-  activeTab: TabKey
-  onTabChange: (tab: TabKey) => void
-  lockedTabs: TabKey[]
-}
-
-const TABS: { key: TabKey; label: string; tour?: string }[] = [
-  { key: 'cuentas', label: 'Cuentas' },
-  { key: 'partidas', label: 'Partidas', tour: 'nav-partidas' },
-  { key: 'aprendizaje', label: 'Aprendizaje', tour: 'nav-aprendizaje' },
-  { key: 'pool-champ', label: 'Pool', tour: 'nav-pool-champ' },
-  { key: 'objetivos', label: 'Objetivos', tour: 'nav-objetivos' },
-]
+import type { MobileTabBarProps, TabGlyphProps } from '../../types/components'
 
 // Glifos geométricos propios, sin librería de iconos — ver handoff_loc/05-movil.md.
 // El peso de trazo (~1.6px) y el rombo de Aprendizaje son lo único que hay
 // que conservar si algún día se reemplazan por una librería real.
-function TabGlyph({ tab, active }: { tab: TabKey; active: boolean }) {
+function TabGlyph({ tab, active }: TabGlyphProps) {
   const stroke = active ? 'var(--hf-gold)' : 'var(--hf-muted-4)'
   const fill = stroke
 
@@ -68,7 +55,7 @@ function TabGlyph({ tab, active }: { tab: TabKey; active: boolean }) {
 export function MobileTabBar({ activeTab, onTabChange, lockedTabs }: MobileTabBarProps) {
   return (
     <nav className="mobile-tabbar" role="tablist" aria-label="Navegación principal">
-      {TABS.map((tab) => {
+      {MOBILE_TAB_ITEMS.map((tab) => {
         const active = tab.key === activeTab
         return (
           <button

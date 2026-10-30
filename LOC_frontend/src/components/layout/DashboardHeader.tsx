@@ -1,34 +1,7 @@
 import { useState } from 'react'
 import { BottomSheet } from '../shared/BottomSheet'
-import type { AccountCard } from '../../types/dashboard'
-
-type DashboardHeaderProps = {
-  userAccounts: AccountCard[]
-  currentAccountId: string
-  activeAccount?: AccountCard
-  onSetCurrentAccountId: (id: string) => void
-  onOpenAccountModal: () => void
-  onSyncMatches: () => void
-  isSyncing: boolean
-  lastSyncedLabel: string
-}
-
-function MobileBrandIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 96 96" className="mobile-header-mark" aria-hidden>
-      <path d="M13 46 L42 46" stroke="#585d67" strokeWidth="8" strokeLinecap="round" />
-      <path d="M68 40 L83 40" stroke="#585d67" strokeWidth="8" strokeLinecap="round" />
-      <path
-        d="M16 74 C30 72 38 68 44 65 C50 62 52 54 58 42 C62 33 67 26 71 20"
-        fill="none"
-        stroke="#c2a05a"
-        strokeWidth="9"
-        strokeLinecap="round"
-      />
-      <path d="M82 8 L62 16 L72 31 Z" fill="#e8cb8b" />
-    </svg>
-  )
-}
+import { LocMark } from '../shared/LocMark'
+import type { DashboardHeaderProps } from '../../types/components'
 
 export function DashboardHeader({
   userAccounts,
@@ -56,7 +29,7 @@ export function DashboardHeader({
 
   return (
     <header className="forge-header">
-      <MobileBrandIcon />
+      <LocMark size={24} weight="bold" className="mobile-header-mark" />
       <span className="header-context">{contextLabel}</span>
 
       {activeAccount && (

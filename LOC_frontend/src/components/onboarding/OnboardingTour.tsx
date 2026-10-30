@@ -1,19 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom'
-import { COACH_STEPS, WELCOME_STEPS } from './onboardingCopy'
+import { COACH_STEPS, DONE_STEP, LAST_COACH_STEP, WELCOME_STEPS } from '../../constants'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
-
-type OnboardingTourProps = {
-  // Se llama al cerrar el recorrido por cualquier vía: Esc, clic afuera,
-  // "Saltar", o las dos acciones del modal de cierre. El padre persiste que
-  // el onboarding ya se vio.
-  onClose: () => void
-  // CTA "Cargar mis partidas" del modal de cierre — además de cerrar, dispara la sincronización real.
-  onLoadMatches: () => void
-}
-
-const LAST_COACH_STEP = COACH_STEPS.length // 5
-const DONE_STEP = LAST_COACH_STEP + 1 // 6
+import { LocMark } from '../shared/LocMark'
+import type { OnboardingTourProps, TooltipPosition } from '../../types/components'
 
 // El mismo data-tour puede existir dos veces a la vez (sidebar de escritorio
 // + MobileTabBar, o el botón de sincronía de escritorio + el compacto de
@@ -28,27 +18,10 @@ function findVisibleAnchor(selector: string): HTMLElement | null {
   return null
 }
 
-function LocMark() {
-  return (
-    <svg width="30" height="30" viewBox="0 0 96 96" style={{ flex: 'none' }} aria-hidden="true">
-      <path d="M13 46 L42 46" stroke="#585d67" strokeWidth="7" strokeLinecap="round" />
-      <path d="M68 40 L83 40" stroke="#585d67" strokeWidth="7" strokeLinecap="round" />
-      <path
-        d="M16 74 C30 72 38 68 44 65 C50 62 52 54 58 42 C62 33 67 26 71 20"
-        fill="none"
-        stroke="#c2a05a"
-        strokeWidth="8"
-        strokeLinecap="round"
-      />
-      <path d="M82 8 L62 16 L72 31 Z" fill="#e8cb8b" />
-    </svg>
-  )
-}
-
 function BrandLockup() {
   return (
     <div className="onboard-brand">
-      <LocMark />
+      <LocMark size={30} className="onboard-brand-mark" />
       <div>
         <div className="onboard-brand-eyebrow">LEAGUE OF COACHING</div>
         <div className="onboard-brand-name">LoC</div>
@@ -61,7 +34,7 @@ export function OnboardingTour({ onClose, onLoadMatches }: OnboardingTourProps) 
   const [step, setStep] = useState(0)
   const tooltipRef = useRef<HTMLDivElement>(null)
   const [holeRect, setHoleRect] = useState<DOMRect | null>(null)
-  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null)
+  const [tooltipPos, setTooltipPos] = useState<TooltipPosition | null>(null)
   const [isAnchorMissing, setIsAnchorMissing] = useState(false)
   // Debajo de 640px el tooltip flotante se vuelve una hoja fija al fondo
   // (ver handoff_loc/05-movil.md) en vez de perseguir el ancla real, que

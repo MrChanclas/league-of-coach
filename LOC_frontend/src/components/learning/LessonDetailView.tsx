@@ -1,24 +1,7 @@
 import { useChampionGuide } from '../../hooks/useApiQueries'
 import { getChampionIconUrl } from '../../lib/riotAssets'
-import type { AccountStatsSummary, LessonCard } from '../../types/dashboard'
-
-type LessonDetailViewProps = {
-  lesson: LessonCard
-  lessonNumber: number
-  totalLessons: number
-  accountId: string
-  ddragonVersion: string | null
-  overallStats: AccountStatsSummary | null
-  onBack: () => void
-  onPrevious: () => void
-  onNext: () => void
-  hasPrevious: boolean
-  hasNext: boolean
-}
-
-function pct(value: number) {
-  return `${Math.round(value * 100)}%`
-}
+import { formatPercent } from '../../lib/lessons'
+import type { LessonDetailViewProps } from '../../types/components'
 
 export function LessonDetailView({
   lesson,
@@ -86,7 +69,7 @@ export function LessonDetailView({
                     color: belowAverage(lesson.championWinrate, overallStats?.winrate) ? 'var(--hf-loss)' : undefined,
                   }}
                 >
-                  {lesson.championWinrate != null ? pct(lesson.championWinrate) : '—'}
+                  {lesson.championWinrate != null ? formatPercent(lesson.championWinrate) : '—'}
                 </span>
                 <span className="diagnosis-stat-label">WINRATE</span>
               </div>

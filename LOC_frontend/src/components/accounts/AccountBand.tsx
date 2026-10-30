@@ -1,16 +1,8 @@
 import { getLaneLabel, getNextRank, getTierColor } from '../../lib/hexforge'
 import { getRankEmblemUrl } from '../../lib/riotAssets'
-import type { AccountCard, AccountStatsSummary, LaneEntry, StreakInfo } from '../../types/dashboard'
+import type { AccountBandProps } from '../../types/components'
 
-type AccountBandProps = {
-  account: AccountCard
-  primaryQueue: 'solo' | 'flex'
-  statsSummary: AccountStatsSummary | null
-  streak: StreakInfo | null
-  lanes: LaneEntry[]
-}
 
-/** Compact ~100px account summary — replaces the old 216px hero (see handoff_loc/06-coaching.md, 4A). */
 export function AccountBand({ account, primaryQueue, statsSummary, streak, lanes }: AccountBandProps) {
   const tier = primaryQueue === 'solo' ? account.soloTier : account.flexTier
   const division = primaryQueue === 'solo' ? account.soloDivision : account.flexDivision
@@ -47,7 +39,7 @@ export function AccountBand({ account, primaryQueue, statsSummary, streak, lanes
             <span className="account-band-tag">#{account.tag}</span>
             <span className="account-band-badge">ACTIVA</span>
           </div>
-          <div className="account-band-tier" style={{ color: tierColor ?? '#9aa0ac' }}>
+          <div className="account-band-tier" style={{ color: tierColor ?? 'var(--hf-muted-1)' }}>
             {isRanked ? `${tier} ${division}` : 'Sin clasificar'}
           </div>
           <div className="account-band-sub">
@@ -62,7 +54,7 @@ export function AccountBand({ account, primaryQueue, statsSummary, streak, lanes
               <div className="account-band-progress-track">
                 <div
                   className="account-band-progress-fill"
-                  style={{ width: `${progressPct}%`, background: `linear-gradient(90deg, #1d7f6a, ${tierColor ?? '#63dcb8'})` }}
+                  style={{ width: `${progressPct}%`, background: `linear-gradient(90deg, var(--hf-lp-line-dim), ${tierColor ?? 'var(--hf-lp-line)'})` }}
                 />
               </div>
               <div className="account-band-progress-labels">
@@ -87,7 +79,7 @@ export function AccountBand({ account, primaryQueue, statsSummary, streak, lanes
         <div className="account-band-metrics">
           <div className="account-band-metric">
             <div className="account-band-metric-label">KDA PROM.</div>
-            <div className="account-band-metric-value" style={{ color: '#e0dbcf' }}>
+            <div className="account-band-metric-value" style={{ color: 'var(--hf-text-soft)' }}>
               {statsSummary ? statsSummary.avgKda.toFixed(2) : '—'}
             </div>
             <div className="account-band-metric-sub">

@@ -1,7 +1,8 @@
 import { useAuth } from '@clerk/clerk-react'
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '../lib/api'
-import { QUEUE_IDS } from '../lib/constants'
+import { QUEUE_IDS, queryKeys } from '../constants'
+import type { MatchPageResponse, PlatformStatsResponse } from '../types/api'
 import type {
   AccountCard,
   AccountStatsSummary,
@@ -12,7 +13,6 @@ import type {
   DashboardPayload,
   LaneEntry,
   LessonCard,
-  MatchParticipantEntry,
   PoolRecommendation,
   PoolView,
   QueueStats,
@@ -20,37 +20,6 @@ import type {
   RosterChampion,
   StreakInfo,
 } from '../types/dashboard'
-
-// Centralized so every hook/invalidation call agrees on the same keys.
-// Account-scoped keys all share the ['account', accountId, ...] prefix so a
-// single `invalidateQueries({ queryKey: queryKeys.account(id) })` (prefix
-// match) refreshes everything for that account at once — e.g. after a match
-// sync.
-export const queryKeys = {
-  internalUser: (clerkUserId: string | null | undefined) => ['internalUser', clerkUserId] as const,
-  dashboard: (userId: string | undefined) => ['dashboard', userId] as const,
-  platformStats: () => ['platformStats'] as const,
-  account: (accountId: string | undefined) => ['account', accountId] as const,
-  accountMatches: (accountId: string | undefined) => ['account', accountId, 'matches'] as const,
-  accountStats: (accountId: string | undefined, queueId?: number) =>
-    ['account', accountId, 'stats', queueId ?? 'all'] as const,
-  accountStreak: (accountId: string | undefined, queueId?: number) =>
-    ['account', accountId, 'streak', queueId ?? 'all'] as const,
-  accountLanes: (accountId: string | undefined) => ['account', accountId, 'lanes'] as const,
-  accountActivity: (accountId: string | undefined) => ['account', accountId, 'activity'] as const,
-  accountRankHistory: (accountId: string | undefined, queue: string) =>
-    ['account', accountId, 'rankHistory', queue] as const,
-  accountLessons: (accountId: string | undefined) => ['account', accountId, 'lessons'] as const,
-  accountBehaviorFlags: (accountId: string | undefined) => ['account', accountId, 'behaviorFlags'] as const,
-  accountsQueueStats: (accountIds: string[]) => ['accountsQueueStats', ...accountIds] as const,
-  championGuide: (accountId: string | undefined, champion: string | undefined) =>
-    ['account', accountId, 'championGuide', champion] as const,
-  championRoster: () => ['championRoster'] as const,
-  accountPool: (accountId: string | undefined) => ['account', accountId, 'pool'] as const,
-  accountPoolRecommendation: (accountId: string | undefined) =>
-    ['account', accountId, 'pool', 'recommendation'] as const,
-}
-
 
 /** Resolves (creating on first login) the app's own User for the signed-in Clerk identity. */
 export function useInternalUser(
@@ -93,7 +62,7 @@ export function useDashboard(userId: string | undefined) {
 export function usePlatformStats() {
   return useQuery({
     queryKey: queryKeys.platformStats(),
-    queryFn: () => apiFetch<{ totalAccountsAnalyzed: number }>('/stats/platform'),
+    queryFn: () => apiFetch<PlatformStatsResponse>('/stats/platform'),
     staleTime: 5 * 60_000,
   })
 }
@@ -104,7 +73,7 @@ export function useAccountMatches(accountId: string | undefined) {
     queryKey: queryKeys.accountMatches(accountId),
     queryFn: async () => {
       const token = await getToken()
-      return apiFetch<{ items: MatchParticipantEntry[] }>(`/matches/account/${accountId}?pageSize=20`, { token })
+      return apiFetch<MatchPageResponse>(`/matches/account/${accountId}?pageSize=20`, { token })
     },
     enabled: Boolean(accountId),
   })

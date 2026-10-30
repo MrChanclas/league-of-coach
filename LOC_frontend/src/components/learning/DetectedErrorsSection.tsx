@@ -1,19 +1,6 @@
 import { getChampionIconUrl } from '../../lib/riotAssets'
-import { ROLE_LABELS } from '../../lib/goalLabels'
-import type { BehaviorFlag, GoalPrefill } from '../../types/dashboard'
-
-type DetectedErrorsSectionProps = {
-  flags: BehaviorFlag[]
-  ddragonVersion: string | null
-  onCreateGoal: (flag: BehaviorFlag) => GoalPrefill
-  onOpenGoalModal: (prefill: GoalPrefill) => void
-}
-
-const SEVERITY_LABELS: Record<BehaviorFlag['severity'], string> = {
-  high: 'Alto',
-  medium: 'Medio',
-  low: 'Bajo',
-}
+import { ERROR_SEVERITY_LABELS, ROLE_LABELS } from '../../constants'
+import type { DetectedErrorsSectionProps } from '../../types/components'
 
 export function DetectedErrorsSection({ flags, ddragonVersion, onCreateGoal, onOpenGoalModal }: DetectedErrorsSectionProps) {
   return (
@@ -37,7 +24,7 @@ export function DetectedErrorsSection({ flags, ddragonVersion, onCreateGoal, onO
               <div className="detected-error-info">
                 <div className="detected-error-head">
                   <span className={`detected-error-badge detected-error-badge--${flag.severity}`}>
-                    {SEVERITY_LABELS[flag.severity]}
+                    {ERROR_SEVERITY_LABELS[flag.severity]}
                   </span>
                   <span className="detected-error-role">{ROLE_LABELS[flag.role] ?? flag.role}</span>
                 </div>

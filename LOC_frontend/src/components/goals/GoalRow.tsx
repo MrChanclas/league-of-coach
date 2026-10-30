@@ -1,17 +1,6 @@
-import type { GoalItem } from '../../types/dashboard'
-import { KIND_LABELS, formatGoalCurrent, formatGoalGap, formatGoalPace, formatGoalTitle } from '../../lib/goalLabels'
-
-type GoalRowProps = {
-  goal: GoalItem
-  onClick: () => void
-  onDelete?: (event: React.MouseEvent) => void
-}
-
-const STATUS_LABELS: Record<GoalItem['status'], string> = {
-  completed: 'COMPLETADO',
-  in_progress: 'EN CURSO',
-  behind: 'ATRASADO',
-}
+import { GOAL_STATUS_LABELS, KIND_LABELS } from '../../constants'
+import { formatGoalCurrent, formatGoalGap, formatGoalPace, formatGoalTitle } from '../../lib/goalLabels'
+import type { GoalRowProps } from '../../types/components'
 
 export function GoalRow({ goal, onClick, onDelete }: GoalRowProps) {
   const gap = formatGoalGap(goal)
@@ -22,7 +11,7 @@ export function GoalRow({ goal, onClick, onDelete }: GoalRowProps) {
     <div className="goal-row" onClick={onClick} role="button" tabIndex={0}>
       <div className="goal-row-type">
         <div className="goal-row-kind">{KIND_LABELS[goal.type]}</div>
-        <span className={`goal-status-badge goal-status-badge--${goal.status}`}>{STATUS_LABELS[goal.status]}</span>
+        <span className={`goal-status-badge goal-status-badge--${goal.status}`}>{GOAL_STATUS_LABELS[goal.status]}</span>
       </div>
 
       <div className="goal-row-main">

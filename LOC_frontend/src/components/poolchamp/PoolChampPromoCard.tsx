@@ -1,22 +1,11 @@
 import { getChampionIconUrl } from '../../lib/riotAssets'
-import { POOL_ROLE_LABELS } from '../../lib/poolLabels'
+import { POOL_PROMO_FAN_ROLES, POOL_ROLE_LABELS } from '../../constants'
 import type { RosterChampion } from '../../types/dashboard'
-
-type PoolChampPromoCardProps = {
-  roster: RosterChampion[]
-  ddragonVersion: string | null
-  onArmarPool: () => void
-  onVerDelCoach: () => void
-}
-
-// Four illustrative portraits for the fan — one per role picked deterministically
-// from the roster so the card doesn't need its own network round-trip (the
-// roster is already fetched, cached 30min, for the Pool Champ tab itself).
-const FAN_ROLES = ['TOP', 'JUNGLE', 'MIDDLE'] as const
+import type { PoolChampPromoCardProps } from '../../types/components'
 
 /** Promo block shown in the home (4A) while the account has no pool yet — see handoff_loc/07-pool-champ.md. */
 export function PoolChampPromoCard({ roster, ddragonVersion, onArmarPool, onVerDelCoach }: PoolChampPromoCardProps) {
-  const fanChampions = FAN_ROLES.map((role) => roster.find((champion) => champion.role === role)).filter(
+  const fanChampions = POOL_PROMO_FAN_ROLES.map((role) => roster.find((champion) => champion.role === role)).filter(
     (champion): champion is RosterChampion => Boolean(champion),
   )
 

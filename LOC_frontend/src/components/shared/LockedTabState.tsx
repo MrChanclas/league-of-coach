@@ -1,11 +1,5 @@
 import { LockGlyph } from './LockGlyph'
-
-type LockedTabStateProps = {
-  title: string
-  body: string
-  ctaLabel: string
-  onCtaClick: () => void
-}
+import type { LockedTabStateProps } from '../../types/components'
 
 /** In-panel placeholder for a tab locked until the account has a champion pool. */
 export function LockedTabState({ title, body, ctaLabel, onCtaClick }: LockedTabStateProps) {

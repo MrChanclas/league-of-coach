@@ -7,46 +7,7 @@ import { PoolChampPromoCard } from '../poolchamp/PoolChampPromoCard'
 import { WeeklyActivityCard } from './WeeklyActivityCard'
 import { FirstStepsChecklist } from '../onboarding/FirstStepsChecklist'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
-import type {
-  AccountCard,
-  AccountStatsSummary,
-  ActivityDay,
-  GoalItem,
-  LaneEntry,
-  LessonCard,
-  PoolView,
-  RankSnapshotEntry,
-  RosterChampion,
-  StreakInfo,
-  TimeRange,
-} from '../../types/dashboard'
-
-type AccountTabPanelProps = {
-  userAccounts: AccountCard[]
-  activeAccount?: AccountCard
-  currentAccountId: string
-  ddragonVersion: string | null
-  statsSummary: AccountStatsSummary | null
-  streak: StreakInfo | null
-  lanes: LaneEntry[]
-  rankHistory: RankSnapshotEntry[]
-  weeklyActivity: ActivityDay[]
-  goalsByAccount: GoalItem[]
-  lessons: LessonCard[]
-  timeRange: TimeRange
-  checklistCompleted: boolean[]
-  championRoster: RosterChampion[]
-  hasChampionPool: boolean
-  poolView: PoolView | undefined
-  onTimeRangeChange: (range: TimeRange) => void
-  onSetCurrentAccountId: (id: string) => void
-  onDeleteAccount: (accountId: string) => void
-  onGoToGoals: () => void
-  onGoToLearning: () => void
-  onGoToPoolChamp: () => void
-  onOpenGoalModal: () => void
-  onOpenLesson: (index: number) => void
-}
+import type { AccountTabPanelProps } from '../../types/components'
 
 export function AccountTabPanel({
   userAccounts,
@@ -73,9 +34,6 @@ export function AccountTabPanel({
   onOpenGoalModal,
   onOpenLesson,
 }: AccountTabPanelProps) {
-  // Debajo de 1024px la barra lateral se reemplaza por la barra de pestañas
-  // inferior: el widget "primeros pasos" pasa de flotante (choca con esa
-  // barra) a ser el primer bloque del scroll de esta vista.
   const isMobileShell = useMediaQuery('(max-width: 1023.98px)')
 
   if (!activeAccount) {

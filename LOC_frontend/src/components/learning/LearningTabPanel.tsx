@@ -3,40 +3,8 @@ import { LessonDetailView } from './LessonDetailView'
 import { LessonMediaArt } from './LessonMediaArt'
 import { LockedTabState } from '../shared/LockedTabState'
 import { buildGoalPrefillFromFlag } from '../../lib/goalPrefill'
-import { POOL_ROLE_LABELS } from '../../lib/poolLabels'
-import type {
-  AccountCard,
-  AccountStatsSummary,
-  BehaviorFlag,
-  GoalPrefill,
-  LessonCard,
-  PoolView,
-  RosterChampion,
-} from '../../types/dashboard'
-
-type LearningTabPanelProps = {
-  activeAccount?: AccountCard
-  lessons: LessonCard[]
-  behaviorFlags: BehaviorFlag[]
-  gamesAnalyzed: number
-  ddragonVersion: string | null
-  overallStats: AccountStatsSummary | null
-  selectedIndex: number | null
-  onSelectIndex: (index: number | null) => void
-  hasPool: boolean
-  poolView: PoolView | undefined
-  championRoster: RosterChampion[]
-  onGoToPoolChamp: () => void
-  onCreateGoalFromFlag: (prefill: GoalPrefill) => void
-}
-
-const MEDIA_LABELS: Record<LessonCard['mediaType'], string> = {
-  CLIP: 'clip de repetición',
-  HEATMAP: 'mapa de calor',
-  GOLD_GRAPH: 'gráfico de oro',
-  MATCHUP_TABLE: 'tabla de matchups',
-  SESSION_REPORT: 'gráfico de sesión',
-}
+import { LESSON_MEDIA_LABELS, POOL_ROLE_LABELS } from '../../constants'
+import type { LearningTabPanelProps } from '../../types/components'
 
 export function LearningTabPanel({
   activeAccount,
@@ -139,7 +107,7 @@ export function LearningTabPanel({
                 kind={lesson.kind}
                 championKey={lesson.championKey}
                 ddragonVersion={ddragonVersion}
-                label={MEDIA_LABELS[lesson.mediaType]}
+                label={LESSON_MEDIA_LABELS[lesson.mediaType]}
               />
               <div className="lesson-body">
                 <div className="lesson-tag">{lesson.tag}</div>

@@ -1,24 +1,5 @@
-import type { GoalGap, GoalItem, GoalPace, GoalType } from '../types/dashboard'
-
-export const ROLE_LABELS: Record<string, string> = {
-  TOP: 'Top',
-  JUNGLE: 'Jungla',
-  MIDDLE: 'Medio',
-  BOTTOM: 'ADC',
-  UTILITY: 'Support',
-}
-
-export const KIND_LABELS: Record<GoalType, string> = {
-  rango: 'RANGO',
-  rol: 'ROL',
-  campeon: 'CAMPEÓN',
-}
-
-export const RANK_BAND_LABELS: Record<string, string> = {
-  LOW: 'Hierro–Oro',
-  MID: 'Platino–Diamante',
-  HIGH: 'Master+',
-}
+import { RANK_BAND_LABELS, ROLE_LABELS } from '../constants'
+import type { GoalGap, GoalItem, GoalPace } from '../types/dashboard'
 
 function pct(value: number | undefined) {
   return Math.round((value ?? 0) * 100)
@@ -78,4 +59,19 @@ export function formatGoalCurrent(goal: GoalItem): string {
   if (!current.gamesPlayed) return 'Sin partidas registradas con este campeón todavía'
   const kda = current.avgKda != null ? ` · ${current.avgKda.toFixed(1)} KDA` : ''
   return `Actual: ${pct(current.winrate)}% WR${kda} (${current.gamesPlayed} partidas)`
+}
+
+export function sortGoals(goals: GoalItem[]): GoalItem[] {
+  return [...goals].sort((a, b) => {
+    const aCompleted = a.status === 'completed' ? 1 : 0
+    const bCompleted = b.status === 'completed' ? 1 : 0
+    if (aCompleted !== bCompleted) return aCompleted - bCompleted
+    return b.progress - a.progress
+  })
+}
+
+export function openGoalsCountLabel(count: number) {
+  if (count === 0) return 'Sin objetivos abiertos'
+  if (count === 1) return 'Un objetivo abierto'
+  return `${count} abiertos`
 }

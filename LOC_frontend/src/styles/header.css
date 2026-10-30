@@ -1,0 +1,225 @@
+/* Header */
+
+.forge-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.forge-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 28px;
+  border-bottom: 1px solid var(--hf-border-soft);
+  background: rgba(10, 12, 16, 0.7);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  backdrop-filter: blur(8px);
+}
+
+.header-context {
+  font: 400 11px/1 var(--font-mono);
+  color: var(--hf-muted-4);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.header-account-select {
+  position: relative;
+  margin-left: 8px;
+}
+
+.header-account-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px 7px 9px;
+  border-radius: 8px;
+  background: var(--hf-surface);
+  border: 1px solid var(--hf-border-strong);
+  cursor: pointer;
+}
+
+.header-account-btn:hover {
+  border-color: rgba(216, 181, 106, 0.4);
+}
+
+.header-account-btn-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+}
+
+.header-account-btn-label {
+  font: 600 8.5px/1 var(--font-mono);
+  letter-spacing: 0.18em;
+  color: var(--hf-muted-4);
+}
+
+.header-account-btn-name {
+  font: 500 12.5px/1 var(--font-body);
+  color: #dcd7cb;
+}
+
+.header-account-caret {
+  font: 400 10px/1 var(--font-mono);
+  color: var(--hf-muted-4);
+  margin-left: 4px;
+}
+
+.header-account-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 220px;
+  background: var(--hf-surface);
+  border: 1px solid var(--hf-border-strong);
+  border-radius: 10px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+  padding: 6px;
+  z-index: 10;
+}
+
+.header-account-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 9px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: #dcd7cb;
+  font: 500 12.5px/1.2 var(--font-body);
+  cursor: pointer;
+  text-align: left;
+}
+
+.header-account-menu-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.header-account-menu-item.active {
+  background: rgba(216, 181, 106, 0.1);
+  color: #f3e8d1;
+}
+
+.header-spacer {
+  flex: 1;
+}
+
+.header-sync-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 400 11px/1 var(--font-mono);
+  color: var(--hf-muted-3);
+  white-space: nowrap;
+}
+
+.header-sync-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--hf-online);
+  animation: hfpulse 2.4s infinite;
+  flex: none;
+}
+
+.header-sync-btn {
+  padding: 9px 15px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(180deg, var(--hf-gold-grad-start), var(--hf-gold-grad-end));
+  color: #141109;
+  font: 600 12.5px/1 var(--font-body);
+  cursor: pointer;
+  box-shadow: 0 2px 14px rgba(216, 181, 106, 0.22);
+  white-space: nowrap;
+}
+
+.header-sync-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.header-new-account-btn {
+  padding: 9px 15px;
+  border-radius: 8px;
+  border: 1px solid var(--hf-border-strong);
+  background: rgba(255, 255, 255, 0.03);
+  color: #d9d4c7;
+  font: 500 12.5px/1 var(--font-body);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Page head (shared across the 4 views) */
+
+.view-content {
+  padding: 26px 28px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.page-head-eyebrow {
+  font: 600 9.5px/1 var(--font-mono);
+  letter-spacing: 0.24em;
+  color: var(--hf-gold-dim);
+}
+
+.page-head h1 {
+  margin: 9px 0 0;
+  font: 700 28px/1.1 var(--font-display);
+  color: var(--hf-heading);
+}
+
+.page-head p {
+  margin: 7px 0 0;
+  font: 400 13px/1.5 var(--font-body);
+  color: var(--hf-muted-2);
+  max-width: 52ch;
+}
+
+.time-toggle {
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+
+.time-toggle-btn {
+  padding: 8px 13px;
+  border-radius: 7px;
+  border: 1px solid var(--hf-border-strong);
+  background: transparent;
+  font: 500 12px/1 var(--font-body);
+  color: #b9beca;
+  cursor: pointer;
+}
+
+.time-toggle-btn.active {
+  border-color: rgba(216, 181, 106, 0.4);
+  background: rgba(216, 181, 106, 0.1);
+  color: var(--hf-gold-strong);
+}
+
+.header-action-btn {
+  padding: 9px 15px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(180deg, var(--hf-gold-grad-start), var(--hf-gold-grad-end));
+  color: #141109;
+  font: 600 12.5px/1 var(--font-body);
+  cursor: pointer;
+}

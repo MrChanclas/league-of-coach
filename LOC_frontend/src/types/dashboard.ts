@@ -193,6 +193,11 @@ export type RankSnapshotEntry = {
   capturedAt: string
 }
 
+export type NextRank = {
+  tier: string
+  division: string
+}
+
 export type ActivityDay = {
   date: string
   wins: number
@@ -349,4 +354,13 @@ export type ReplacePoolEntryInput = {
 export type ReplacePoolInput = {
   source: PoolSource
   entries: ReplacePoolEntryInput[]
+}
+
+export type QueueInfo = {
+  key: 'solo' | 'flex'
+  label: string
+  tier: string
+  division: string
+  lp: number
+  summary: AccountStatsSummary | null
 }

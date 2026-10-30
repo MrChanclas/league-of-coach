@@ -1,14 +1,9 @@
-export const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:4100').replace(/\/$/, '')
+import type { ApiErrorPayload, ApiFetchOptions } from '../types/api'
+import { API_URL } from '../constants/runtime'
+
+export { API_URL }
 
 export class ApiError extends Error {}
-
-type ApiFetchOptions = {
-  method?: string
-  token?: string | null
-  body?: unknown
-  // false for endpoints that respond with no body (e.g. some DELETEs) — skips the JSON parse.
-  parseJson?: boolean
-}
 
 /**
  * Every backend call goes through here so token attachment and error shape
@@ -29,10 +24,7 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
   })
 
   if (!response.ok) {
-    const payload = (await response.json().catch(() => null)) as {
-      message?: string
-      errors?: { message?: string }[]
-    } | null
+    const payload = (await response.json().catch(() => null)) as ApiErrorPayload | null
     // ZodValidationPipe replies with a generic top-level "Validation failed"
     // plus a per-issue `errors` array — surface those specific messages
     // (e.g. "Superior tiene 3 campeones: hacen falta al menos 5…") instead

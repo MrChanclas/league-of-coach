@@ -13,76 +13,12 @@ import { FirstStepsChecklist } from '../onboarding/FirstStepsChecklist'
 import { OnboardingTour } from '../onboarding/OnboardingTour'
 import { PoolChampTabPanel } from '../poolchamp/PoolChampTabPanel'
 
-import type { SubmitEvent } from 'react'
 import type {
-  AccountCard,
-  AccountForm,
-  AccountStatsSummary,
-  ActivityDay,
-  BehaviorFlag,
-  GoalCreateInput,
-  GoalItem,
   GoalPrefill,
-  LaneEntry,
-  LessonCard,
-  MatchParticipantEntry,
-  PoolRecommendation,
   PoolSlotKey,
-  PoolView,
-  RankSnapshotEntry,
-  ReplacePoolEntryInput,
-  RosterChampion,
-  StreakInfo,
   TabKey,
-  TimeRange,
 } from '../../types/dashboard'
-
-type DashboardScreenProps = {
-  isSignedIn: boolean
-  userDisplayName: string
-  userDisplayEmail: string
-  activeTab: TabKey
-  userAccounts: AccountCard[]
-  currentAccountId: string
-  activeAccount?: AccountCard
-  goalsByAccount: GoalItem[]
-  status: string
-  isLoadingDashboard: boolean
-  accountForm: AccountForm
-  matches: MatchParticipantEntry[]
-  statsSummary: AccountStatsSummary | null
-  streak: StreakInfo | null
-  lanes: LaneEntry[]
-  weeklyActivity: ActivityDay[]
-  rankHistory: RankSnapshotEntry[]
-  lessons: LessonCard[]
-  behaviorFlags: BehaviorFlag[]
-  ddragonVersion: string | null
-  timeRange: TimeRange
-  isSyncing: boolean
-  lastSyncedLabel: string
-  championRoster: RosterChampion[]
-  poolView: PoolView | undefined
-  poolRecommendation: PoolRecommendation | undefined
-  isPoolRecommendationLoading: boolean
-  isSavingPool: boolean
-  onSavePool: (entries: ReplacePoolEntryInput[]) => Promise<boolean>
-  onAddPoolOutsider: (championKey: string, role: PoolSlotKey) => void
-  // undefined = todavía no se resolvió el usuario (no auto-abrir); null = resuelto
-  // y nunca vio el onboarding (auto-abrir); string = ya lo vio/saltó.
-  onboardingCompletedAt: string | null | undefined
-  onCompleteOnboarding: () => void
-  onTimeRangeChange: (range: TimeRange) => void
-  onTabChange: (tab: TabKey) => void
-  onLogout: () => void
-  onSetCurrentAccountId: (id: string) => void
-  onAccountFieldChange: (event: React.ChangeEvent<HTMLInputElement>) => void
-  onCreateAccount: (event: SubmitEvent<HTMLFormElement>) => void
-  onDeleteAccount: (accountId: string) => void
-  onSyncMatches: () => void
-  onCreateGoal: (input: GoalCreateInput) => Promise<boolean>
-  onDeleteGoal: (goalId: string) => void
-}
+import type { DashboardScreenProps } from '../../types/components'
 
 export function DashboardScreen({
   isSignedIn,

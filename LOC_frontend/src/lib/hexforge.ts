@@ -1,17 +1,5 @@
-import { APEX_TIERS, RANK_DIVISIONS, RANK_TIERS } from './constants'
-
-export const TIER_COLORS: Record<string, string> = {
-  IRON: '#8a8578',
-  BRONZE: '#a9784f',
-  SILVER: '#9fb4bd',
-  GOLD: '#cfa64c',
-  PLATINUM: '#5fb6d8',
-  EMERALD: '#4fd6b0',
-  DIAMOND: '#7fa9f0',
-  MASTER: '#b980e0',
-  GRANDMASTER: '#e05a5a',
-  CHALLENGER: '#f4e6a1',
-}
+import { APEX_TIERS, LANE_LABELS, RANK_DIVISIONS, RANK_TIERS, TIER_COLORS } from '../constants'
+import type { NextRank } from '../types/dashboard'
 
 export function getTierColor(tier: string): string | null {
   return TIER_COLORS[tier.trim().toUpperCase()] ?? null
@@ -32,13 +20,20 @@ export function formatRelativeTime(iso: string): string {
   return `hace ${days} d`
 }
 
+export function formatLastSyncedLabel(lastSyncedAt: Date | null): string {
+  if (!lastSyncedAt) return 'Sin sincronizar en esta sesión'
+  const minutes = Math.max(0, Math.round((Date.now() - lastSyncedAt.getTime()) / 60_000))
+  if (minutes < 1) return 'Sincronizado hace instantes'
+  return `Sincronizado hace ${minutes} min`
+}
+
 export function formatGameDuration(seconds: number): string {
   const minutes = Math.floor(seconds / 60)
   const remainingSeconds = Math.floor(seconds % 60)
   return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`
 }
 
-export function getNextRank(tier: string, division: string): { tier: string; division: string } | null {
+export function getNextRank(tier: string, division: string): NextRank | null {
   const normalizedTier = tier.trim().toUpperCase()
   const normalizedDivision = division.trim().toUpperCase()
   const tierIndex = RANK_TIERS.indexOf(normalizedTier as (typeof RANK_TIERS)[number])
@@ -57,14 +52,6 @@ export function getNextRank(tier: string, division: string): { tier: string; div
   const nextTier = RANK_TIERS[tierIndex + 1]
   if (!nextTier) return null
   return { tier: nextTier, division: APEX_TIERS.has(nextTier) ? 'I' : 'IV' }
-}
-
-const LANE_LABELS: Record<string, string> = {
-  TOP: 'TOP',
-  JUNGLE: 'JNG',
-  MIDDLE: 'MID',
-  BOTTOM: 'ADC',
-  UTILITY: 'SUP',
 }
 
 export function getLaneLabel(lane: string): string {

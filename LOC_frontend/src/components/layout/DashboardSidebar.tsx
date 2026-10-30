@@ -1,45 +1,8 @@
 import { useState } from 'react'
-import { getTierColor } from '../../lib/hexforge'
+import { NAV_ITEMS } from '../../constants'
 import { LockGlyph } from '../shared/LockGlyph'
-import type { AccountCard, TabKey } from '../../types/dashboard'
-
-type DashboardSidebarProps = {
-  userDisplayName: string
-  userDisplayEmail: string
-  activeTab: TabKey
-  onTabChange: (tab: TabKey) => void
-  onLogout: () => void
-  userAccounts: AccountCard[]
-  currentAccountId: string
-  onSetCurrentAccountId: (id: string) => void
-  onOpenAccountModal: () => void
-  onReplayOnboarding: () => void
-  navMeta: { cuentas: number; partidas: number; aprendizaje: number; 'pool-champ': number; objetivos: number }
-  lockedTabs: TabKey[]
-}
-
-const navItems: { key: TabKey; label: string; tour?: string }[] = [
-  { key: 'cuentas', label: 'Cuentas' },
-  { key: 'partidas', label: 'Partidas', tour: 'nav-partidas' },
-  { key: 'aprendizaje', label: 'Aprendizaje', tour: 'nav-aprendizaje' },
-  { key: 'pool-champ', label: 'Pool Champ', tour: 'nav-pool-champ' },
-  { key: 'objetivos', label: 'Objetivos', tour: 'nav-objetivos' },
-]
-
-function titleCaseTier(tier: string) {
-  return tier.charAt(0).toUpperCase() + tier.slice(1).toLowerCase()
-}
-
-function getPrimaryQueueLabel(account: AccountCard) {
-  const isSoloRanked = account.soloTier !== 'Unranked'
-  const isFlexRanked = account.flexTier !== 'Unranked'
-  if (!isSoloRanked && !isFlexRanked) return { label: 'Sin clasificar', color: null }
-
-  const tier = isSoloRanked ? account.soloTier : account.flexTier
-  const division = isSoloRanked ? account.soloDivision : account.flexDivision
-  const lp = isSoloRanked ? account.soloLp : account.flexLp
-  return { label: `${titleCaseTier(tier)} ${division} · ${lp}`, color: getTierColor(tier) }
-}
+import { getPrimaryQueueLabel } from '../../lib/accounts'
+import type { DashboardSidebarProps } from '../../types/components'
 
 export function DashboardSidebar({
   userDisplayName,
@@ -70,7 +33,7 @@ export function DashboardSidebar({
 
         <div className="sidebar-section-label">NAVEGACIÓN</div>
         <nav className="sidebar-nav">
-          {navItems.map((item) => (
+          {NAV_ITEMS.map((item) => (
             <button
               key={item.key}
               type="button"

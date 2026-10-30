@@ -1,11 +1,8 @@
 import { useState } from 'react'
 import type { SubmitEvent } from 'react'
 import { useSubmitFeedbackMutation } from '../../hooks/useApiMutations'
+import type { FeedbackModalProps } from '../../types/components'
 
-type FeedbackModalProps = {
-  isOpen: boolean
-  onClose: () => void
-}
 
 export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
   const [message, setMessage] = useState('')

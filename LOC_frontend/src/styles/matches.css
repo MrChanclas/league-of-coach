@@ -1,0 +1,70 @@
+/* Partidas view */
+
+.filter-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  padding: 8px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font: 500 12px/1 var(--font-body);
+  color: var(--hf-muted-1);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--hf-border-strong);
+}
+
+.filter-pill.active {
+  color: #f3e8d1;
+  background: rgba(216, 181, 106, 0.12);
+  border-color: rgba(216, 181, 106, 0.4);
+}
+
+.agg-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.agg-stat-card {
+  border-radius: 12px;
+  border: 1px solid var(--hf-border);
+  background: var(--hf-surface);
+  padding: 15px 17px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.agg-ring {
+  width: 64px;
+  height: 64px;
+  flex: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+.agg-ring-inner {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--hf-surface);
+  display: grid;
+  place-items: center;
+  font: 600 14px/1 var(--font-mono);
+}
+
+.agg-stat-label {
+  font: 600 9.5px/1 var(--font-mono);
+  letter-spacing: 0.16em;
+  color: var(--hf-muted-3);
+}
+
+.agg-stat-detail {
+  font: 500 12.5px/1.4 var(--font-body);
+  color: #c9cdd6;
+  margin-top: 8px;
+}

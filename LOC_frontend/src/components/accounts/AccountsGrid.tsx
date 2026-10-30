@@ -1,50 +1,8 @@
 import { useAccountsQueueStats } from '../../hooks/useApiQueries'
 import { getTierColor } from '../../lib/hexforge'
 import { getProfileIconUrl, getRankEmblemUrl } from '../../lib/riotAssets'
-import type { AccountCard, AccountStatsSummary, QueueStats } from '../../types/dashboard'
-
-type AccountsGridProps = {
-  userAccounts: AccountCard[]
-  currentAccountId: string
-  ddragonVersion: string | null
-  onSetCurrentAccountId: (id: string) => void
-  onDeleteAccount: (accountId: string) => void
-}
-
-type QueueInfo = {
-  key: 'solo' | 'flex'
-  label: string
-  tier: string
-  division: string
-  lp: number
-  summary: AccountStatsSummary | null
-}
-
-function getOrderedQueues(account: AccountCard, stats?: QueueStats): QueueInfo[] {
-  const solo: QueueInfo = {
-    key: 'solo',
-    label: 'SOLO/DÚO',
-    tier: account.soloTier,
-    division: account.soloDivision,
-    lp: account.soloLp,
-    summary: stats?.solo ?? null,
-  }
-  const flex: QueueInfo = {
-    key: 'flex',
-    label: 'FLEXIBLE',
-    tier: account.flexTier,
-    division: account.flexDivision,
-    lp: account.flexLp,
-    summary: stats?.flex ?? null,
-  }
-
-  return account.soloTier !== 'Unranked' ? [solo, flex] : [flex, solo]
-}
-
-function formatWinrate(summary: AccountStatsSummary | null) {
-  if (!summary || summary.gamesPlayed === 0) return '0 J'
-  return `${Math.round(summary.winrate * 100)}% WR · ${summary.gamesPlayed} J`
-}
+import { formatQueueWinrate, getOrderedQueues } from '../../lib/accounts'
+import type { AccountsGridProps } from '../../types/components'
 
 export function AccountsGrid({
   userAccounts,
@@ -56,7 +14,7 @@ export function AccountsGrid({
   const queueStatsQuery = useAccountsQueueStats(userAccounts)
   const queueStatsByAccount = queueStatsQuery.data ?? {}
 
-  const handleDeleteClick = (event: React.MouseEvent, account: AccountCard) => {
+  const handleDeleteClick = (event: React.MouseEvent, account: AccountsGridProps['userAccounts'][0]) => {
     event.stopPropagation()
     const confirmed = window.confirm(
       `¿Seguro que quieres eliminar la cuenta "${account.summoner}#${account.tag}"? Esto también borra sus partidas, objetivos y aprendizaje guardados.`,
@@ -143,7 +101,7 @@ export function AccountsGrid({
                         </div>
                         <div className="queue-side">
                           {queue.tier !== 'Unranked' && <div className="queue-lp">{queue.lp} LP</div>}
-                          <div className="queue-wr">{formatWinrate(queue.summary)}</div>
+                          <div className="queue-wr">{formatQueueWinrate(queue.summary)}</div>
                         </div>
                       </div>
                     )

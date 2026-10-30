@@ -1,23 +1,7 @@
 import { GoalRow } from './GoalRow'
-import type { GoalItem } from '../../types/dashboard'
-
-type ObjectivesPreviewCardProps = {
-  goals: GoalItem[]
-  onGoToGoals: () => void
-  onOpenGoalModal: () => void
-}
-
-function daysUntil(deadline?: string | null): number | null {
-  if (!deadline) return null
-  const days = Math.ceil((new Date(deadline).getTime() - Date.now()) / (24 * 60 * 60 * 1000))
-  return days > 0 ? days : null
-}
-
-function openCountLabel(count: number) {
-  if (count === 0) return 'Sin objetivos abiertos'
-  if (count === 1) return 'Un objetivo abierto'
-  return `${count} abiertos`
-}
+import { daysUntil } from '../../lib/dates'
+import { openGoalsCountLabel } from '../../lib/goalLabels'
+import type { ObjectivesPreviewCardProps } from '../../types/components'
 
 export function ObjectivesPreviewCard({ goals, onGoToGoals, onOpenGoalModal }: ObjectivesPreviewCardProps) {
   const openGoals = goals.filter((goal) => goal.status !== 'completed')
@@ -29,7 +13,7 @@ export function ObjectivesPreviewCard({ goals, onGoToGoals, onOpenGoalModal }: O
       <div className="objectives-preview-head">
         <div>
           <div className="objectives-preview-eyebrow">OBJETIVOS</div>
-          <h2>{openCountLabel(openGoals.length)}</h2>
+          <h2>{openGoalsCountLabel(openGoals.length)}</h2>
         </div>
         {Number.isFinite(daysRemaining) && <span className="objectives-preview-days">{daysRemaining} DÍAS</span>}
       </div>

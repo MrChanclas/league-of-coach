@@ -1,22 +1,5 @@
-import type { LessonCard } from '../../types/dashboard'
-
-type LearningPreviewCardProps = {
-  lessons: LessonCard[]
-  gamesAnalyzed: number
-  onOpenLesson: (index: number) => void
-  onGoToLearning: () => void
-}
-
-function countLabel(count: number) {
-  return count === 1 ? 'Una cosa para arreglar' : `${count} cosas para arreglar`
-}
-
-function backingFigure(lesson: LessonCard) {
-  if (lesson.kind === 'champion' && lesson.championWinrate != null) {
-    return { value: `${Math.round(lesson.championWinrate * 100)}%`, label: 'WINRATE' }
-  }
-  return null
-}
+import { getLessonBackingFigure, lessonCountLabel } from '../../lib/lessons'
+import type { LearningPreviewCardProps } from '../../types/components'
 
 export function LearningPreviewCard({ lessons, gamesAnalyzed, onOpenLesson, onGoToLearning }: LearningPreviewCardProps) {
   const [hero, ...rest] = lessons
@@ -27,7 +10,7 @@ export function LearningPreviewCard({ lessons, gamesAnalyzed, onOpenLesson, onGo
       <div className="learning-preview-head">
         <div>
           <div className="learning-preview-eyebrow">APRENDIZAJE</div>
-          <h2>{lessons.length === 0 ? 'Sin lecciones pendientes' : countLabel(lessons.length)}</h2>
+          <h2>{lessons.length === 0 ? 'Sin lecciones pendientes' : lessonCountLabel(lessons.length)}</h2>
           <p>
             De tus últimas {gamesAnalyzed} partidas. Entra a la lección para ver la evidencia
             {lessons.some((lesson) => lesson.kind === 'champion') ? ' y la guía.' : '.'}
@@ -55,10 +38,10 @@ export function LearningPreviewCard({ lessons, gamesAnalyzed, onOpenLesson, onGo
                   <div className="learning-hero-row-title">{hero.title}</div>
                   <p className="learning-hero-row-why">{hero.body}</p>
                 </div>
-                {backingFigure(hero) && (
+                {getLessonBackingFigure(hero) && (
                   <div className="learning-row-figure">
-                    <span className="learning-row-figure-value">{backingFigure(hero)!.value}</span>
-                    <span className="learning-row-figure-label">{backingFigure(hero)!.label}</span>
+                    <span className="learning-row-figure-value">{getLessonBackingFigure(hero)!.value}</span>
+                    <span className="learning-row-figure-label">{getLessonBackingFigure(hero)!.label}</span>
                   </div>
                 )}
                 <span className="learning-row-chevron">›</span>
@@ -66,7 +49,7 @@ export function LearningPreviewCard({ lessons, gamesAnalyzed, onOpenLesson, onGo
             )}
 
             {rows.map((lesson, index) => {
-              const figure = backingFigure(lesson)
+              const figure = getLessonBackingFigure(lesson)
               return (
                 <button
                   type="button"

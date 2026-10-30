@@ -1,0 +1,17 @@
+/* Imported in the same order the rules had in the old single App.css, so the
+   cascade is unchanged: responsive.css overrides rules from earlier files. */
+@import './tokens.css';
+@import './shell.css';
+@import './header.css';
+@import './home.css';
+@import './matches.css';
+@import './goals.css';
+@import './learning.css';
+@import './modal.css';
+@import './auth.css';
+@import './responsive.css';
+@import './mobile.css';
+@import './onboarding.css';
+@import './user-menu.css';
+@import './onboarding-mobile.css';
+@import './pool-champ.css';
