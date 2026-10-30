@@ -67,6 +67,7 @@ export type DashboardHeaderProps = {
   activeAccount?: AccountCard
   onSetCurrentAccountId: (id: string) => void
   onOpenAccountModal: () => void
+  onDeleteAccount: (accountId: string) => void
   onSyncMatches: () => void
   isSyncing: boolean
   lastSyncedLabel: string

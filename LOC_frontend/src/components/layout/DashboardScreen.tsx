@@ -164,6 +164,7 @@ export function DashboardScreen({
           activeAccount={activeAccount}
           onSetCurrentAccountId={onSetCurrentAccountId}
           onOpenAccountModal={handleOpenAccountModal}
+          onDeleteAccount={onDeleteAccount}
           onSyncMatches={onSyncMatches}
           isSyncing={isSyncing}
           lastSyncedLabel={lastSyncedLabel}
