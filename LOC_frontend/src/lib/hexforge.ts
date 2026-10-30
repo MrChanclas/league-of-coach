@@ -1,8 +1,19 @@
-import { APEX_TIERS, LANE_LABELS, RANK_DIVISIONS, RANK_TIERS, TIER_COLORS } from '../constants'
+import { APEX_TIERS, LANE_LABELS, RANK_DIVISIONS, RANK_TIERS, TIER_COLORS, TIER_LABELS } from '../constants'
 import type { NextRank } from '../types/dashboard'
 
 export function getTierColor(tier: string): string | null {
   return TIER_COLORS[tier.trim().toUpperCase()] ?? null
+}
+
+/** "EMERALD" → "Esmeralda". Unknown values fall back to title case. */
+export function formatTier(tier: string): string {
+  const trimmed = tier.trim()
+  return TIER_LABELS[trimmed.toUpperCase()] ?? trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase()
+}
+
+/** "Esmeralda IV"; apex tiers have no division, so just "Maestro". */
+export function formatRank(tier: string, division: string): string {
+  return APEX_TIERS.has(tier.trim().toUpperCase()) ? formatTier(tier) : `${formatTier(tier)} ${division}`
 }
 
 export function formatRelativeTime(iso: string): string {

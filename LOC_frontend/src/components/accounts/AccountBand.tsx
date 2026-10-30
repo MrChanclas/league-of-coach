@@ -1,4 +1,4 @@
-import { getLaneLabel, getNextRank, getTierColor } from '../../lib/hexforge'
+import { formatRank, getLaneLabel, getNextRank, getTierColor } from '../../lib/hexforge'
 import { getRankEmblemUrl } from '../../lib/riotAssets'
 import type { AccountBandProps } from '../../types/components'
 
@@ -26,7 +26,7 @@ export function AccountBand({ account, primaryQueue, statsSummary, streak, lanes
         <div className="account-band-diamond">
           <div className="account-band-crest">
             {emblemUrl ? (
-              <img className="rank-emblem" src={emblemUrl} alt={tier} />
+              <img className="rank-emblem" src={emblemUrl} alt={formatRank(tier, division)} />
             ) : (
               <div className="account-band-crest-fallback" />
             )}
@@ -40,7 +40,7 @@ export function AccountBand({ account, primaryQueue, statsSummary, streak, lanes
             <span className="account-band-badge">ACTIVA</span>
           </div>
           <div className="account-band-tier" style={{ color: tierColor ?? 'var(--hf-muted-1)' }}>
-            {isRanked ? `${tier} ${division}` : 'Sin clasificar'}
+            {isRanked ? formatRank(tier, division) : 'Sin clasificar'}
           </div>
           <div className="account-band-sub">
             {isRanked ? `${lp} LP · ` : ''}
@@ -58,9 +58,9 @@ export function AccountBand({ account, primaryQueue, statsSummary, streak, lanes
                 />
               </div>
               <div className="account-band-progress-labels">
-                <span>{tier} {division}</span>
+                <span>{formatRank(tier, division)}</span>
                 <span className="account-band-progress-next">
-                  {nextRank ? `${nextRank.tier} ${nextRank.division}` : 'RANGO MÁXIMO'}
+                  {nextRank ? formatRank(nextRank.tier, nextRank.division) : 'RANGO MÁXIMO'}
                 </span>
               </div>
             </>

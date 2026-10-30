@@ -1,5 +1,5 @@
 import { useAccountsQueueStats } from '../../hooks/useApiQueries'
-import { getTierColor } from '../../lib/hexforge'
+import { formatRank, getTierColor } from '../../lib/hexforge'
 import { getProfileIconUrl, getRankEmblemUrl } from '../../lib/riotAssets'
 import { formatQueueWinrate, getOrderedQueues } from '../../lib/accounts'
 import type { AccountsGridProps } from '../../types/components'
@@ -89,14 +89,14 @@ export function AccountsGrid({
                     return (
                       <div key={queue.key} className="queue-row">
                         {emblemUrl ? (
-                          <img className="rank-emblem rank-emblem--chip" src={emblemUrl} alt={queue.tier} />
+                          <img className="rank-emblem rank-emblem--chip" src={emblemUrl} alt={formatRank(queue.tier, queue.division)} />
                         ) : (
                           <div className="rank-emblem rank-emblem--chip rank-emblem--unranked" />
                         )}
                         <div className="queue-info">
                           <div className="queue-name">{queue.label}</div>
                           <div className="queue-tier" style={{ color: tierColor ?? 'var(--hf-muted-4)' }}>
-                            {queue.tier === 'Unranked' ? 'SIN CLASIFICAR' : `${queue.tier} ${queue.division}`}
+                            {queue.tier === 'Unranked' ? 'SIN CLASIFICAR' : formatRank(queue.tier, queue.division)}
                           </div>
                         </div>
                         <div className="queue-side">

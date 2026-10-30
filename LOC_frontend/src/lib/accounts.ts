@@ -1,5 +1,5 @@
 import type { AccountCard, AccountStatsSummary, ActivityDay, QueueInfo, QueueStats } from '../types/dashboard'
-import { getTierColor } from './hexforge'
+import { formatRank, getTierColor } from './hexforge'
 
 export function getOrderedQueues(account: AccountCard, stats?: QueueStats): QueueInfo[] {
   const solo: QueueInfo = {
@@ -27,10 +27,6 @@ export function formatQueueWinrate(summary: AccountStatsSummary | null) {
   return `${Math.round(summary.winrate * 100)}% WR · ${summary.gamesPlayed} J`
 }
 
-function titleCaseTier(tier: string) {
-  return tier.charAt(0).toUpperCase() + tier.slice(1).toLowerCase()
-}
-
 export function getPrimaryQueueLabel(account: AccountCard) {
   const isSoloRanked = account.soloTier !== 'Unranked'
   const isFlexRanked = account.flexTier !== 'Unranked'
@@ -39,7 +35,7 @@ export function getPrimaryQueueLabel(account: AccountCard) {
   const tier = isSoloRanked ? account.soloTier : account.flexTier
   const division = isSoloRanked ? account.soloDivision : account.flexDivision
   const lp = isSoloRanked ? account.soloLp : account.flexLp
-  return { label: `${titleCaseTier(tier)} ${division} · ${lp}`, color: getTierColor(tier) }
+  return { label: `${formatRank(tier, division)} · ${lp}`, color: getTierColor(tier) }
 }
 
 export function buildLastSevenDays(activity: ActivityDay[]): ActivityDay[] {

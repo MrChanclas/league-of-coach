@@ -114,7 +114,22 @@ export const GOAL_STATUS_LABELS: Record<GoalStatus, string> = {
 export const RANK_BAND_LABELS: Record<string, string> = {
   LOW: 'Hierro–Oro',
   MID: 'Platino–Diamante',
-  HIGH: 'Master+',
+  HIGH: 'Maestro+',
+}
+
+// Official Spanish (LAS/LAN) tier names. The API keeps Riot's English keys;
+// every place that shows a tier goes through formatTier/formatRank.
+export const TIER_LABELS: Record<string, string> = {
+  IRON: 'Hierro',
+  BRONZE: 'Bronce',
+  SILVER: 'Plata',
+  GOLD: 'Oro',
+  PLATINUM: 'Platino',
+  EMERALD: 'Esmeralda',
+  DIAMOND: 'Diamante',
+  MASTER: 'Maestro',
+  GRANDMASTER: 'Gran Maestro',
+  CHALLENGER: 'Retador',
 }
 
 export const TIER_COLORS: Record<string, string> = {

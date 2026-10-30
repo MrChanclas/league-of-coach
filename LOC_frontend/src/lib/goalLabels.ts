@@ -1,4 +1,5 @@
 import { RANK_BAND_LABELS, ROLE_LABELS } from '../constants'
+import { formatTier } from './hexforge'
 import type { GoalGap, GoalItem, GoalPace } from '../types/dashboard'
 
 function pct(value: number | undefined) {
@@ -9,7 +10,7 @@ export function formatGoalTitle(goal: GoalItem): string {
   if (goal.type === 'rango') {
     const queue = goal.queueType === 'flex' ? 'Flex' : 'SoloQ'
     const division = goal.targetDivision ? ` ${goal.targetDivision}` : ''
-    return `${queue}: llegar a ${goal.targetTier}${division}`
+    return `${queue}: llegar a ${formatTier(goal.targetTier ?? '')}${division}`
   }
 
   if (goal.type === 'rol') {
@@ -47,7 +48,7 @@ export function formatGoalCurrent(goal: GoalItem): string {
     if (!current.tier || current.tier === 'Unranked') return 'Actual: sin clasificar'
     const divisionPart = current.division && current.division !== 'Unranked' ? ` ${current.division}` : ''
     const lpPart = current.lp != null ? ` · ${current.lp} LP` : ''
-    return `Actual: ${current.tier}${divisionPart}${lpPart}`
+    return `Actual: ${formatTier(current.tier)}${divisionPart}${lpPart}`
   }
 
   if (goal.type === 'rol') {

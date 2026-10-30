@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { SubmitEvent } from 'react'
 import type { GoalCreateInput, GoalType } from '../../types/dashboard'
 import { RANK_DIVISIONS, RANK_TIERS, ROLE_KEYS, ROLE_LABELS, TYPE_TABS } from '../../constants'
+import { formatTier } from '../../lib/hexforge'
 import { getChampionList, getDdragonVersion } from '../../lib/riotAssets'
 import { RoleMetricsInfoModal } from './RoleMetricsInfoModal'
 import type { GoalFormModalProps } from '../../types/components'
@@ -133,11 +134,11 @@ export function GoalFormModal({ isOpen, accountId, status, prefill, onClose, onS
                 </select>
               </label>
               <label>
-                Tier objetivo
+                Rango objetivo
                 <select value={targetTier} onChange={(event) => setTargetTier(event.target.value)}>
                   {RANK_TIERS.map((tier) => (
                     <option key={tier} value={tier}>
-                      {tier}
+                      {formatTier(tier)}
                     </option>
                   ))}
                 </select>
