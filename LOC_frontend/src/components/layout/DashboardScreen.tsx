@@ -36,6 +36,7 @@ export function DashboardScreen({
   hasOlderMatches,
   historyWindowDays,
   statsSummary,
+  homeStatsSummary,
   streak,
   lanes,
   weeklyActivity,
@@ -178,6 +179,7 @@ export function DashboardScreen({
             currentAccountId={currentAccountId}
             ddragonVersion={ddragonVersion}
             statsSummary={statsSummary}
+            homeStatsSummary={homeStatsSummary}
             streak={streak}
             lanes={lanes}
             rankHistory={rankHistory}

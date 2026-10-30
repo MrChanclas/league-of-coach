@@ -33,6 +33,8 @@ export const RANK_TIERS = [
   'CHALLENGER',
 ] as const
 
+// The home's "7 días" period; "Split" is the whole synced season.
+export const HOME_RECENT_DAYS = 7
 export const WEEKDAY_LABELS = ['D', 'L', 'M', 'X', 'J', 'V', 'S']
 export const BAR_SCALE_PX = 26
 export const APP_VERSION = __APP_VERSION__

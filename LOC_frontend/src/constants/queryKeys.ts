@@ -7,8 +7,8 @@ export const queryKeys = {
   platformStats: () => ['platformStats'] as const,
   account: (accountId: string | undefined) => ['account', accountId] as const,
   accountMatches: (accountId: string | undefined) => ['account', accountId, 'matches'] as const,
-  accountStats: (accountId: string | undefined, queueId?: number) =>
-    ['account', accountId, 'stats', queueId ?? 'all'] as const,
+  accountStats: (accountId: string | undefined, queueId?: number, days?: number) =>
+    ['account', accountId, 'stats', queueId ?? 'all', days ?? 'season'] as const,
   accountStreak: (accountId: string | undefined, queueId?: number) =>
     ['account', accountId, 'streak', queueId ?? 'all'] as const,
   accountLanes: (accountId: string | undefined) => ['account', accountId, 'lanes'] as const,

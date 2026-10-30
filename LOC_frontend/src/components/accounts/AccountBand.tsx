@@ -3,7 +3,7 @@ import { getRankEmblemUrl } from '../../lib/riotAssets'
 import type { AccountBandProps } from '../../types/components'
 
 
-export function AccountBand({ account, primaryQueue, statsSummary, streak, lanes }: AccountBandProps) {
+export function AccountBand({ account, primaryQueue, statsSummary: periodSummary, streak, lanes }: AccountBandProps) {
   const tier = primaryQueue === 'solo' ? account.soloTier : account.flexTier
   const division = primaryQueue === 'solo' ? account.soloDivision : account.flexDivision
   const lp = primaryQueue === 'solo' ? account.soloLp : account.flexLp
@@ -13,6 +13,9 @@ export function AccountBand({ account, primaryQueue, statsSummary, streak, lanes
   const nextRank = isRanked ? getNextRank(tier, division) : null
   const progressPct = isRanked ? Math.min(100, Math.max(0, lp)) : 0
 
+  // A period with no games (e.g. nothing played in the last 7 days) reads
+  // "—" instead of 0% / 0.00, which would look like real results.
+  const statsSummary = periodSummary && periodSummary.gamesPlayed > 0 ? periodSummary : null
   const games = statsSummary?.gamesPlayed ?? 0
   const wins = statsSummary?.wins ?? 0
   const losses = games - wins
@@ -70,7 +73,7 @@ export function AccountBand({ account, primaryQueue, statsSummary, streak, lanes
         </div>
 
         <div className="account-band-winrate">
-          <div className="account-band-winrate-value">{winratePct}%</div>
+          <div className="account-band-winrate-value">{statsSummary ? `${winratePct}%` : '—'}</div>
           <div className="account-band-winrate-sub">
             {wins}V · {losses}D
           </div>
