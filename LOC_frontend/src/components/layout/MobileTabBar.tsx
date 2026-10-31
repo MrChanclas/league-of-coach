@@ -44,6 +44,16 @@ function TabGlyph({ tab, active }: TabGlyphProps) {
       </svg>
     )
   }
+  if (tab === 'social') {
+    return (
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden>
+        <circle cx="8" cy="8" r="3.2" stroke={stroke} strokeWidth="1.6" />
+        <circle cx="15" cy="9" r="2.6" stroke={stroke} strokeWidth="1.6" />
+        <path d="M2.5 18.5c.6-3 2.8-4.7 5.5-4.7s4.9 1.7 5.5 4.7" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" />
+        <path d="M14.5 13.8c2.4 0 4.3 1.5 4.9 4.2" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" />
+      </svg>
+    )
+  }
   return (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden>
       <circle cx="11" cy="11" r="9" stroke={stroke} strokeWidth="1.6" />

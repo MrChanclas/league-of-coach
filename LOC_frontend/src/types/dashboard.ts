@@ -1,4 +1,4 @@
-export type TabKey = 'cuentas' | 'aprendizaje' | 'objetivos' | 'partidas' | 'pool-champ'
+export type TabKey = 'cuentas' | 'aprendizaje' | 'objetivos' | 'partidas' | 'pool-champ' | 'social'
 
 export type AuthUser = {
   id: string

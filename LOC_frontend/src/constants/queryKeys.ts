@@ -24,4 +24,14 @@ export const queryKeys = {
   accountPool: (accountId: string | undefined) => ['account', accountId, 'pool'] as const,
   accountPoolRecommendation: (accountId: string | undefined) =>
     ['account', accountId, 'pool', 'recommendation'] as const,
+  // Everything social shares the 'social' prefix, so one invalidation
+  // refreshes the panel after any action.
+  social: () => ['social'] as const,
+  socialSummary: () => ['social', 'summary'] as const,
+  socialProfile: () => ['social', 'profile'] as const,
+  socialCandidates: () => ['social', 'candidates'] as const,
+  socialRequests: () => ['social', 'requests'] as const,
+  socialDuos: () => ['social', 'duos'] as const,
+  socialDuo: (duoId: string | null) => ['social', 'duos', duoId] as const,
+  socialMessages: (duoId: string | null) => ['social', 'duos', duoId, 'messages'] as const,
 }

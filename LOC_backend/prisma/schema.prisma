@@ -17,7 +17,19 @@ model User {
   // su primer ingreso al panel. Se guarda en la base (no en localStorage)
   // para que no vuelva a aparecer al cambiar de dispositivo.
   onboardingCompletedAt DateTime?
+  // Copied from the Discord account linked in Clerk (see
+  // users.service.ts syncDiscordIdentity). Shown to a duo partner so they can
+  // also talk outside LoC; null until the user links Discord.
+  discordId             String?      @unique
+  discordUsername       String?
   accounts              LolAccount[]
+  duoProfile            DuoProfile?
+  sentDuoRequests       DuoRequest[] @relation("DuoRequestFrom")
+  receivedDuoRequests   DuoRequest[] @relation("DuoRequestTo")
+  duosAsA               Duo[]        @relation("DuoUserA")
+  duosAsB               Duo[]        @relation("DuoUserB")
+  duoMessages           DuoMessage[]
+  duoReports            DuoReport[]
 }
 
 model LolAccount {
@@ -66,6 +78,11 @@ model LolAccount {
   rankSnapshots            RankSnapshot[]
   championPool             ChampionPool?
   seasonRecoveryCandidates SeasonRecoveryCandidate[]
+  duoProfiles              DuoProfile[]
+  duoRequestsFrom          DuoRequest[]              @relation("DuoRequestFromAccount")
+  duoRequestsTo            DuoRequest[]              @relation("DuoRequestToAccount")
+  duosAsA                  Duo[]                     @relation("DuoAccountA")
+  duosAsB                  Duo[]                     @relation("DuoAccountB")
 
   @@index([userId])
 }
@@ -281,4 +298,115 @@ model MatchParticipant {
   // query filters participants by account (or by puuid for shared accounts).
   @@index([accountId])
   @@index([puuid])
+}
+
+// ─── Social: duo finder, duos and their chat (see src/social) ─────────────
+
+// A player's public "looking for duo" card. One per user; it searches with
+// one of their Riot accounts (rank and region come from that account, never
+// from what the player types). `active` false hides it from searches without
+// losing what was filled in.
+model DuoProfile {
+  id           String     @id @default(cuid())
+  userId       String     @unique
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId    String
+  account      LolAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  queue        String // 'solo' | 'flex'
+  roles        String[] // lines the player plays: TOP | JUNGLE | MIDDLE | BOTTOM | UTILITY
+  lookingFor   String[] // lines wanted in the partner
+  availability String[] // 'manana' | 'tarde' | 'noche' | 'madrugada'
+  note         String?
+  active       Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([active, queue])
+  @@index([accountId])
+}
+
+model DuoRequest {
+  id            String     @id @default(cuid())
+  fromUserId    String
+  fromUser      User       @relation("DuoRequestFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId      String
+  toUser        User       @relation("DuoRequestTo", fields: [toUserId], references: [id], onDelete: Cascade)
+  fromAccountId String
+  fromAccount   LolAccount @relation("DuoRequestFromAccount", fields: [fromAccountId], references: [id], onDelete: Cascade)
+  toAccountId   String
+  toAccount     LolAccount @relation("DuoRequestToAccount", fields: [toAccountId], references: [id], onDelete: Cascade)
+  queue         String // 'solo' | 'flex'
+  message       String?
+  status        String     @default("pending") // 'pending' | 'accepted' | 'declined' | 'cancelled'
+  createdAt     DateTime   @default(now())
+  respondedAt   DateTime?
+  duo           Duo?
+
+  @@index([toUserId, status])
+  @@index([fromUserId, status])
+}
+
+// An accepted request. Side A is whoever sent it. `lastReadAtA/B` mark how far
+// each side has read the chat, for unread counts. `endedAt` closes the duo:
+// the chat turns read-only and it leaves the active list.
+model Duo {
+  id          String       @id @default(cuid())
+  requestId   String       @unique
+  request     DuoRequest   @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  userAId     String
+  userA       User         @relation("DuoUserA", fields: [userAId], references: [id], onDelete: Cascade)
+  userBId     String
+  userB       User         @relation("DuoUserB", fields: [userBId], references: [id], onDelete: Cascade)
+  accountAId  String
+  accountA    LolAccount   @relation("DuoAccountA", fields: [accountAId], references: [id], onDelete: Cascade)
+  accountBId  String
+  accountB    LolAccount   @relation("DuoAccountB", fields: [accountBId], references: [id], onDelete: Cascade)
+  queue       String // 'solo' | 'flex'
+  lastReadAtA DateTime?
+  lastReadAtB DateTime?
+  createdAt   DateTime     @default(now())
+  endedAt     DateTime?
+  goal        DuoGoal?
+  messages    DuoMessage[]
+  reports     DuoReport[]
+
+  @@index([userAId])
+  @@index([userBId])
+}
+
+// Shared rank goal: both partners reach the target in the duo's queue.
+model DuoGoal {
+  id             String    @id @default(cuid())
+  duoId          String    @unique
+  duo            Duo       @relation(fields: [duoId], references: [id], onDelete: Cascade)
+  targetTier     String // IRON..CHALLENGER
+  targetDivision String? // I..IV, null on Master+
+  deadline       DateTime?
+  createdAt      DateTime  @default(now())
+}
+
+model DuoMessage {
+  id        String   @id @default(cuid())
+  duoId     String
+  duo       Duo      @relation(fields: [duoId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([duoId, createdAt])
+}
+
+// A report from one partner about the other; also posted to the moderation
+// channel on Discord.
+model DuoReport {
+  id         String   @id @default(cuid())
+  duoId      String
+  duo        Duo      @relation(fields: [duoId], references: [id], onDelete: Cascade)
+  reporterId String
+  reporter   User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  reason     String
+  createdAt  DateTime @default(now())
+
+  @@index([duoId])
 }

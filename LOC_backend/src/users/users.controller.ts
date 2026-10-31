@@ -47,6 +47,12 @@ export class UsersController {
     );
   }
 
+  // Called after the user links (or unlinks) Discord in Clerk.
+  @Post('me/discord/sync')
+  syncDiscord(@Req() request: AuthenticatedRequest) {
+    return this.usersService.syncDiscordIdentity(request.clerkUserId);
+  }
+
   @Get()
   async findAll(@Req() request: AuthenticatedRequest) {
     await this.authz.assertAdmin(request.clerkUserId);
