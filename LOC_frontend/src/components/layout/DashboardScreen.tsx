@@ -5,6 +5,7 @@ import { CuentaTabPanel } from '../auth/CuentaTabPanel'
 import { DashboardHeader } from './DashboardHeader'
 import { DashboardSidebar } from './DashboardSidebar'
 import { MobileTabBar } from './MobileTabBar'
+import { TwitchLiveBanner } from './TwitchLiveBanner'
 import { GoalFormModal } from '../goals/GoalFormModal'
 import { GoalsTabPanel } from '../goals/GoalsTabPanel'
 import { LearningTabPanel } from '../learning/LearningTabPanel'
@@ -176,6 +177,8 @@ export function DashboardScreen({
           isSyncing={isSyncing}
           lastSyncedLabel={lastSyncedLabel}
         />
+
+        <TwitchLiveBanner />
 
         {status && <p className="dashboard-status">{status}</p>}
         {isLoadingDashboard && <p className="dashboard-status">Cargando dashboard…</p>}

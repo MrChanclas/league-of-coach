@@ -25,6 +25,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { RiotModule } from './riot/riot.module';
 import { SocialModule } from './social/social.module';
 import { StatsModule } from './stats/stats.module';
+import { TwitchModule } from './twitch/twitch.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -51,6 +52,7 @@ import { UsersModule } from './users/users.module';
     ChampionPoolsModule,
     MatchesModule,
     StatsModule,
+    TwitchModule,
   ],
   controllers: [AppController],
   providers: [

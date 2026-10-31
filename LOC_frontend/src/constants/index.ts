@@ -319,6 +319,16 @@ export const CHECKLIST_TASKS = [
   { name: 'Fijar un objetivo del split', hint: 'Rango, winrate o un hábito.' },
 ] as const
 
+// ─── Twitch "en vivo" banner ────────────────────────────────────────────
+
+// The backend caches Twitch's answer for a minute, so asking more often than
+// this would only return the same thing.
+export const TWITCH_LIVE_POLL_MS = 2 * 60_000
+export const TWITCH_STREAMER_NAME = 'Captain Chala'
+// Remembers which stream the player closed the banner for, so it stays
+// closed for that stream and comes back on the next one.
+export const TWITCH_DISMISSED_STREAM_KEY = 'loc:twitch-dismissed-stream'
+
 // ─── Social (duo finder, duos and chat) ─────────────────────────────────
 
 // Polling instead of a socket: the backend runs on several Cloud Run

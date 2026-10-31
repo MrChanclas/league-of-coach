@@ -25,6 +25,18 @@ export type PlatformStatsResponse = {
   totalAccountsAnalyzed: number
 }
 
+export type TwitchLiveStatus =
+  | { live: false; channelUrl: string }
+  | {
+      live: true
+      channelUrl: string
+      streamId: string
+      title: string
+      gameName: string
+      viewerCount: number
+      startedAt: string
+    }
+
 export type MatchPageResponse = {
   items: MatchParticipantEntry[]
   /** How many days back the history list reaches (the sync still covers the whole season). */
