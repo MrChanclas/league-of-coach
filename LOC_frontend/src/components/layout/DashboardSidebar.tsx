@@ -44,7 +44,11 @@ export function DashboardSidebar({
               <span className="nav-item-dot" />
               <span className="nav-item-label">{item.label}</span>
               {lockedTabs.includes(item.key) && <LockGlyph className="nav-item-lock" />}
-              <span className="nav-item-meta">{navMeta[item.key]}</span>
+              {item.key === 'social' ? (
+                navMeta.social > 0 && <span className="nav-item-badge">{navMeta.social}</span>
+              ) : (
+                <span className="nav-item-meta">{navMeta[item.key]}</span>
+              )}
             </button>
           ))}
         </nav>
