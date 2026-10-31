@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { canDuo, type DuoQueue } from '../common/duo-eligibility';
 import { rankValue } from '../common/rank-order';
-import { DiscordService } from '../discord/discord.service';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   DUO_ACCOUNT_SELECT,
@@ -27,10 +26,7 @@ type ProfileWithAccount = {
 
 @Injectable()
 export class DuoProfilesService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly discord: DiscordService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async getMine(userId: string) {
     const [profile, user] = await Promise.all([
@@ -44,25 +40,13 @@ export class DuoProfilesService {
   }
 
   async upsert(userId: string, input: UpsertDuoProfileInput) {
-    const existing = await this.prisma.duoProfile.findUnique({
-      where: { userId },
-      select: { active: true },
-    });
     const data = { ...input, note: input.note || null };
-    const profile = await this.prisma.duoProfile.upsert({
+    return this.prisma.duoProfile.upsert({
       where: { userId },
       create: { userId, ...data },
       update: data,
       include: { account: { select: DUO_ACCOUNT_SELECT } },
     });
-
-    if (profile.active && !existing?.active) {
-      const rank = rankForQueue(profile.account, profile.queue);
-      this.discord.notifySocial(
-        `🔎 Busca duo: **${profile.account.summoner}#${profile.account.tag}** (${profile.account.server}, ${rank.tier} ${rank.division}, ${profile.queue === 'flex' ? 'Flex' : 'Solo/Dúo'}) · juega ${profile.roles.join('/')}, busca ${profile.lookingFor.join('/')}`,
-      );
-    }
-    return profile;
   }
 
   /**
