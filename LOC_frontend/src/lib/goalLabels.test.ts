@@ -9,7 +9,7 @@ function goal(overrides: Partial<GoalItem>): GoalItem {
 describe('formatGoalTitle', () => {
   it('names the queue and target rank for a rank goal', () => {
     expect(formatGoalTitle(goal({ queueType: 'flex', targetTier: 'PLATINUM', targetDivision: 'II' }))).toBe(
-      'Flex: llegar a PLATINUM II',
+      'Flex: llegar a Platino II',
     )
   })
 

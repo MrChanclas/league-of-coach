@@ -48,7 +48,7 @@ describe('formatQueueWinrate', () => {
 
 describe('getPrimaryQueueLabel', () => {
   it('falls back to Flex when Solo/Dúo is unranked', () => {
-    expect(getPrimaryQueueLabel(account({ soloTier: 'Unranked' })).label).toBe('Silver I · 10')
+    expect(getPrimaryQueueLabel(account({ soloTier: 'Unranked' })).label).toBe('Plata I · 10')
   })
 
   it('says unranked when neither queue has a rank', () => {
