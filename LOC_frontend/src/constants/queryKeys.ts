@@ -5,6 +5,7 @@ export const queryKeys = {
   internalUser: (clerkUserId: string | null | undefined) => ['internalUser', clerkUserId] as const,
   dashboard: (userId: string | undefined) => ['dashboard', userId] as const,
   platformStats: () => ['platformStats'] as const,
+  twitchLive: () => ['twitchLive'] as const,
   account: (accountId: string | undefined) => ['account', accountId] as const,
   accountMatches: (accountId: string | undefined) => ['account', accountId, 'matches'] as const,
   accountStats: (accountId: string | undefined, queueId?: number, days?: number) =>

@@ -1,0 +1,136 @@
+/* Twitch "en vivo" banner — Twitch's purple marks it as the channel's, not the app's */
+
+.twitch-banner {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  margin: 18px 28px 0;
+  padding: 12px 14px 12px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(145, 70, 255, 0.45);
+  background: linear-gradient(90deg, rgba(145, 70, 255, 0.18), rgba(145, 70, 255, 0.05));
+}
+
+.twitch-banner-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #e91916;
+  color: #fff;
+  font: 700 10px/1 var(--font-mono);
+  letter-spacing: 0.12em;
+}
+
+.twitch-banner-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  animation: twitch-banner-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes twitch-banner-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.twitch-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.twitch-banner-text strong {
+  font: 600 14px/1.25 var(--font-body);
+  color: var(--hf-heading-3);
+}
+
+.twitch-banner-title,
+.twitch-banner-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 400 12.5px/1.35 var(--font-body);
+  color: var(--hf-muted-1);
+}
+
+.twitch-banner-meta {
+  font-size: 11.5px;
+  color: var(--hf-muted-3);
+}
+
+.twitch-banner-cta {
+  padding: 9px 14px;
+  border-radius: 9px;
+  background: #9146ff;
+  color: #fff;
+  font: 600 13px/1 var(--font-body);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.twitch-banner-cta:hover {
+  background: #a970ff;
+}
+
+.twitch-banner-close {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--hf-muted-3);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.twitch-banner-close:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--hf-heading-3);
+}
+
+.twitch-banner-cta:focus-visible,
+.twitch-banner-close:focus-visible {
+  outline: 2px solid #bf94ff;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .twitch-banner-dot {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .twitch-banner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    margin: 0 16px 14px;
+    gap: 10px;
+  }
+
+  .twitch-banner-live {
+    justify-self: start;
+  }
+
+  .twitch-banner-text {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .twitch-banner-cta {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    text-align: center;
+  }
+
+  .twitch-banner-close {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}

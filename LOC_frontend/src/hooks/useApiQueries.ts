@@ -1,8 +1,8 @@
 import { useAuth } from '@clerk/clerk-react'
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '../lib/api'
-import { QUEUE_IDS, queryKeys } from '../constants'
-import type { MatchPageResponse, PlatformStatsResponse } from '../types/api'
+import { QUEUE_IDS, TWITCH_LIVE_POLL_MS, queryKeys } from '../constants'
+import type { MatchPageResponse, PlatformStatsResponse, TwitchLiveStatus } from '../types/api'
 import type {
   AccountCard,
   AccountStatsSummary,
@@ -64,6 +64,14 @@ export function usePlatformStats() {
     queryKey: queryKeys.platformStats(),
     queryFn: () => apiFetch<PlatformStatsResponse>('/stats/platform'),
     staleTime: 5 * 60_000,
+  })
+}
+
+export function useTwitchLive() {
+  return useQuery({
+    queryKey: queryKeys.twitchLive(),
+    queryFn: () => apiFetch<TwitchLiveStatus>('/twitch/live'),
+    refetchInterval: TWITCH_LIVE_POLL_MS,
   })
 }
 
