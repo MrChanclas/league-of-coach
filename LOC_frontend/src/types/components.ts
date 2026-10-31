@@ -67,6 +67,7 @@ export type DashboardHeaderProps = {
   activeAccount?: AccountCard
   onSetCurrentAccountId: (id: string) => void
   onOpenAccountModal: () => void
+  onDeleteAccount: (accountId: string) => void
   onSyncMatches: () => void
   isSyncing: boolean
   lastSyncedLabel: string
@@ -127,6 +128,8 @@ export type DashboardScreenProps = {
   hasOlderMatches: boolean
   historyWindowDays: number | null
   statsSummary: AccountStatsSummary | null
+  // The home's summary for the selected period (see timeRange).
+  homeStatsSummary: AccountStatsSummary | null
   streak: StreakInfo | null
   lanes: LaneEntry[]
   weeklyActivity: ActivityDay[]
@@ -366,6 +369,7 @@ export type AccountTabPanelProps = {
   currentAccountId: string
   ddragonVersion: string | null
   statsSummary: AccountStatsSummary | null
+  homeStatsSummary: AccountStatsSummary | null
   streak: StreakInfo | null
   lanes: LaneEntry[]
   rankHistory: RankSnapshotEntry[]

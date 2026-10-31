@@ -33,6 +33,8 @@ export const RANK_TIERS = [
   'CHALLENGER',
 ] as const
 
+// The home's "7 días" period; "Split" is the whole synced season.
+export const HOME_RECENT_DAYS = 7
 export const WEEKDAY_LABELS = ['D', 'L', 'M', 'X', 'J', 'V', 'S']
 export const BAR_SCALE_PX = 26
 export const APP_VERSION = __APP_VERSION__
@@ -114,7 +116,22 @@ export const GOAL_STATUS_LABELS: Record<GoalStatus, string> = {
 export const RANK_BAND_LABELS: Record<string, string> = {
   LOW: 'Hierro–Oro',
   MID: 'Platino–Diamante',
-  HIGH: 'Master+',
+  HIGH: 'Maestro+',
+}
+
+// Official Spanish (LAS/LAN) tier names. The API keeps Riot's English keys;
+// every place that shows a tier goes through formatTier/formatRank.
+export const TIER_LABELS: Record<string, string> = {
+  IRON: 'Hierro',
+  BRONZE: 'Bronce',
+  SILVER: 'Plata',
+  GOLD: 'Oro',
+  PLATINUM: 'Platino',
+  EMERALD: 'Esmeralda',
+  DIAMOND: 'Diamante',
+  MASTER: 'Maestro',
+  GRANDMASTER: 'Gran Maestro',
+  CHALLENGER: 'Retador',
 }
 
 export const TIER_COLORS: Record<string, string> = {

@@ -9,6 +9,7 @@ export function DashboardHeader({
   activeAccount,
   onSetCurrentAccountId,
   onOpenAccountModal,
+  onDeleteAccount,
   onSyncMatches,
   isSyncing,
   lastSyncedLabel,
@@ -25,6 +26,15 @@ export function DashboardHeader({
   const handleSelectAccount = (accountId: string) => {
     onSetCurrentAccountId(accountId)
     setIsMenuOpen(false)
+  }
+
+  const handleDeleteActiveAccount = () => {
+    if (!activeAccount) return
+    setIsMenuOpen(false)
+    const confirmed = window.confirm(
+      `¿Seguro que quieres desvincular "${activeAccount.summoner}#${activeAccount.tag}"? Esto también borra sus partidas, objetivos y aprendizaje guardados.`,
+    )
+    if (confirmed) onDeleteAccount(activeAccount.id)
   }
 
   return (
@@ -61,6 +71,13 @@ export function DashboardHeader({
                   {account.summoner} #{account.tag}
                 </button>
               ))}
+              <button
+                type="button"
+                className="header-account-menu-item header-account-menu-item--danger"
+                onClick={handleDeleteActiveAccount}
+              >
+                Desvincular {activeAccount.summoner}
+              </button>
             </div>
           )}
 
@@ -93,6 +110,9 @@ export function DashboardHeader({
               }}
             >
               + Registrar cuenta
+            </button>
+            <button type="button" className="sheet-ghost-btn sheet-ghost-btn--danger" onClick={handleDeleteActiveAccount}>
+              Desvincular {activeAccount.summoner}
             </button>
           </BottomSheet>
         </div>

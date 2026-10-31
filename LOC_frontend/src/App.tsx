@@ -31,7 +31,7 @@ import { useMatchSync } from './hooks/useMatchSync'
 import { useStatusMessage } from './hooks/useStatusMessage'
 import { useTabNavigation } from './hooks/useTabNavigation'
 import { getDdragonVersion } from './lib/riotAssets'
-import { BLANK_ACCOUNT_FORM, queryKeys } from './constants'
+import { BLANK_ACCOUNT_FORM, HOME_RECENT_DAYS, queryKeys } from './constants'
 import type { AccountForm, GoalCreateInput, PoolSlotKey, ReplacePoolEntryInput, TimeRange } from './types/dashboard'
 
 function App() {
@@ -99,6 +99,13 @@ function App() {
 
   const matchesQuery = useAccountMatches(currentAccountId)
   const statsQuery = useAccountStats(currentAccountId)
+  // The home's account band follows the "7 días / Split" toggle; on "Split"
+  // it's the same query as statsQuery, which React Query dedupes.
+  const homeStatsQuery = useAccountStats(
+    currentAccountId,
+    undefined,
+    timeRange === '7d' ? HOME_RECENT_DAYS : undefined,
+  )
   const streakQuery = useAccountStreak(currentAccountId)
   const lanesQuery = useAccountLanes(currentAccountId)
   const activityQuery = useAccountActivity(currentAccountId)
@@ -264,6 +271,7 @@ function App() {
       hasOlderMatches={matchesQuery.data?.hasOlderMatches ?? false}
       historyWindowDays={matchesQuery.data?.windowDays ?? null}
       statsSummary={statsSummary}
+      homeStatsSummary={homeStatsQuery.data ?? null}
       streak={streak}
       lanes={lanes}
       weeklyActivity={weeklyActivity}

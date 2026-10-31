@@ -80,15 +80,17 @@ export function useAccountMatches(accountId: string | undefined) {
 }
 
 /** queueId omitted = combined solo + flex (the account's whole history). */
-export function useAccountStats(accountId: string | undefined, queueId?: number) {
+// `days` narrows the account-wide summary to a recent window; it doesn't
+// apply to the per-queue one.
+export function useAccountStats(accountId: string | undefined, queueId?: number, days?: number) {
   const { getToken } = useAuth()
   return useQuery({
-    queryKey: queryKeys.accountStats(accountId, queueId),
+    queryKey: queryKeys.accountStats(accountId, queueId, days),
     queryFn: async () => {
       const token = await getToken()
       const path = queueId
         ? `/stats/account/${accountId}/by-queue/${queueId}`
-        : `/stats/account/${accountId}`
+        : `/stats/account/${accountId}${days ? `?days=${days}` : ''}`
       return apiFetch<AccountStatsSummary>(path, { token })
     },
     enabled: Boolean(accountId),
