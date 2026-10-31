@@ -42,4 +42,5 @@ export type AuthFlow = {
   handleForgotRequestSubmit: FormSubmitHandler
   handleForgotResetSubmit: FormSubmitHandler
   handleGoogleAuth: () => Promise<void>
+  handleDiscordAuth: () => Promise<void>
 }
