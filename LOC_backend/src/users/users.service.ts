@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { DISCORD_PROVIDERS, getClerkClient } from '../auth/clerk-client';
 import { DiscordService } from '../discord/discord.service';
 import { GoalsService } from '../goals/goals.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -26,6 +27,27 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto) {
     return this.createUser(createUserDto);
+  }
+
+  /**
+   * Copies the Discord account linked in Clerk onto the user (or clears it
+   * when unlinked). Read from Clerk rather than taken from the client, so a
+   * duo partner can trust the username they're shown.
+   */
+  async syncDiscordIdentity(clerkId: string) {
+    const clerkUser = await getClerkClient().users.getUser(clerkId);
+    const discord = clerkUser.externalAccounts.find((account) =>
+      DISCORD_PROVIDERS.has(account.provider),
+    );
+
+    return this.prisma.user.update({
+      where: { clerkId },
+      data: {
+        discordId: discord?.externalId ?? null,
+        discordUsername: discord?.username ?? null,
+      },
+      select: { discordId: true, discordUsername: true },
+    });
   }
 
   async findOrCreateByClerkId(clerkId: string, name: string, email: string) {
