@@ -5,10 +5,9 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import * as Sentry from '@sentry/react'
 import './index.css'
 import App from './App.tsx'
+import { CLERK_PUBLISHABLE_KEY } from './constants/runtime'
 import { queryClient } from './lib/queryClient'
 import { initSentry } from './lib/sentry'
-
-const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
 if (!CLERK_PUBLISHABLE_KEY) {
   throw new Error('Falta la variable de entorno VITE_CLERK_PUBLISHABLE_KEY')

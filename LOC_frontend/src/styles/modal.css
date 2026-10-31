@@ -1,0 +1,167 @@
+/* Modal */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 7, 10, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 50;
+}
+
+.modal-card {
+  width: min(100%, 460px);
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 16px;
+  background: var(--hf-surface);
+  border: 1px solid var(--hf-border-strong);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  padding: 24px 24px 22px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  letter-spacing: 0.04em;
+  color: var(--hf-heading-2);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--hf-muted-2);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Auth screen: shared primitives still used by AccountSearchModal */
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #d7d2c8;
+  font-size: 0.9rem;
+}
+
+.auth-form input,
+.auth-form select,
+.auth-form textarea {
+  width: 100%;
+  background: rgba(9, 12, 18, 0.8);
+  border: 1px solid var(--hf-border-strong);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #f6f1e7;
+  box-sizing: border-box;
+  font: inherit;
+  resize: vertical;
+}
+
+.auth-form input:focus,
+.auth-form select:focus,
+.auth-form textarea:focus {
+  outline: 2px solid rgba(216, 181, 106, 0.5);
+  outline-offset: 1px;
+}
+
+.form-hint {
+  margin: -6px 0 0;
+  color: #9a948a;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.auth-submit {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.primary-btn {
+  border-radius: 8px;
+  border: none;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  background: linear-gradient(180deg, var(--hf-gold-grad-start), var(--hf-gold-grad-end));
+  color: #141109;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-weight: 600;
+}
+
+.primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Generic gold-outline secondary action — same look as objectives-preview-primary, generalized for reuse (Pool Champ). */
+.secondary-btn {
+  padding: 9px 15px;
+  border-radius: 8px;
+  border: 1px solid rgba(216, 181, 106, 0.4);
+  background: rgba(216, 181, 106, 0.1);
+  color: var(--hf-gold-strong);
+  font: 600 12.5px var(--font-body);
+  cursor: pointer;
+}
+
+.secondary-btn:hover:not(:disabled) {
+  background: rgba(216, 181, 106, 0.16);
+}
+
+.secondary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.goals-panel-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.link-btn {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--hf-gold-strong);
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.auth-status {
+  margin-top: 18px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  background: rgba(63, 174, 143, 0.08);
+  border: 1px solid rgba(63, 174, 143, 0.35);
+  color: #c7f3e6;
+}
+
+.auth-help {
+  margin-top: 14px;
+  color: var(--hf-muted-2);
+  font-size: 0.82rem;
+}

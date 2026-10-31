@@ -2,30 +2,7 @@ import { useState } from 'react'
 import { PoolBoard } from './PoolBoard'
 import { PoolSelector } from './PoolSelector'
 import { poolEntryKey } from '../../lib/poolLabels'
-import type {
-  AccountCard,
-  LessonCard,
-  PoolRecommendation,
-  PoolSlotKey,
-  PoolView,
-  ReplacePoolEntryInput,
-  RosterChampion,
-} from '../../types/dashboard'
-
-type PoolChampTabPanelProps = {
-  activeAccount?: AccountCard
-  poolView: PoolView | undefined
-  roster: RosterChampion[]
-  ddragonVersion: string | null
-  lessons: LessonCard[]
-  recommendation: PoolRecommendation | undefined
-  isRecommendationLoading: boolean
-  isSavingPool: boolean
-  onSavePool: (entries: ReplacePoolEntryInput[]) => Promise<boolean>
-  onAddOutsider: (championKey: string, role: PoolSlotKey) => void
-  onOpenChampionLesson: (championKey: string, role: PoolSlotKey) => void
-  onGoToAccounts: () => void
-}
+import type { PoolChampTabPanelProps } from '../../types/components'
 
 export function PoolChampTabPanel({
   activeAccount,

@@ -1,32 +1,9 @@
-import type { GoalItem } from '../../types/dashboard'
 import { GoalRow } from './GoalRow'
 import { LockedTabState } from '../shared/LockedTabState'
-
-type GoalsTabPanelProps = {
-  goalsByAccount: GoalItem[]
-  behaviorFlagsCount: number
-  hasPool: boolean
-  onOpenGoalModal: () => void
-  onDeleteGoal: (goalId: string) => void
-  onGoToMatches: () => void
-  onGoToLearning: () => void
-  onGoToPoolChamp: () => void
-}
-
-function daysUntil(deadline?: string | null): number | null {
-  if (!deadline) return null
-  const days = Math.ceil((new Date(deadline).getTime() - Date.now()) / (24 * 60 * 60 * 1000))
-  return days > 0 ? days : null
-}
-
-function sortGoals(goals: GoalItem[]): GoalItem[] {
-  return [...goals].sort((a, b) => {
-    const aCompleted = a.status === 'completed' ? 1 : 0
-    const bCompleted = b.status === 'completed' ? 1 : 0
-    if (aCompleted !== bCompleted) return aCompleted - bCompleted
-    return b.progress - a.progress
-  })
-}
+import { daysUntil } from '../../lib/dates'
+import { sortGoals } from '../../lib/goalLabels'
+import type { GoalItem } from '../../types/dashboard'
+import type { GoalsTabPanelProps } from '../../types/components'
 
 export function GoalsTabPanel({
   goalsByAccount,

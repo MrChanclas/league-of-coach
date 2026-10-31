@@ -1,0 +1,53 @@
+/* User menu (sidebar profile card) */
+
+.profile-card {
+  position: relative;
+}
+
+.profile-card-trigger {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.profile-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  border-radius: 10px;
+  border: 1px solid var(--hf-border-strong);
+  background: var(--hf-surface);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 30;
+}
+
+.profile-menu-item {
+  background: none;
+  border: none;
+  border-radius: 7px;
+  padding: 9px 10px;
+  text-align: left;
+  font: 500 12.5px/1 var(--font-body);
+  color: var(--hf-muted-1);
+  cursor: pointer;
+}
+
+.profile-menu-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--hf-heading-3);
+}
+
+.profile-menu-item--danger:hover {
+  color: var(--hf-loss);
+}

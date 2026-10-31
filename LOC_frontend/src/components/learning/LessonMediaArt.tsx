@@ -1,14 +1,7 @@
 import type { ReactElement } from 'react'
 import { getChampionSplashUrl } from '../../lib/riotAssets'
 import type { LessonCard } from '../../types/dashboard'
-
-type LessonMediaArtProps = {
-  mediaType: LessonCard['mediaType']
-  kind?: LessonCard['kind']
-  championKey?: string
-  ddragonVersion: string | null
-  label: string
-}
+import type { LessonMediaArtProps } from '../../types/components'
 
 const ICON_PROPS = {
   width: 40,

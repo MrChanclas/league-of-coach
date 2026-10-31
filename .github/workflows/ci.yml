@@ -1,0 +1,49 @@
+name: Verify
+
+# Runs on every pull request, and deploy.yml calls it before shipping to
+# production, so a broken build or a failing test never reaches Cloud Run.
+on:
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: LOC_backend
+    env:
+      # prisma.config.ts resolves DATABASE_URL even for `generate`; no
+      # connection is made (same placeholder as the Dockerfile).
+      DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prisma generate
+      # Not `pnpm run lint`: that script passes --fix, which CI must not do.
+      - run: pnpm exec eslint "{src,test}/**/*.ts"
+      - run: pnpm run test
+      - run: pnpm run build
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: LOC_frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
+      - run: pnpm run test
+      - run: pnpm run build

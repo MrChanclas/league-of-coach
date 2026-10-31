@@ -1,32 +1,15 @@
 import { useMemo, useState } from 'react'
 import { MatchRow } from './MatchRow'
-import { QUEUE_IDS } from '../../lib/constants'
+import { MATCH_QUEUE_FILTERS } from '../../constants'
 import { useAccountStats, useAccountStreak } from '../../hooks/useApiQueries'
-import type { AccountCard, MatchParticipantEntry, RankSnapshotEntry } from '../../types/dashboard'
-
-type MatchesTabPanelProps = {
-  activeAccount?: AccountCard
-  matches: MatchParticipantEntry[]
-  rankHistory: RankSnapshotEntry[]
-  ddragonVersion: string | null
-}
-
-type QueueFilter = 'all' | typeof QUEUE_IDS.SOLO | typeof QUEUE_IDS.FLEX
-
-const FILTERS: { key: QueueFilter; label: string }[] = [
-  { key: 'all', label: 'Solo/dúo + Flexible' },
-  { key: QUEUE_IDS.SOLO, label: 'Clasif. solo/dúo' },
-  { key: QUEUE_IDS.FLEX, label: 'Flexible' },
-]
-
-function matchesFilter(entry: MatchParticipantEntry, filter: QueueFilter) {
-  if (filter === 'all') return true
-  return entry.match.queueId === filter
-}
+import { matchesQueueFilter } from '../../lib/matches'
+import type { MatchesTabPanelProps, QueueFilter } from '../../types/components'
 
 export function MatchesTabPanel({
   activeAccount,
   matches,
+  hasOlderMatches,
+  historyWindowDays,
   rankHistory,
   ddragonVersion,
 }: MatchesTabPanelProps) {
@@ -40,7 +23,7 @@ export function MatchesTabPanel({
   const statsSummary = statsQuery.data ?? null
   const streak = streakQuery.data ?? null
 
-  const filteredMatches = useMemo(() => matches.filter((entry) => matchesFilter(entry, filter)), [matches, filter])
+  const filteredMatches = useMemo(() => matches.filter((entry) => matchesQueueFilter(entry, filter)), [matches, filter])
 
   if (!activeAccount) {
     return (
@@ -103,7 +86,7 @@ export function MatchesTabPanel({
       </div>
 
       <div className="filter-pills">
-        {FILTERS.map((item) => (
+        {MATCH_QUEUE_FILTERS.map((item) => (
           <button
             key={item.key}
             type="button"
@@ -135,7 +118,12 @@ export function MatchesTabPanel({
       </div>
 
       <section className="matches-panel">
-        {filteredMatches.length === 0 ? (
+        {matches.length === 0 && hasOlderMatches ? (
+          <p className="matches-empty">
+            No existen partidas recientes. El historial muestra tus partidas clasificatorias de los últimos{' '}
+            {historyWindowDays} días; tus estadísticas siguen contando toda la temporada.
+          </p>
+        ) : filteredMatches.length === 0 ? (
           <p className="matches-empty">No hay partidas sincronizadas que coincidan con este filtro.</p>
         ) : (
           filteredMatches.map((entry) => (

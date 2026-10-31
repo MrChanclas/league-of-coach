@@ -1,0 +1,442 @@
+/* ── Onboarding ──────────────────────────────────────────────────────── */
+
+.onboard-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 4, 6, 0.74);
+  z-index: 9998;
+}
+
+.onboard-spotlight-hole {
+  position: fixed;
+  border-radius: 10px;
+  pointer-events: none;
+  z-index: 9998;
+  box-shadow:
+    0 0 0 9999px rgba(3, 4, 6, 0.74),
+    0 0 0 1px rgba(216, 181, 106, 0.6),
+    0 0 26px 3px rgba(216, 181, 106, 0.22);
+}
+
+.onboard-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.onboard-brand-mark {
+  flex: none;
+}
+
+.onboard-brand-eyebrow {
+  font: 600 9px/1 var(--font-mono);
+  letter-spacing: 0.22em;
+  color: var(--hf-muted-4);
+}
+
+.onboard-brand-name {
+  font: 700 20px/1.2 var(--font-display);
+  letter-spacing: 0.14em;
+  color: #f1e6cf;
+  margin-top: 3px;
+}
+
+/* Coach mark tooltip */
+
+.onboard-tooltip {
+  position: fixed;
+  width: 330px;
+  border-radius: 13px;
+  border: 1px solid rgba(216, 181, 106, 0.3);
+  background: linear-gradient(160deg, #191d26, #0e1116);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.55);
+  padding: 17px 18px 18px;
+  z-index: 9999;
+}
+
+/* Paso cuyo elemento todavía no existe en pantalla: tooltip centrado, sin hueco. */
+.onboard-tooltip--centered {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: calc(100vw - 32px);
+}
+
+.onboard-tooltip-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.onboard-tooltip-tag {
+  font: 600 9px/1 var(--font-mono);
+  letter-spacing: 0.18em;
+  color: var(--hf-gold-dim);
+}
+
+.onboard-tooltip-counter {
+  font: 400 9.5px/1 var(--font-mono);
+  color: var(--hf-muted-6);
+}
+
+.onboard-tooltip-title {
+  font: 700 18px/1.25 var(--font-display);
+  color: var(--hf-heading-2);
+  margin-top: 12px;
+  text-wrap: pretty;
+}
+
+.onboard-tooltip-body {
+  font: 400 12.5px/1.6 var(--font-body);
+  color: #8d919c;
+  margin-top: 9px;
+  text-wrap: pretty;
+}
+
+.onboard-tooltip-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 11px 12px;
+  border-radius: 9px;
+  background: rgba(216, 181, 106, 0.07);
+  border: 1px solid rgba(216, 181, 106, 0.2);
+}
+
+.onboard-note-dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  margin-top: 5px;
+  transform: rotate(45deg);
+  background: var(--hf-gold-grad-end);
+}
+
+.onboard-tooltip-note span:last-child {
+  font: 400 11.5px/1.5 var(--font-body);
+  color: #c9cdd6;
+  text-wrap: pretty;
+}
+
+.onboard-progress {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 18px;
+}
+
+.onboard-progress-seg {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.onboard-progress-seg.done {
+  background: var(--hf-gold);
+}
+
+.onboard-tooltip-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 16px;
+}
+
+.onboard-btn-secondary {
+  padding: 11px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  background: rgba(255, 255, 255, 0.03);
+  font: 500 12px/1 var(--font-body);
+  color: var(--hf-muted-1);
+  cursor: pointer;
+}
+
+.onboard-btn-secondary:hover:not(:disabled) {
+  border-color: rgba(216, 181, 106, 0.4);
+  color: #dcd7cb;
+}
+
+.onboard-btn-secondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.onboard-btn-next {
+  flex: 1;
+  padding: 11px 14px;
+  font-size: 12.5px;
+}
+
+.onboard-skip {
+  background: none;
+  border: none;
+  padding: 11px 12px;
+  font: 500 11.5px/1 var(--font-body);
+  color: var(--hf-muted-4);
+  cursor: pointer;
+}
+
+.onboard-skip:hover {
+  color: var(--hf-gold-soft);
+}
+
+/* Welcome / done modals */
+
+.onboard-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 16px;
+  border: 1px solid rgba(216, 181, 106, 0.24);
+  background: linear-gradient(150deg, #12161d 0%, #0d1116 52%, #151018 100%);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  z-index: 9999;
+  max-width: calc(100vw - 32px);
+}
+
+.onboard-modal--welcome {
+  width: 520px;
+  padding: 30px 32px 26px;
+}
+
+.onboard-modal--done {
+  width: 500px;
+  padding: 32px;
+}
+
+.onboard-modal-title {
+  margin: 24px 0 0;
+  font: 700 30px/1.15 var(--font-display);
+  color: var(--hf-heading);
+  text-wrap: pretty;
+}
+
+.onboard-modal-title--done {
+  margin-top: 14px;
+  font-size: 28px;
+}
+
+.onboard-modal-body {
+  margin: 11px 0 0;
+  font: 400 13.5px/1.6 var(--font-body);
+  color: var(--hf-muted-2);
+  text-wrap: pretty;
+}
+
+.onboard-welcome-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 26px 0 0;
+}
+
+.onboard-welcome-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+}
+
+.onboard-welcome-step-num {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 7px;
+  background: rgba(216, 181, 106, 0.12);
+  border: 1px solid rgba(216, 181, 106, 0.32);
+  display: grid;
+  place-items: center;
+  font: 600 11px/1 var(--font-mono);
+  color: var(--hf-gold-strong);
+}
+
+.onboard-welcome-step-title {
+  font: 600 13.5px/1.3 var(--font-body);
+  color: var(--hf-heading-3);
+}
+
+.onboard-welcome-step-body {
+  font: 400 12px/1.5 var(--font-body);
+  color: var(--hf-muted-2);
+  margin-top: 5px;
+  text-wrap: pretty;
+}
+
+.onboard-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 26px;
+}
+
+.onboard-modal-actions--done {
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.onboard-modal-actions--done .onboard-btn-secondary {
+  flex: none;
+  padding: 13px 16px;
+}
+
+.onboard-modal-cta {
+  flex: 1;
+  padding: 13px 14px;
+  font-size: 13.5px;
+}
+
+.onboard-modal-ghost {
+  background: none;
+  border: none;
+  padding: 13px 16px;
+  font: 500 12.5px/1 var(--font-body);
+  color: var(--hf-muted-3);
+  cursor: pointer;
+}
+
+.onboard-modal-ghost:hover {
+  color: var(--hf-gold-soft);
+}
+
+.onboard-done-note {
+  margin-top: 22px;
+  padding: 14px 16px;
+  border-radius: 11px;
+  background: rgba(216, 181, 106, 0.07);
+  border: 1px solid rgba(216, 181, 106, 0.2);
+}
+
+.onboard-done-note-title {
+  font: 600 11.5px/1 var(--font-body);
+  color: var(--hf-gold-strong);
+}
+
+.onboard-done-note-body {
+  font: 400 12px/1.55 var(--font-body);
+  color: #8d919c;
+  margin-top: 7px;
+  text-wrap: pretty;
+}
+
+/* First-steps checklist */
+
+.onboard-checklist {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  width: 308px;
+  border-radius: 13px;
+  border: 1px solid rgba(216, 181, 106, 0.26);
+  background: linear-gradient(160deg, #171a22, #0e1116);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  z-index: 40;
+}
+
+.onboard-checklist-head {
+  padding: 15px 17px 13px;
+  border-bottom: 1px solid var(--hf-border-soft);
+}
+
+.onboard-checklist-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.onboard-checklist-label {
+  font: 600 9.5px/1 var(--font-mono);
+  letter-spacing: 0.2em;
+  color: var(--hf-gold-soft);
+}
+
+.onboard-checklist-count {
+  font: 600 10.5px/1 var(--font-mono);
+  color: var(--hf-gold-strong);
+}
+
+.onboard-checklist-bar-track {
+  height: 4px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  margin-top: 11px;
+  overflow: hidden;
+}
+
+.onboard-checklist-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--hf-gold-grad-end), var(--hf-gold-light));
+}
+
+.onboard-checklist-tasks {
+  padding: 6px 9px 9px;
+}
+
+.onboard-task-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 10px 8px;
+  border-radius: 9px;
+}
+
+.onboard-task-row--now {
+  background: rgba(216, 181, 106, 0.08);
+}
+
+.onboard-task-box {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  margin-top: 1px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font: 600 10px/1 var(--font-mono);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--hf-muted-6);
+}
+
+.onboard-task-box--done {
+  background: var(--hf-gold);
+  border: 1px solid rgba(216, 181, 106, 0.6);
+  color: #141109;
+}
+
+.onboard-task-box--now {
+  background: rgba(216, 181, 106, 0.14);
+  border: 1px solid rgba(216, 181, 106, 0.45);
+  color: var(--hf-gold-strong);
+}
+
+.onboard-task-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.onboard-task-label {
+  font: 500 12.5px/1.35 var(--font-body);
+  color: var(--hf-muted-1);
+}
+
+.onboard-task-label--done {
+  color: var(--hf-muted-3);
+  text-decoration: line-through;
+}
+
+.onboard-task-label--now {
+  font-weight: 600;
+  color: var(--hf-heading-2);
+}
+
+.onboard-task-hint {
+  font: 400 11px/1.45 var(--font-body);
+  color: var(--hf-muted-2);
+  margin-top: 4px;
+  text-wrap: pretty;
+}

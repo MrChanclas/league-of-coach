@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import './App.css'
+import './styles/index.css'
 import { AuthenticateWithRedirectCallback, useAuth, useClerk, useUser } from '@clerk/clerk-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { DashboardScreen } from './components/layout/DashboardScreen'
@@ -11,10 +11,8 @@ import {
   useDeleteGoalMutation,
   useResolveAccountMutation,
   useSavePoolMutation,
-  useSyncMatchesMutation,
 } from './hooks/useApiMutations'
 import {
-  queryKeys,
   useAccountActivity,
   useAccountBehaviorFlags,
   useAccountLanes,
@@ -29,37 +27,12 @@ import {
   useDashboard,
   useInternalUser,
 } from './hooks/useApiQueries'
+import { useMatchSync } from './hooks/useMatchSync'
+import { useStatusMessage } from './hooks/useStatusMessage'
+import { useTabNavigation } from './hooks/useTabNavigation'
 import { getDdragonVersion } from './lib/riotAssets'
-import type {
-  AccountForm,
-  GoalCreateInput,
-  PoolSlotKey,
-  ReplacePoolEntryInput,
-  TabKey,
-  TimeRange,
-} from './types/dashboard'
-
-// Mirrors the tab in the URL hash so browser back/forward moves between
-// tabs instead of leaving the app — see readTabFromLocation below.
-const TAB_KEYS: TabKey[] = ['cuentas', 'aprendizaje', 'objetivos', 'partidas', 'pool-champ']
-
-function readTabFromLocation(): TabKey | null {
-  const hash = window.location.hash.replace('#', '')
-  return (TAB_KEYS as string[]).includes(hash) ? (hash as TabKey) : null
-}
-
-function formatLastSyncedLabel(lastSyncedAt: Date | null): string {
-  if (!lastSyncedAt) return 'Sin sincronizar en esta sesión'
-  const minutes = Math.max(0, Math.round((Date.now() - lastSyncedAt.getTime()) / 60_000))
-  if (minutes < 1) return 'Sincronizado hace instantes'
-  return `Sincronizado hace ${minutes} min`
-}
-
-const blankAccountForm: AccountForm = {
-  summoner: '',
-  tag: '',
-  server: 'LAS',
-}
+import { BLANK_ACCOUNT_FORM, HOME_RECENT_DAYS, queryKeys } from './constants'
+import type { AccountForm, GoalCreateInput, PoolSlotKey, ReplacePoolEntryInput, TimeRange } from './types/dashboard'
 
 function App() {
   const { isSignedIn } = useAuth()
@@ -67,56 +40,17 @@ function App() {
   const { signOut } = useClerk()
   const queryClient = useQueryClient()
 
-  const [activeTab, setActiveTab] = useState<TabKey>(() => readTabFromLocation() ?? 'cuentas')
+  const { activeTab, handleTabChange } = useTabNavigation(isSignedIn)
   const [currentAccountId, setCurrentAccountId] = useState('')
-  const [accountForm, setAccountForm] = useState<AccountForm>(blankAccountForm)
-  const [status, setStatus] = useState('')
+  const [accountForm, setAccountForm] = useState<AccountForm>(BLANK_ACCOUNT_FORM)
+  const [status, setStatus] = useStatusMessage()
   const [ddragonVersion, setDdragonVersion] = useState<string | null>(null)
   const [timeRange, setTimeRange] = useState<TimeRange>('7d')
-  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null)
-  // True while the season backfill keeps re-calling sync in the background;
-  // the mutation itself is idle between rounds, so the button would
-  // otherwise flicker back to «Sincronizar ahora» mid-catch-up.
-  const [isCatchingUpSeason, setIsCatchingUpSeason] = useState(false)
+  const { syncMatches, isSyncing, lastSyncedLabel } = useMatchSync(currentAccountId, setStatus)
 
   useEffect(() => {
     void getDdragonVersion().then(setDdragonVersion)
   }, [])
-
-  // Back/forward moves between tabs (popstate) instead of leaving the app.
-  useEffect(() => {
-    function handlePopState() {
-      setActiveTab(readTabFromLocation() ?? 'cuentas')
-    }
-    window.addEventListener('popstate', handlePopState)
-    return () => window.removeEventListener('popstate', handlePopState)
-  }, [])
-
-  // Right when the dashboard first mounts for a signed-in user — whether
-  // from an existing session or straight off the Google OAuth redirect back
-  // to '/' — replace (not push) the current history entry with the active
-  // tab's URL. That overwrites whatever entry was showing the login screen,
-  // so "back" from inside the app lands on a previous tab or the app's own
-  // starting point instead of a stale pre-login render.
-  useEffect(() => {
-    if (isSignedIn) {
-      window.history.replaceState(null, '', `#${activeTab}`)
-    }
-    // Only the transition into a signed-in session should reset the history
-    // baseline — not every tab change, which is handled by handleTabChange.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSignedIn])
-
-  const handleTabChange = (tab: TabKey) => {
-    setActiveTab(tab)
-    if (tab !== activeTab) window.history.pushState(null, '', `#${tab}`)
-  }
-
-  useEffect(() => {
-    if (!status) return
-    const timer = setTimeout(() => setStatus(''), 5000)
-    return () => clearTimeout(timer)
-  }, [status])
 
   const userDisplayName = useMemo(
     () => user?.fullName ?? user?.primaryEmailAddress?.emailAddress ?? 'League of Coach',
@@ -165,6 +99,13 @@ function App() {
 
   const matchesQuery = useAccountMatches(currentAccountId)
   const statsQuery = useAccountStats(currentAccountId)
+  // The home's account band follows the "7 días / Split" toggle; on "Split"
+  // it's the same query as statsQuery, which React Query dedupes.
+  const homeStatsQuery = useAccountStats(
+    currentAccountId,
+    undefined,
+    timeRange === '7d' ? HOME_RECENT_DAYS : undefined,
+  )
   const streakQuery = useAccountStreak(currentAccountId)
   const lanesQuery = useAccountLanes(currentAccountId)
   const activityQuery = useAccountActivity(currentAccountId)
@@ -194,7 +135,6 @@ function App() {
   const deleteAccountMutation = useDeleteAccountMutation()
   const createGoalMutation = useCreateGoalMutation()
   const deleteGoalMutation = useDeleteGoalMutation()
-  const syncMatchesMutation = useSyncMatchesMutation()
   const completeOnboardingMutation = useCompleteOnboardingMutation()
   const savePoolMutation = useSavePoolMutation()
   const addPoolEntryMutation = useAddPoolEntryMutation()
@@ -226,7 +166,7 @@ function App() {
         userId: internalUser.id,
       })
 
-      setAccountForm(blankAccountForm)
+      setAccountForm(BLANK_ACCOUNT_FORM)
       await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard(internalUser.id) })
 
       const baseMessage = payload.message ?? 'Cuenta detectada y vinculada correctamente.'
@@ -275,51 +215,6 @@ function App() {
     }
   }
 
-  // Each call only fetches as much history as Riot's rate limit allows, so a
-  // first sync of a full season needs several rounds. The cap is a safety
-  // net against an endless loop, not an expected stopping point: it covers
-  // far more games than a single season can hold.
-  const MAX_SYNC_ROUNDS = 60
-
-  const handleSyncMatches = async () => {
-    if (!currentAccountId) return
-
-    let syncedTotal = 0
-    let skippedTotal = 0
-    let relinkedTotal = 0
-
-    try {
-      setIsCatchingUpSeason(true)
-
-      for (let round = 0; round < MAX_SYNC_ROUNDS; round += 1) {
-        const payload = await syncMatchesMutation.mutateAsync(currentAccountId)
-        syncedTotal += payload.synced ?? 0
-        skippedTotal += payload.skipped ?? 0
-        relinkedTotal += payload.relinked ?? 0
-        setLastSyncedAt(new Date())
-
-        // Refreshed every round so the numbers fill in while the season
-        // history keeps arriving, instead of only at the very end.
-        await queryClient.invalidateQueries({ queryKey: queryKeys.account(currentAccountId) })
-
-        if (payload.seasonBackfill?.done !== false) break
-
-        setStatus(
-          `Recuperando el historial de la temporada… ${syncedTotal} partidas recuperadas hasta ahora.`,
-        )
-      }
-
-      const relinkedNote = relinkedTotal ? `, ${relinkedTotal} recuperadas de cuentas compartidas` : ''
-      setStatus(
-        `Se sincronizaron ${syncedTotal} partidas nuevas (${skippedTotal} ya existían${relinkedNote}).`,
-      )
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : 'No se pudieron sincronizar las partidas.')
-    } finally {
-      setIsCatchingUpSeason(false)
-    }
-  }
-
   const handleSavePool = async (entries: ReplacePoolEntryInput[]): Promise<boolean> => {
     if (!currentAccountId) return false
 
@@ -355,11 +250,6 @@ function App() {
     void signOut()
   }
 
-  // Not memoized: it depends on the current time, not just `lastSyncedAt`, so
-  // memoizing it would freeze the label's wording at whatever it was right
-  // after the sync instead of it staying accurate as time passes.
-  const lastSyncedLabel = formatLastSyncedLabel(lastSyncedAt)
-
   if (window.location.pathname === '/sso-callback') {
     return <AuthenticateWithRedirectCallback signInForceRedirectUrl="/" signUpForceRedirectUrl="/" />
   }
@@ -378,7 +268,10 @@ function App() {
       isLoadingDashboard={dashboardQuery.isLoading}
       accountForm={accountForm}
       matches={matches}
+      hasOlderMatches={matchesQuery.data?.hasOlderMatches ?? false}
+      historyWindowDays={matchesQuery.data?.windowDays ?? null}
       statsSummary={statsSummary}
+      homeStatsSummary={homeStatsQuery.data ?? null}
       streak={streak}
       lanes={lanes}
       weeklyActivity={weeklyActivity}
@@ -387,7 +280,7 @@ function App() {
       behaviorFlags={behaviorFlags}
       ddragonVersion={ddragonVersion}
       timeRange={timeRange}
-      isSyncing={syncMatchesMutation.isPending || isCatchingUpSeason}
+      isSyncing={isSyncing}
       lastSyncedLabel={lastSyncedLabel}
       championRoster={championRoster}
       poolView={poolQuery.data}
@@ -405,7 +298,7 @@ function App() {
       onAccountFieldChange={handleAccountFieldChange}
       onCreateAccount={handleCreateAccount}
       onDeleteAccount={handleDeleteAccount}
-      onSyncMatches={handleSyncMatches}
+      onSyncMatches={syncMatches}
       onCreateGoal={handleCreateGoal}
       onDeleteGoal={handleDeleteGoal}
     />

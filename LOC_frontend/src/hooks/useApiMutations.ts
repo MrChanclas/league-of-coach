@@ -1,7 +1,16 @@
 import { useAuth } from '@clerk/clerk-react'
 import { useMutation } from '@tanstack/react-query'
 import { apiFetch } from '../lib/api'
-import type { GoalCreateInput, PoolEntryState, PoolSlotKey, ReplacePoolInput } from '../types/dashboard'
+import type {
+  AccountSearchResponse,
+  FeedbackInput,
+  PoolEntryMutationInput,
+  ResolveAccountInput,
+  SavePoolMutationInput,
+  SyncMatchesResponse,
+  UpdatePoolEntryMutationInput,
+} from '../types/api'
+import type { GoalCreateInput } from '../types/dashboard'
 
 // These hooks only perform the API call — they deliberately don't own cache
 // invalidation. That stays in App.tsx alongside the rest of each action's
@@ -11,9 +20,9 @@ import type { GoalCreateInput, PoolEntryState, PoolSlotKey, ReplacePoolInput } f
 export function useResolveAccountMutation() {
   const { getToken } = useAuth()
   return useMutation({
-    mutationFn: async (input: { summoner: string; tag: string; server: string; userId: string }) => {
+    mutationFn: async (input: ResolveAccountInput) => {
       const token = await getToken()
-      const payload = await apiFetch<{ message?: string; found?: boolean; created?: boolean }>('/accounts/search', {
+      const payload = await apiFetch<AccountSearchResponse>('/accounts/search', {
         method: 'POST',
         token,
         body: input,
@@ -63,16 +72,7 @@ export function useSyncMatchesMutation() {
   return useMutation({
     mutationFn: async (accountId: string) => {
       const token = await getToken()
-      return apiFetch<{
-        synced?: number
-        skipped?: number
-        relinked?: number
-        // `seasonBackfill.done` is false while the backend still has season
-        // history left to fetch: Riot's rate limit makes a full season
-        // impossible to pull in one request, so the client keeps calling
-        // until it comes back true (see matches.service.ts).
-        seasonBackfill?: { done: boolean; oldestSyncedAt: string | null }
-      }>(`/matches/sync/${accountId}`, {
+      return apiFetch<SyncMatchesResponse>(`/matches/sync/${accountId}`, {
         method: 'POST',
         token,
         body: {},
@@ -94,7 +94,7 @@ export function useCompleteOnboardingMutation() {
 export function useSavePoolMutation() {
   const { getToken } = useAuth()
   return useMutation({
-    mutationFn: async ({ accountId, input }: { accountId: string; input: ReplacePoolInput }) => {
+    mutationFn: async ({ accountId, input }: SavePoolMutationInput) => {
       const token = await getToken()
       return apiFetch(`/champion-pools/account/${accountId}`, { method: 'PUT', token, body: input })
     },
@@ -104,7 +104,7 @@ export function useSavePoolMutation() {
 export function useAddPoolEntryMutation() {
   const { getToken } = useAuth()
   return useMutation({
-    mutationFn: async ({ accountId, championKey, role }: { accountId: string; championKey: string; role: PoolSlotKey }) => {
+    mutationFn: async ({ accountId, championKey, role }: PoolEntryMutationInput) => {
       const token = await getToken()
       return apiFetch(`/champion-pools/account/${accountId}/entries`, {
         method: 'POST',
@@ -123,12 +123,7 @@ export function useUpdatePoolEntryMutation() {
       championKey,
       role,
       patch,
-    }: {
-      accountId: string
-      championKey: string
-      role: PoolSlotKey
-      patch: { state?: PoolEntryState; note?: string | null }
-    }) => {
+    }: UpdatePoolEntryMutationInput) => {
       const token = await getToken()
       return apiFetch(`/champion-pools/account/${accountId}/entries/${championKey}/${role}`, {
         method: 'PATCH',
@@ -142,7 +137,7 @@ export function useUpdatePoolEntryMutation() {
 export function useRemovePoolEntryMutation() {
   const { getToken } = useAuth()
   return useMutation({
-    mutationFn: async ({ accountId, championKey, role }: { accountId: string; championKey: string; role: PoolSlotKey }) => {
+    mutationFn: async ({ accountId, championKey, role }: PoolEntryMutationInput) => {
       const token = await getToken()
       await apiFetch(`/champion-pools/account/${accountId}/entries/${championKey}/${role}`, {
         method: 'DELETE',
@@ -156,7 +151,7 @@ export function useRemovePoolEntryMutation() {
 
 export function useSubmitFeedbackMutation() {
   return useMutation({
-    mutationFn: async (input: { message: string; email: string }) => {
+    mutationFn: async (input: FeedbackInput) => {
       return apiFetch('/feedback', { method: 'POST', body: input })
     },
   })

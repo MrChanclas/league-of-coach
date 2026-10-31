@@ -1,0 +1,47 @@
+:root {
+  --hf-bg: #07080b;
+  --hf-surface: #0e1116;
+  --hf-border: rgba(255, 255, 255, 0.07);
+  --hf-border-soft: rgba(255, 255, 255, 0.055);
+  --hf-border-strong: rgba(255, 255, 255, 0.1);
+  --hf-heading: #f3ece0;
+  --hf-heading-2: #f0e9dd;
+  --hf-heading-3: #eae4d8;
+  --hf-muted-1: #9aa0ac;
+  --hf-muted-2: #868b96;
+  --hf-muted-3: #787d88;
+  --hf-muted-4: #6f747f;
+  --hf-muted-5: #585d67;
+  --hf-muted-6: #5c616b;
+  --hf-text-soft: #e0dbcf;
+  --hf-gold: #d8b56a;
+  --hf-gold-strong: #e2c483;
+  --hf-gold-soft: #c8a862;
+  --hf-gold-dim: #b99b58;
+  --hf-gold-grad-start: #e0c07a;
+  --hf-gold-grad-end: #c2a05a;
+  --hf-gold-light: #e8cb8b;
+  --hf-win-blue: #63b7dc;
+  --hf-win-green: #5fceac;
+  --hf-lp-line: #63dcb8;
+  --hf-lp-line-dim: #1d7f6a;
+  --hf-loss: #cd6a63;
+  --hf-online: #3fae8f;
+  --font-display: 'Chakra Petch', sans-serif;
+  --font-body: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+
+@keyframes hfpulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--hf-muted-4);
+}

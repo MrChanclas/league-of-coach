@@ -1,12 +1,6 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
-
-type BottomSheetProps = {
-  isOpen: boolean
-  onClose: () => void
-  ariaLabel: string
-  children: React.ReactNode
-}
+import type { BottomSheetProps } from '../../types/components'
 
 // Hoja inferior compartida — selector de cuenta, sincronía, y los pasos del
 // onboarding en mobile la usan todos, ver handoff_loc/05-movil.md.

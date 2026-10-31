@@ -1,17 +1,10 @@
-import { RANK_TIERS } from './constants'
+import { FALLBACK_DDRAGON_VERSION, DDRAGON_HOST, RANK_EMBLEM_BASE } from '../constants/runtime'
+import { RANK_TIERS } from '../constants'
+import type { ChampionIndexResponse } from '../types/api'
 
 // Un solo lugar para los hosts de arte de Riot: Data Dragon sirve los assets
 // versionados por parche y Community Dragon los emblemas de rango, que no
 // están versionados.
-const DDRAGON_HOST = 'https://ddragon.leagueoflegends.com'
-const RANK_EMBLEM_BASE =
-  'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem'
-
-// Solo se usa si Data Dragon no responde. Mantener igual a FALLBACK_VERSION
-// en el backend (LOC_backend/src/champion-guides/data-dragon.service.ts):
-// son paquetes separados y no pueden compartir la constante.
-const FALLBACK_DDRAGON_VERSION = '16.18.1'
-
 /** Base del CDN para un parche concreto: de aquí cuelgan íconos, ítems y datos. */
 const cdn = (version: string) => `${DDRAGON_HOST}/cdn/${version}`
 
@@ -57,7 +50,7 @@ export function getChampionList(version: string): Promise<string[]> {
   if (cached) return cached
 
   const request = fetch(`${cdn(version)}/data/en_US/champion.json`)
-    .then((response) => response.json() as Promise<{ data: Record<string, { name: string }> }>)
+    .then((response) => response.json() as Promise<ChampionIndexResponse>)
     .then((payload) => Object.values(payload.data).map((champion) => champion.name).sort())
     .catch(() => [])
   championListByVersion.set(version, request)

@@ -1,24 +1,11 @@
+import { MOBILE_TAB_ITEMS } from '../../constants'
 import { LockGlyph } from '../shared/LockGlyph'
-import type { TabKey } from '../../types/dashboard'
-
-type MobileTabBarProps = {
-  activeTab: TabKey
-  onTabChange: (tab: TabKey) => void
-  lockedTabs: TabKey[]
-}
-
-const TABS: { key: TabKey; label: string; tour?: string }[] = [
-  { key: 'cuentas', label: 'Cuentas' },
-  { key: 'partidas', label: 'Partidas', tour: 'nav-partidas' },
-  { key: 'aprendizaje', label: 'Aprendizaje', tour: 'nav-aprendizaje' },
-  { key: 'pool-champ', label: 'Pool', tour: 'nav-pool-champ' },
-  { key: 'objetivos', label: 'Objetivos', tour: 'nav-objetivos' },
-]
+import type { MobileTabBarProps, TabGlyphProps } from '../../types/components'
 
 // Glifos geométricos propios, sin librería de iconos — ver handoff_loc/05-movil.md.
 // El peso de trazo (~1.6px) y el rombo de Aprendizaje son lo único que hay
 // que conservar si algún día se reemplazan por una librería real.
-function TabGlyph({ tab, active }: { tab: TabKey; active: boolean }) {
+function TabGlyph({ tab, active }: TabGlyphProps) {
   const stroke = active ? 'var(--hf-gold)' : 'var(--hf-muted-4)'
   const fill = stroke
 
@@ -57,6 +44,16 @@ function TabGlyph({ tab, active }: { tab: TabKey; active: boolean }) {
       </svg>
     )
   }
+  if (tab === 'social') {
+    return (
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden>
+        <circle cx="8" cy="8" r="3.2" stroke={stroke} strokeWidth="1.6" />
+        <circle cx="15" cy="9" r="2.6" stroke={stroke} strokeWidth="1.6" />
+        <path d="M2.5 18.5c.6-3 2.8-4.7 5.5-4.7s4.9 1.7 5.5 4.7" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" />
+        <path d="M14.5 13.8c2.4 0 4.3 1.5 4.9 4.2" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" />
+      </svg>
+    )
+  }
   return (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden>
       <circle cx="11" cy="11" r="9" stroke={stroke} strokeWidth="1.6" />
@@ -68,7 +65,7 @@ function TabGlyph({ tab, active }: { tab: TabKey; active: boolean }) {
 export function MobileTabBar({ activeTab, onTabChange, lockedTabs }: MobileTabBarProps) {
   return (
     <nav className="mobile-tabbar" role="tablist" aria-label="Navegación principal">
-      {TABS.map((tab) => {
+      {MOBILE_TAB_ITEMS.map((tab) => {
         const active = tab.key === activeTab
         return (
           <button

@@ -1,4 +1,4 @@
-export type TabKey = 'cuentas' | 'aprendizaje' | 'objetivos' | 'partidas' | 'pool-champ'
+export type TabKey = 'cuentas' | 'aprendizaje' | 'objetivos' | 'partidas' | 'pool-champ' | 'social'
 
 export type AuthUser = {
   id: string
@@ -193,6 +193,11 @@ export type RankSnapshotEntry = {
   capturedAt: string
 }
 
+export type NextRank = {
+  tier: string
+  division: string
+}
+
 export type ActivityDay = {
   date: string
   wins: number
@@ -349,4 +354,13 @@ export type ReplacePoolEntryInput = {
 export type ReplacePoolInput = {
   source: PoolSource
   entries: ReplacePoolEntryInput[]
+}
+
+export type QueueInfo = {
+  key: 'solo' | 'flex'
+  label: string
+  tier: string
+  division: string
+  lp: number
+  summary: AccountStatsSummary | null
 }

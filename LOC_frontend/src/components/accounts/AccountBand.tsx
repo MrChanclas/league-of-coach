@@ -1,17 +1,9 @@
-import { getLaneLabel, getNextRank, getTierColor } from '../../lib/hexforge'
+import { formatRank, getLaneLabel, getNextRank, getTierColor } from '../../lib/hexforge'
 import { getRankEmblemUrl } from '../../lib/riotAssets'
-import type { AccountCard, AccountStatsSummary, LaneEntry, StreakInfo } from '../../types/dashboard'
+import type { AccountBandProps } from '../../types/components'
 
-type AccountBandProps = {
-  account: AccountCard
-  primaryQueue: 'solo' | 'flex'
-  statsSummary: AccountStatsSummary | null
-  streak: StreakInfo | null
-  lanes: LaneEntry[]
-}
 
-/** Compact ~100px account summary — replaces the old 216px hero (see handoff_loc/06-coaching.md, 4A). */
-export function AccountBand({ account, primaryQueue, statsSummary, streak, lanes }: AccountBandProps) {
+export function AccountBand({ account, primaryQueue, statsSummary: periodSummary, streak, lanes }: AccountBandProps) {
   const tier = primaryQueue === 'solo' ? account.soloTier : account.flexTier
   const division = primaryQueue === 'solo' ? account.soloDivision : account.flexDivision
   const lp = primaryQueue === 'solo' ? account.soloLp : account.flexLp
@@ -21,6 +13,9 @@ export function AccountBand({ account, primaryQueue, statsSummary, streak, lanes
   const nextRank = isRanked ? getNextRank(tier, division) : null
   const progressPct = isRanked ? Math.min(100, Math.max(0, lp)) : 0
 
+  // A period with no games (e.g. nothing played in the last 7 days) reads
+  // "—" instead of 0% / 0.00, which would look like real results.
+  const statsSummary = periodSummary && periodSummary.gamesPlayed > 0 ? periodSummary : null
   const games = statsSummary?.gamesPlayed ?? 0
   const wins = statsSummary?.wins ?? 0
   const losses = games - wins
@@ -34,7 +29,7 @@ export function AccountBand({ account, primaryQueue, statsSummary, streak, lanes
         <div className="account-band-diamond">
           <div className="account-band-crest">
             {emblemUrl ? (
-              <img className="rank-emblem" src={emblemUrl} alt={tier} />
+              <img className="rank-emblem" src={emblemUrl} alt={formatRank(tier, division)} />
             ) : (
               <div className="account-band-crest-fallback" />
             )}
@@ -47,8 +42,8 @@ export function AccountBand({ account, primaryQueue, statsSummary, streak, lanes
             <span className="account-band-tag">#{account.tag}</span>
             <span className="account-band-badge">ACTIVA</span>
           </div>
-          <div className="account-band-tier" style={{ color: tierColor ?? '#9aa0ac' }}>
-            {isRanked ? `${tier} ${division}` : 'Sin clasificar'}
+          <div className="account-band-tier" style={{ color: tierColor ?? 'var(--hf-muted-1)' }}>
+            {isRanked ? formatRank(tier, division) : 'Sin clasificar'}
           </div>
           <div className="account-band-sub">
             {isRanked ? `${lp} LP · ` : ''}
@@ -62,13 +57,13 @@ export function AccountBand({ account, primaryQueue, statsSummary, streak, lanes
               <div className="account-band-progress-track">
                 <div
                   className="account-band-progress-fill"
-                  style={{ width: `${progressPct}%`, background: `linear-gradient(90deg, #1d7f6a, ${tierColor ?? '#63dcb8'})` }}
+                  style={{ width: `${progressPct}%`, background: `linear-gradient(90deg, var(--hf-lp-line-dim), ${tierColor ?? 'var(--hf-lp-line)'})` }}
                 />
               </div>
               <div className="account-band-progress-labels">
-                <span>{tier} {division}</span>
+                <span>{formatRank(tier, division)}</span>
                 <span className="account-band-progress-next">
-                  {nextRank ? `${nextRank.tier} ${nextRank.division}` : 'RANGO MÁXIMO'}
+                  {nextRank ? formatRank(nextRank.tier, nextRank.division) : 'RANGO MÁXIMO'}
                 </span>
               </div>
             </>
@@ -78,7 +73,7 @@ export function AccountBand({ account, primaryQueue, statsSummary, streak, lanes
         </div>
 
         <div className="account-band-winrate">
-          <div className="account-band-winrate-value">{winratePct}%</div>
+          <div className="account-band-winrate-value">{statsSummary ? `${winratePct}%` : '—'}</div>
           <div className="account-band-winrate-sub">
             {wins}V · {losses}D
           </div>
@@ -87,7 +82,7 @@ export function AccountBand({ account, primaryQueue, statsSummary, streak, lanes
         <div className="account-band-metrics">
           <div className="account-band-metric">
             <div className="account-band-metric-label">KDA PROM.</div>
-            <div className="account-band-metric-value" style={{ color: '#e0dbcf' }}>
+            <div className="account-band-metric-value" style={{ color: 'var(--hf-text-soft)' }}>
               {statsSummary ? statsSummary.avgKda.toFixed(2) : '—'}
             </div>
             <div className="account-band-metric-sub">

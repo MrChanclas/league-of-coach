@@ -1,27 +1,23 @@
-import { Controller, ForbiddenException, Headers, Post } from '@nestjs/common';
+import { Controller, Post, UseGuards } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
+import { InternalSecretGuard } from '../auth/internal-secret.guard';
 import { Public } from '../auth/public.decorator';
 import { RankSnapshotsService } from './rank-snapshots.service';
 
 /**
  * Triggered by Cloud Scheduler in production (Cloud Run scales to zero, so
  * an in-process cron can't be relied on there). Not a user-facing endpoint:
- * auth is a shared secret header instead of a Clerk session.
+ * see InternalSecretGuard.
  */
 @Controller('internal')
 export class RankSnapshotsController {
   constructor(private readonly rankSnapshots: RankSnapshotsService) {}
 
   @Public()
+  @SkipThrottle()
+  @UseGuards(InternalSecretGuard)
   @Post('poll-ranks')
-  async pollRanks(@Headers('x-internal-secret') providedSecret?: string) {
-    const expectedSecret = process.env.INTERNAL_POLL_SECRET;
-
-    if (!expectedSecret || providedSecret !== expectedSecret) {
-      throw new ForbiddenException(
-        'Secreto interno inválido o no configurado.',
-      );
-    }
-
+  async pollRanks() {
     return this.rankSnapshots.pollAllAccounts();
   }
 }

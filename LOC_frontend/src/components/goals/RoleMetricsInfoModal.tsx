@@ -1,12 +1,5 @@
-import { ROLE_LABELS } from '../../lib/goalLabels'
-import { ROLE_METRIC_LABELS } from '../../lib/roleMetricsInfo'
-
-type RoleMetricsInfoModalProps = {
-  isOpen: boolean
-  onClose: () => void
-}
-
-const ROLE_ORDER = ['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY']
+import { ROLE_KEYS, ROLE_LABELS, ROLE_METRIC_LABELS } from '../../constants'
+import type { RoleMetricsInfoModalProps } from '../../types/components'
 
 export function RoleMetricsInfoModal({ isOpen, onClose }: RoleMetricsInfoModalProps) {
   if (!isOpen) return null
@@ -28,7 +21,7 @@ export function RoleMetricsInfoModal({ isOpen, onClose }: RoleMetricsInfoModalPr
           </button>
         </div>
 
-        {ROLE_ORDER.map((role) => (
+        {ROLE_KEYS.map((role) => (
           <div key={role} style={{ marginBottom: 16 }}>
             <div style={{ fontWeight: 600, marginBottom: 6 }}>{ROLE_LABELS[role]}</div>
             <ul style={{ margin: 0, paddingLeft: 20 }}>

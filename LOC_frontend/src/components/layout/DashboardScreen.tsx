@@ -5,6 +5,7 @@ import { CuentaTabPanel } from '../auth/CuentaTabPanel'
 import { DashboardHeader } from './DashboardHeader'
 import { DashboardSidebar } from './DashboardSidebar'
 import { MobileTabBar } from './MobileTabBar'
+import { TwitchLiveBanner } from './TwitchLiveBanner'
 import { GoalFormModal } from '../goals/GoalFormModal'
 import { GoalsTabPanel } from '../goals/GoalsTabPanel'
 import { LearningTabPanel } from '../learning/LearningTabPanel'
@@ -12,77 +13,15 @@ import { MatchesTabPanel } from '../matches/MatchesTabPanel'
 import { FirstStepsChecklist } from '../onboarding/FirstStepsChecklist'
 import { OnboardingTour } from '../onboarding/OnboardingTour'
 import { PoolChampTabPanel } from '../poolchamp/PoolChampTabPanel'
+import { SocialTabPanel } from '../social/SocialTabPanel'
+import { useSocialSummary } from '../../hooks/useSocial'
 
-import type { SubmitEvent } from 'react'
 import type {
-  AccountCard,
-  AccountForm,
-  AccountStatsSummary,
-  ActivityDay,
-  BehaviorFlag,
-  GoalCreateInput,
-  GoalItem,
   GoalPrefill,
-  LaneEntry,
-  LessonCard,
-  MatchParticipantEntry,
-  PoolRecommendation,
   PoolSlotKey,
-  PoolView,
-  RankSnapshotEntry,
-  ReplacePoolEntryInput,
-  RosterChampion,
-  StreakInfo,
   TabKey,
-  TimeRange,
 } from '../../types/dashboard'
-
-type DashboardScreenProps = {
-  isSignedIn: boolean
-  userDisplayName: string
-  userDisplayEmail: string
-  activeTab: TabKey
-  userAccounts: AccountCard[]
-  currentAccountId: string
-  activeAccount?: AccountCard
-  goalsByAccount: GoalItem[]
-  status: string
-  isLoadingDashboard: boolean
-  accountForm: AccountForm
-  matches: MatchParticipantEntry[]
-  statsSummary: AccountStatsSummary | null
-  streak: StreakInfo | null
-  lanes: LaneEntry[]
-  weeklyActivity: ActivityDay[]
-  rankHistory: RankSnapshotEntry[]
-  lessons: LessonCard[]
-  behaviorFlags: BehaviorFlag[]
-  ddragonVersion: string | null
-  timeRange: TimeRange
-  isSyncing: boolean
-  lastSyncedLabel: string
-  championRoster: RosterChampion[]
-  poolView: PoolView | undefined
-  poolRecommendation: PoolRecommendation | undefined
-  isPoolRecommendationLoading: boolean
-  isSavingPool: boolean
-  onSavePool: (entries: ReplacePoolEntryInput[]) => Promise<boolean>
-  onAddPoolOutsider: (championKey: string, role: PoolSlotKey) => void
-  // undefined = todavía no se resolvió el usuario (no auto-abrir); null = resuelto
-  // y nunca vio el onboarding (auto-abrir); string = ya lo vio/saltó.
-  onboardingCompletedAt: string | null | undefined
-  onCompleteOnboarding: () => void
-  onTimeRangeChange: (range: TimeRange) => void
-  onTabChange: (tab: TabKey) => void
-  onLogout: () => void
-  onSetCurrentAccountId: (id: string) => void
-  onAccountFieldChange: (event: React.ChangeEvent<HTMLInputElement>) => void
-  onCreateAccount: (event: SubmitEvent<HTMLFormElement>) => void
-  onDeleteAccount: (accountId: string) => void
-  onSyncMatches: () => void
-  onCreateGoal: (input: GoalCreateInput) => Promise<boolean>
-  onDeleteGoal: (goalId: string) => void
-}
+import type { DashboardScreenProps } from '../../types/components'
 
 export function DashboardScreen({
   isSignedIn,
@@ -97,7 +36,10 @@ export function DashboardScreen({
   isLoadingDashboard,
   accountForm,
   matches,
+  hasOlderMatches,
+  historyWindowDays,
   statsSummary,
+  homeStatsSummary,
   streak,
   lanes,
   weeklyActivity,
@@ -134,6 +76,10 @@ export function DashboardScreen({
   const [goalModalPrefill, setGoalModalPrefill] = useState<GoalPrefill | null | undefined>(undefined)
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false)
   const [selectedLessonIndex, setSelectedLessonIndex] = useState<number | null>(null)
+  const socialSummaryQuery = useSocialSummary(isSignedIn)
+  // Pending duo requests plus unread chat messages, shown on the Social tab.
+  const socialBadge =
+    (socialSummaryQuery.data?.pendingRequests ?? 0) + (socialSummaryQuery.data?.unreadMessages ?? 0)
 
   // Solo se evalúa una vez que poolView resolvió, para no mostrar un flash de
   // "bloqueado" mientras carga a una cuenta que sí tiene pool armado.
@@ -181,6 +127,7 @@ export function DashboardScreen({
     aprendizaje: lessons.length,
     'pool-champ': poolView?.entries.length ?? 0,
     objetivos: goalsByAccount.length,
+    social: socialBadge,
   }
 
   // Estado real, no el paso del tour — ver handoff_loc/04-onboarding.md.
@@ -225,10 +172,13 @@ export function DashboardScreen({
           activeAccount={activeAccount}
           onSetCurrentAccountId={onSetCurrentAccountId}
           onOpenAccountModal={handleOpenAccountModal}
+          onDeleteAccount={onDeleteAccount}
           onSyncMatches={onSyncMatches}
           isSyncing={isSyncing}
           lastSyncedLabel={lastSyncedLabel}
         />
+
+        <TwitchLiveBanner />
 
         {status && <p className="dashboard-status">{status}</p>}
         {isLoadingDashboard && <p className="dashboard-status">Cargando dashboard…</p>}
@@ -240,6 +190,7 @@ export function DashboardScreen({
             currentAccountId={currentAccountId}
             ddragonVersion={ddragonVersion}
             statsSummary={statsSummary}
+            homeStatsSummary={homeStatsSummary}
             streak={streak}
             lanes={lanes}
             rankHistory={rankHistory}
@@ -266,6 +217,8 @@ export function DashboardScreen({
           <MatchesTabPanel
             activeAccount={activeAccount}
             matches={matches}
+            hasOlderMatches={hasOlderMatches}
+            historyWindowDays={historyWindowDays}
             rankHistory={rankHistory}
             ddragonVersion={ddragonVersion}
           />
@@ -304,6 +257,10 @@ export function DashboardScreen({
             onOpenChampionLesson={handleOpenChampionLesson}
             onGoToAccounts={() => onTabChange('cuentas')}
           />
+        )}
+
+        {activeTab === 'social' && (
+          <SocialTabPanel userAccounts={userAccounts} activeAccount={activeAccount} ddragonVersion={ddragonVersion} />
         )}
 
         {activeTab === 'objetivos' && (

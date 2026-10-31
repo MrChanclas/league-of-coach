@@ -39,3 +39,6 @@ infra/
 
 # Misc
 *.tsbuildinfo
+
+# Personal notes (not part of the repo)
+GUIA_PERSONAL.md

@@ -1,14 +1,5 @@
-import { CHECKLIST_TASKS } from './onboardingCopy'
-
-type FirstStepsChecklistProps = {
-  // Una entrada por tarea, en el mismo orden que CHECKLIST_TASKS — reflejan
-  // estado real (¿tiene cuentas? ¿tiene partidas? ...), no el paso del tour.
-  completed: boolean[]
-  // 'floating' (por defecto) = widget fijo abajo a la derecha, para escritorio.
-  // 'inline' = bloque de ancho completo dentro del scroll de la vista Cuentas
-  // en mobile — ver handoff_loc/05-movil.md.
-  variant?: 'floating' | 'inline'
-}
+import { CHECKLIST_TASKS } from '../../constants'
+import type { FirstStepsChecklistProps } from '../../types/components'
 
 export function FirstStepsChecklist({ completed, variant = 'floating' }: FirstStepsChecklistProps) {
   const doneCount = completed.filter(Boolean).length

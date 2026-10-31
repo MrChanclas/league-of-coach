@@ -1,15 +1,6 @@
 import { getChampionIconUrl } from '../../lib/riotAssets'
-import { POOL_ROLE_LABELS, POOL_STATE_LABELS } from '../../lib/poolLabels'
-import type { PoolEntry, PoolRoleKey } from '../../types/dashboard'
-
-type PoolChampMiniCardProps = {
-  entries: PoolEntry[]
-  mainRole: PoolRoleKey | undefined
-  ddragonVersion: string | null
-  onGoToPoolChamp: () => void
-}
-
-const PREVIEW_LIMIT = 6
+import { POOL_PREVIEW_LIMIT, POOL_ROLE_LABELS, POOL_STATE_LABELS } from '../../constants'
+import type { PoolChampMiniCardProps } from '../../types/components'
 
 /**
  * Replaces PoolChampPromoCard in the home once the account already has a
@@ -34,7 +25,7 @@ export function PoolChampMiniCard({ entries, mainRole, ddragonVersion, onGoToPoo
         </p>
       ) : (
         <div className="pool-mini-preview-rows">
-          {roleEntries.slice(0, PREVIEW_LIMIT).map((entry) => (
+          {roleEntries.slice(0, POOL_PREVIEW_LIMIT).map((entry) => (
             <div key={entry.championKey} className="pool-mini-preview-row">
               {ddragonVersion ? (
                 <img
