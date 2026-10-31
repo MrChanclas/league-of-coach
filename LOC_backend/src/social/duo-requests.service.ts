@@ -6,7 +6,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { canDuo, type DuoQueue } from '../common/duo-eligibility';
-import { DiscordService } from '../discord/discord.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { DUO_ACCOUNT_SELECT, rankForQueue, toAccountCard } from './duo-cards';
 import type { CreateDuoRequestInput } from './social.schemas';
@@ -21,10 +20,7 @@ const REQUEST_INCLUDE = {
 
 @Injectable()
 export class DuoRequestsService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly discord: DiscordService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(fromUserId: string, input: CreateDuoRequestInput) {
     if (input.toUserId === fromUserId) {
@@ -149,7 +145,7 @@ export class DuoRequestsService {
 
   async accept(userId: string, requestId: string) {
     const request = await this.findPendingFor(requestId, userId, 'to');
-    const duo = await this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx) => {
       await tx.duoRequest.update({
         where: { id: request.id },
         data: { status: 'accepted', respondedAt: new Date() },
@@ -165,11 +161,6 @@ export class DuoRequestsService {
         },
       });
     });
-
-    this.discord.notifySocial(
-      `🤝 Nuevo duo: **${request.fromAccount.summoner}#${request.fromAccount.tag}** + **${request.toAccount.summoner}#${request.toAccount.tag}** (${request.queue === 'flex' ? 'Flex' : 'Solo/Dúo'})`,
-    );
-    return duo;
   }
 
   async decline(userId: string, requestId: string) {
