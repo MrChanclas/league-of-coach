@@ -22,6 +22,10 @@ const DaysQuerySchema = z.object({
   days: z.coerce.number().int().min(1).max(365).default(7),
 });
 
+const SummaryQuerySchema = z.object({
+  days: z.coerce.number().int().min(1).max(365).optional(),
+});
+
 const ChampionsQuerySchema = z.object({
   days: z.coerce.number().int().min(1).max(365).optional(),
 });
@@ -39,13 +43,20 @@ export class StatsController {
     return this.statsService.getPlatformStats();
   }
 
+  // `days` narrows the summary to a recent window (the home's "7 días"
+  // toggle); without it the summary covers every synced game of the season.
   @Get('account/:accountId')
   async getAccountSummary(
     @Req() request: AuthenticatedRequest,
     @Param('accountId') accountId: string,
+    @Query(new ZodValidationPipe(SummaryQuerySchema))
+    query: z.infer<typeof SummaryQuerySchema>,
   ) {
     await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
-    return this.statsService.getAccountSummary(accountId);
+    const since = query.days
+      ? new Date(Date.now() - query.days * 24 * 60 * 60 * 1000)
+      : undefined;
+    return this.statsService.getAccountSummary(accountId, since);
   }
 
   @Get('account/:accountId/by-queue/:queueId')

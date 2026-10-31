@@ -1,6 +1,6 @@
 import { PASSWORD_STRENGTH_BARS } from '../../constants'
 import { getPasswordStrength } from '../../lib/auth'
-import { AuthCheckbox, ClerkBadge, GoogleIcon, OrDivider } from './AuthPrimitives'
+import { AuthCheckbox, ClerkBadge, DiscordIcon, GoogleIcon, OrDivider } from './AuthPrimitives'
 import type { AuthStatusProps, AuthStepProps } from '../../types/components'
 
 function AuthStatus({ status }: AuthStatusProps) {
@@ -141,6 +141,10 @@ export function LoginStep({ flow }: AuthStepProps) {
         <button type="button" className="auth-social-btn" onClick={flow.handleGoogleAuth}>
           <GoogleIcon />
           <span className="auth-social-label">Continuar con Google</span>
+        </button>
+        <button type="button" className="auth-social-btn" onClick={flow.handleDiscordAuth}>
+          <DiscordIcon />
+          <span className="auth-social-label">Continuar con Discord</span>
         </button>
       </div>
 

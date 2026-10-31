@@ -23,6 +23,7 @@ import { LearningModule } from './learning/learning.module';
 import { MatchesModule } from './matches/matches.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RiotModule } from './riot/riot.module';
+import { SocialModule } from './social/social.module';
 import { StatsModule } from './stats/stats.module';
 import { UsersModule } from './users/users.module';
 
@@ -40,6 +41,7 @@ import { UsersModule } from './users/users.module';
     DiscordModule,
     PrismaModule,
     UsersModule,
+    SocialModule,
     RiotModule,
     AccountsModule,
     FeedbackModule,

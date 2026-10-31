@@ -26,6 +26,17 @@ import type {
   TabKey,
   TimeRange,
 } from './dashboard'
+import type {
+  DuoAccountCard,
+  DuoCandidate,
+  DuoDetail,
+  DuoGoalInput,
+  DuoListItem,
+  DuoProfile,
+  DuoProfileInput,
+  DuoRequestsResponse,
+  RankGoalProgress,
+} from './social'
 
 export type BottomSheetProps = {
   isOpen: boolean
@@ -67,6 +78,7 @@ export type DashboardHeaderProps = {
   activeAccount?: AccountCard
   onSetCurrentAccountId: (id: string) => void
   onOpenAccountModal: () => void
+  onDeleteAccount: (accountId: string) => void
   onSyncMatches: () => void
   isSyncing: boolean
   lastSyncedLabel: string
@@ -83,7 +95,7 @@ export type DashboardSidebarProps = {
   onSetCurrentAccountId: (id: string) => void
   onOpenAccountModal: () => void
   onReplayOnboarding: () => void
-  navMeta: { cuentas: number; partidas: number; aprendizaje: number; 'pool-champ': number; objetivos: number }
+  navMeta: Record<TabKey, number>
   lockedTabs: TabKey[]
 }
 
@@ -127,6 +139,8 @@ export type DashboardScreenProps = {
   hasOlderMatches: boolean
   historyWindowDays: number | null
   statsSummary: AccountStatsSummary | null
+  // The home's summary for the selected period (see timeRange).
+  homeStatsSummary: AccountStatsSummary | null
   streak: StreakInfo | null
   lanes: LaneEntry[]
   weeklyActivity: ActivityDay[]
@@ -366,6 +380,7 @@ export type AccountTabPanelProps = {
   currentAccountId: string
   ddragonVersion: string | null
   statsSummary: AccountStatsSummary | null
+  homeStatsSummary: AccountStatsSummary | null
   streak: StreakInfo | null
   lanes: LaneEntry[]
   rankHistory: RankSnapshotEntry[]
@@ -413,4 +428,80 @@ export type LocMarkProps = {
   size: number
   weight?: 'regular' | 'bold'
   className?: string
+}
+
+// ─── Social ───────────────────────────────────────────────────────────────
+
+export type SocialTabPanelProps = {
+  userAccounts: AccountCard[]
+  activeAccount?: AccountCard
+  ddragonVersion: string | null
+}
+
+export type DuoAccountChipProps = {
+  account: DuoAccountCard
+  ddragonVersion: string | null
+}
+
+export type DiscordLinkCardProps = {
+  discordUsername: string | null
+}
+
+export type DuoProfileFormProps = {
+  profile: DuoProfile | null
+  userAccounts: AccountCard[]
+  defaultAccountId: string | undefined
+  isSaving: boolean
+  onSave: (input: DuoProfileInput) => void
+}
+
+export type RolePickerProps = {
+  label: string
+  selected: string[]
+  onToggle: (role: string) => void
+}
+
+export type DuoCandidateListProps = {
+  candidates: DuoCandidate[]
+  ddragonVersion: string | null
+  isLoading: boolean
+  sendingTo: string | null
+  onSendRequest: (toUserId: string, message: string) => void
+}
+
+export type DuoRequestListProps = {
+  requests: DuoRequestsResponse
+  ddragonVersion: string | null
+  onRespond: (requestId: string, action: 'accept' | 'decline' | 'cancel') => void
+}
+
+export type DuoListProps = {
+  duos: DuoListItem[]
+  ddragonVersion: string | null
+  onOpen: (duoId: string) => void
+}
+
+export type DuoDetailViewProps = {
+  duoId: string
+  ddragonVersion: string | null
+  onBack: () => void
+  onStatus: (message: string) => void
+}
+
+export type DuoGoalCardProps = {
+  detail: DuoDetail
+  isSaving: boolean
+  onSave: (input: DuoGoalInput) => void
+  onRemove: () => void
+}
+
+export type DuoGoalProgressLineProps = {
+  label: string
+  progress: RankGoalProgress
+}
+
+export type DuoChatProps = {
+  duoId: string
+  isEnded: boolean
+  partnerName: string
 }

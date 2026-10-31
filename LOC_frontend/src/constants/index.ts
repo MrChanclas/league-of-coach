@@ -11,6 +11,7 @@ import type {
   TabKey,
 } from '../types/dashboard'
 import type { CoachStep } from '../types/onboarding'
+import type { AvailabilitySlot, DuoQueue } from '../types/social'
 import type { MobileNavigationItem, NavigationItem, QueueFilter } from '../types/components'
 
 export { queryKeys } from './queryKeys'
@@ -33,6 +34,8 @@ export const RANK_TIERS = [
   'CHALLENGER',
 ] as const
 
+// The home's "7 días" period; "Split" is the whole synced season.
+export const HOME_RECENT_DAYS = 7
 export const WEEKDAY_LABELS = ['D', 'L', 'M', 'X', 'J', 'V', 'S']
 export const BAR_SCALE_PX = 26
 export const APP_VERSION = __APP_VERSION__
@@ -59,7 +62,7 @@ export const TYPE_TABS: { key: GoalType; label: string }[] = [
   { key: 'campeon', label: 'Campeón' },
 ]
 
-export const TAB_KEYS: TabKey[] = ['cuentas', 'aprendizaje', 'objetivos', 'partidas', 'pool-champ']
+export const TAB_KEYS: TabKey[] = ['cuentas', 'aprendizaje', 'objetivos', 'partidas', 'pool-champ', 'social']
 export const DEFAULT_TAB: TabKey = 'cuentas'
 
 export const BLANK_ACCOUNT_FORM: AccountForm = {
@@ -81,6 +84,7 @@ export const NAV_ITEMS: NavigationItem[] = [
   { key: 'aprendizaje', label: 'Aprendizaje', tour: 'nav-aprendizaje' },
   { key: 'pool-champ', label: 'Pool Champ', tour: 'nav-pool-champ' },
   { key: 'objetivos', label: 'Objetivos', tour: 'nav-objetivos' },
+  { key: 'social', label: 'Social' },
 ]
 
 export const MOBILE_TAB_ITEMS: MobileNavigationItem[] = [
@@ -89,6 +93,7 @@ export const MOBILE_TAB_ITEMS: MobileNavigationItem[] = [
   { key: 'aprendizaje', label: 'Aprendizaje', tour: 'nav-aprendizaje' },
   { key: 'pool-champ', label: 'Pool', tour: 'nav-pool-champ' },
   { key: 'objetivos', label: 'Objetivos', tour: 'nav-objetivos' },
+  { key: 'social', label: 'Social' },
 ]
 
 export const ROLE_LABELS: Record<string, string> = {
@@ -114,7 +119,22 @@ export const GOAL_STATUS_LABELS: Record<GoalStatus, string> = {
 export const RANK_BAND_LABELS: Record<string, string> = {
   LOW: 'Hierro–Oro',
   MID: 'Platino–Diamante',
-  HIGH: 'Master+',
+  HIGH: 'Maestro+',
+}
+
+// Official Spanish (LAS/LAN) tier names. The API keeps Riot's English keys;
+// every place that shows a tier goes through formatTier/formatRank.
+export const TIER_LABELS: Record<string, string> = {
+  IRON: 'Hierro',
+  BRONZE: 'Bronce',
+  SILVER: 'Plata',
+  GOLD: 'Oro',
+  PLATINUM: 'Platino',
+  EMERALD: 'Esmeralda',
+  DIAMOND: 'Diamante',
+  MASTER: 'Maestro',
+  GRANDMASTER: 'Gran Maestro',
+  CHALLENGER: 'Retador',
 }
 
 export const TIER_COLORS: Record<string, string> = {
@@ -298,3 +318,34 @@ export const CHECKLIST_TASKS = [
   { name: 'Leer tu primera lección', hint: 'Se desbloquean cuando armas tu pool.' },
   { name: 'Fijar un objetivo del split', hint: 'Rango, winrate o un hábito.' },
 ] as const
+
+// ─── Social (duo finder, duos and chat) ─────────────────────────────────
+
+// Polling instead of a socket: the backend runs on several Cloud Run
+// instances, so a push from one wouldn't reach clients on another. The open
+// chat polls fast; badges and lists can lag a little.
+export const CHAT_POLL_MS = 3_000
+export const DUO_LIST_POLL_MS = 15_000
+export const SOCIAL_SUMMARY_POLL_MS = 30_000
+
+// Same limits the backend validates (social.schemas.ts).
+export const DUO_NOTE_MAX = 200
+export const DUO_REQUEST_MESSAGE_MAX = 300
+export const DUO_MESSAGE_MAX = 1000
+export const DUO_REPORT_REASON_MAX = 500
+
+export const DUO_QUEUE_LABELS: Record<DuoQueue, string> = {
+  solo: 'Solo/Dúo',
+  flex: 'Flexible',
+}
+
+export const AVAILABILITY_SLOTS: AvailabilitySlot[] = ['manana', 'tarde', 'noche', 'madrugada']
+export const AVAILABILITY_LABELS: Record<AvailabilitySlot, string> = {
+  manana: 'Mañana',
+  tarde: 'Tarde',
+  noche: 'Noche',
+  madrugada: 'Madrugada',
+}
+
+// Duo goals stop at Master: from Grandmaster on, Riot doesn't allow duo.
+export const DUO_GOAL_TIERS = RANK_TIERS.slice(0, RANK_TIERS.indexOf('MASTER') + 1)

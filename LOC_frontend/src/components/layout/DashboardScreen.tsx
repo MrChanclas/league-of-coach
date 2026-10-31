@@ -12,6 +12,8 @@ import { MatchesTabPanel } from '../matches/MatchesTabPanel'
 import { FirstStepsChecklist } from '../onboarding/FirstStepsChecklist'
 import { OnboardingTour } from '../onboarding/OnboardingTour'
 import { PoolChampTabPanel } from '../poolchamp/PoolChampTabPanel'
+import { SocialTabPanel } from '../social/SocialTabPanel'
+import { useSocialSummary } from '../../hooks/useSocial'
 
 import type {
   GoalPrefill,
@@ -36,6 +38,7 @@ export function DashboardScreen({
   hasOlderMatches,
   historyWindowDays,
   statsSummary,
+  homeStatsSummary,
   streak,
   lanes,
   weeklyActivity,
@@ -72,6 +75,10 @@ export function DashboardScreen({
   const [goalModalPrefill, setGoalModalPrefill] = useState<GoalPrefill | null | undefined>(undefined)
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false)
   const [selectedLessonIndex, setSelectedLessonIndex] = useState<number | null>(null)
+  const socialSummaryQuery = useSocialSummary(isSignedIn)
+  // Pending duo requests plus unread chat messages, shown on the Social tab.
+  const socialBadge =
+    (socialSummaryQuery.data?.pendingRequests ?? 0) + (socialSummaryQuery.data?.unreadMessages ?? 0)
 
   // Solo se evalúa una vez que poolView resolvió, para no mostrar un flash de
   // "bloqueado" mientras carga a una cuenta que sí tiene pool armado.
@@ -119,6 +126,7 @@ export function DashboardScreen({
     aprendizaje: lessons.length,
     'pool-champ': poolView?.entries.length ?? 0,
     objetivos: goalsByAccount.length,
+    social: socialBadge,
   }
 
   // Estado real, no el paso del tour — ver handoff_loc/04-onboarding.md.
@@ -163,6 +171,7 @@ export function DashboardScreen({
           activeAccount={activeAccount}
           onSetCurrentAccountId={onSetCurrentAccountId}
           onOpenAccountModal={handleOpenAccountModal}
+          onDeleteAccount={onDeleteAccount}
           onSyncMatches={onSyncMatches}
           isSyncing={isSyncing}
           lastSyncedLabel={lastSyncedLabel}
@@ -178,6 +187,7 @@ export function DashboardScreen({
             currentAccountId={currentAccountId}
             ddragonVersion={ddragonVersion}
             statsSummary={statsSummary}
+            homeStatsSummary={homeStatsSummary}
             streak={streak}
             lanes={lanes}
             rankHistory={rankHistory}
@@ -244,6 +254,10 @@ export function DashboardScreen({
             onOpenChampionLesson={handleOpenChampionLesson}
             onGoToAccounts={() => onTabChange('cuentas')}
           />
+        )}
+
+        {activeTab === 'social' && (
+          <SocialTabPanel userAccounts={userAccounts} activeAccount={activeAccount} ddragonVersion={ddragonVersion} />
         )}
 
         {activeTab === 'objetivos' && (

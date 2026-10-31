@@ -7,8 +7,8 @@ export const queryKeys = {
   platformStats: () => ['platformStats'] as const,
   account: (accountId: string | undefined) => ['account', accountId] as const,
   accountMatches: (accountId: string | undefined) => ['account', accountId, 'matches'] as const,
-  accountStats: (accountId: string | undefined, queueId?: number) =>
-    ['account', accountId, 'stats', queueId ?? 'all'] as const,
+  accountStats: (accountId: string | undefined, queueId?: number, days?: number) =>
+    ['account', accountId, 'stats', queueId ?? 'all', days ?? 'season'] as const,
   accountStreak: (accountId: string | undefined, queueId?: number) =>
     ['account', accountId, 'streak', queueId ?? 'all'] as const,
   accountLanes: (accountId: string | undefined) => ['account', accountId, 'lanes'] as const,
@@ -24,4 +24,14 @@ export const queryKeys = {
   accountPool: (accountId: string | undefined) => ['account', accountId, 'pool'] as const,
   accountPoolRecommendation: (accountId: string | undefined) =>
     ['account', accountId, 'pool', 'recommendation'] as const,
+  // Everything social shares the 'social' prefix, so one invalidation
+  // refreshes the panel after any action.
+  social: () => ['social'] as const,
+  socialSummary: () => ['social', 'summary'] as const,
+  socialProfile: () => ['social', 'profile'] as const,
+  socialCandidates: () => ['social', 'candidates'] as const,
+  socialRequests: () => ['social', 'requests'] as const,
+  socialDuos: () => ['social', 'duos'] as const,
+  socialDuo: (duoId: string | null) => ['social', 'duos', duoId] as const,
+  socialMessages: (duoId: string | null) => ['social', 'duos', duoId, 'messages'] as const,
 }

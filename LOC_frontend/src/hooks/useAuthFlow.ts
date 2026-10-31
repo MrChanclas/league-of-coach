@@ -157,21 +157,26 @@ export function useAuthFlow(): AuthFlow {
     }
   }
 
-  const handleGoogleAuth = async () => {
+  // Google and Discord share the redirect flow; a first-time player is
+  // turned into a sign-up by AuthenticateWithRedirectCallback on the way back.
+  const handleOAuth = async (strategy: 'oauth_google' | 'oauth_discord', providerName: string) => {
     if (!isSignInLoaded) return
 
     setStatus('')
 
     try {
       await signIn.authenticateWithRedirect({
-        strategy: 'oauth_google',
+        strategy,
         redirectUrl: `${window.location.origin}/sso-callback`,
         redirectUrlComplete: window.location.origin,
       })
     } catch (error) {
-      setStatus(getClerkErrorMessage(error, 'No se pudo conectar con Google.'))
+      setStatus(getClerkErrorMessage(error, `No se pudo conectar con ${providerName}.`))
     }
   }
+
+  const handleGoogleAuth = () => handleOAuth('oauth_google', 'Google')
+  const handleDiscordAuth = () => handleOAuth('oauth_discord', 'Discord')
 
   return {
     isUserLoaded,
@@ -202,5 +207,6 @@ export function useAuthFlow(): AuthFlow {
     handleForgotRequestSubmit,
     handleForgotResetSubmit,
     handleGoogleAuth,
+    handleDiscordAuth,
   }
 }

@@ -15,6 +15,7 @@ export function AccountTabPanel({
   currentAccountId,
   ddragonVersion,
   statsSummary,
+  homeStatsSummary,
   streak,
   lanes,
   weeklyActivity,
@@ -89,7 +90,7 @@ export function AccountTabPanel({
         <AccountBand
           account={activeAccount}
           primaryQueue={primaryQueue}
-          statsSummary={statsSummary}
+          statsSummary={homeStatsSummary}
           streak={streak}
           lanes={lanes}
         />
