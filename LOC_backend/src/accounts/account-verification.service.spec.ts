@@ -146,7 +146,17 @@ describe('AccountVerificationService.confirm', () => {
       expiresAt: new Date(Date.now() - 1),
     });
 
-    await expect(service.confirm('user-2')).rejects.toThrow('venció');
+    await expect(service.confirm('user-2')).rejects.toMatchObject({
+      response: { code: 'VERIFICATION_EXPIRED' },
+    });
+  });
+
+  it('tells the client when Riot does not show the icon yet', async () => {
+    const { service } = build(null, 3);
+
+    await expect(service.confirm('user-2')).rejects.toMatchObject({
+      response: { code: 'ICON_NOT_UPDATED' },
+    });
   });
 
   it('refuses to take an account another profile already verified', async () => {
