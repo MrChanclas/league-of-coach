@@ -60,6 +60,25 @@ export class AccountVerificationService {
       );
     }
 
+    // Reopening the modal must not swap the icon the user may already have
+    // equipped. The deadline stays too, so a challenge can't be held open
+    // until the owner happens to pick that icon.
+    const pending = await this.prisma.accountVerification.findUnique({
+      where: { userId },
+    });
+    if (
+      pending?.puuid === riotAccount.puuid &&
+      pending.expiresAt.getTime() > Date.now()
+    ) {
+      return {
+        summoner: pending.summoner,
+        tag: pending.tag,
+        server: pending.server,
+        iconId: pending.iconId,
+        expiresAt: pending.expiresAt,
+      };
+    }
+
     const riotSummoner = await this.riotApi.getSummonerByPuuid(
       input.server,
       riotAccount.puuid,
@@ -103,7 +122,7 @@ export class AccountVerificationService {
     );
     if (riotSummoner.profileIconId !== challenge.iconId) {
       throw new BadRequestException(
-        'Todavía no vemos el ícono pedido en esa cuenta. Puede tardar un minuto en actualizarse: inténtalo de nuevo.',
+        `Riot todavía muestra el ícono n.º ${riotSummoner.profileIconId} y pedimos el n.º ${challenge.iconId}. Si ya lo cambiaste, puede tardar en actualizarse: inténtalo de nuevo en unos minutos.`,
       );
     }
 

@@ -16,6 +16,75 @@ describe('pickChallengeIcon', () => {
   });
 });
 
+describe('AccountVerificationService.start', () => {
+  const input = { summoner: 'Owner', tag: 'LAS', server: 'LAS' };
+
+  function build(pending: unknown) {
+    const prisma = {
+      accountVerification: {
+        findUnique: jest.fn().mockResolvedValue(pending),
+        upsert: jest
+          .fn()
+          .mockImplementation(({ create }: { create: unknown }) => create),
+      },
+      lolAccount: { findUnique: jest.fn().mockResolvedValue(null) },
+    };
+    const riotApi = {
+      getAccountByRiotId: jest.fn().mockResolvedValue({
+        puuid: 'puuid-1',
+        gameName: 'Owner',
+        tagLine: 'LAS',
+      }),
+      getSummonerByPuuid: jest.fn().mockResolvedValue({ profileIconId: 3 }),
+    };
+    const service = new AccountVerificationService(
+      prisma as never,
+      riotApi as never,
+      {} as never,
+      {} as never,
+    );
+    return { service, prisma };
+  }
+
+  const pending = {
+    puuid: 'puuid-1',
+    server: 'LAS',
+    summoner: 'Owner',
+    tag: 'LAS',
+    iconId: 7,
+    expiresAt: new Date(Date.now() + 60_000),
+  };
+
+  it('keeps the icon and deadline of a challenge still in progress', async () => {
+    const { service, prisma } = build(pending);
+
+    await expect(service.start('user-2', input)).resolves.toMatchObject({
+      iconId: 7,
+      expiresAt: pending.expiresAt,
+    });
+    expect(prisma.accountVerification.upsert).not.toHaveBeenCalled();
+  });
+
+  it('issues a new challenge once the previous one expired', async () => {
+    const { service, prisma } = build({
+      ...pending,
+      expiresAt: new Date(Date.now() - 1),
+    });
+
+    await service.start('user-2', input);
+
+    expect(prisma.accountVerification.upsert).toHaveBeenCalledTimes(1);
+  });
+
+  it('issues a new challenge when the user switches account', async () => {
+    const { service, prisma } = build({ ...pending, puuid: 'puuid-2' });
+
+    await service.start('user-2', input);
+
+    expect(prisma.accountVerification.upsert).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('AccountVerificationService.confirm', () => {
   const challenge = {
     userId: 'user-2',
@@ -64,7 +133,9 @@ describe('AccountVerificationService.confirm', () => {
   it('rejects when the account does not show the requested icon', async () => {
     const { service, prisma } = build(null, 3);
 
-    await expect(service.confirm('user-2')).rejects.toThrow('Todavía no');
+    await expect(service.confirm('user-2')).rejects.toThrow(
+      'Riot todavía muestra el ícono n.º 3 y pedimos el n.º 7',
+    );
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 

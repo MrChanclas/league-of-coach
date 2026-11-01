@@ -60,8 +60,14 @@ export function AccountVerificationModal({ target, ddragonVersion, onClose }: Ac
             )}
             <ol className="verify-steps">
               <li>Abre el cliente de League of Legends con {accountLabel}.</li>
-              <li>Entra a tu perfil y equipa este ícono. Es uno de los básicos, todas las cuentas lo tienen.</li>
-              <li>Vuelve aquí y confirma. Tienes 15 minutos.</li>
+              <li>
+                Entra a tu perfil y equipa este ícono (n.º {challenge.iconId}). Es uno de los básicos, todas las cuentas
+                lo tienen.
+              </li>
+              <li>
+                Vuelve aquí y confirma antes de las{' '}
+                {new Date(challenge.expiresAt).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}.
+              </li>
             </ol>
           </div>
           <button
