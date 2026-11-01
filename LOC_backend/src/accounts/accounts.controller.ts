@@ -21,13 +21,6 @@ import {
 } from './account-verification.service';
 import { AccountsService } from './accounts.service';
 
-const CreateAccountSchema = z.object({
-  summoner: z.string().min(2).max(80),
-  tag: z.string().min(2).max(20),
-  server: z.string().min(2).max(30),
-  userId: z.string().min(1),
-});
-
 // Each of these spends the shared Riot key, so they get less room than the
 // global per-IP limit.
 const RIOT_LOOKUP_THROTTLE = { default: { ttl: 60_000, limit: 10 } };
@@ -46,17 +39,7 @@ export class AccountsController {
     private readonly authz: AuthzService,
   ) {}
 
-  @Throttle(RIOT_LOOKUP_THROTTLE)
-  @Post()
-  async create(
-    @Req() request: AuthenticatedRequest,
-    @Body(new ZodValidationPipe(CreateAccountSchema))
-    body: z.infer<typeof CreateAccountSchema>,
-  ) {
-    await this.authz.assertUserOwnership(body.userId, request.clerkUserId);
-    return this.accountsService.create(body);
-  }
-
+  // Accounts are only linked by passing this verification: see confirm().
   @Throttle(RIOT_LOOKUP_THROTTLE)
   @Post('verification')
   async startVerification(

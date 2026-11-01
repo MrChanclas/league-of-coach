@@ -43,13 +43,18 @@ export class SocialController {
     private readonly chat: DuoChatService,
   ) {}
 
-  private me(request: AuthenticatedRequest) {
-    return this.authz.resolveUserId(request.clerkUserId);
+  private async me(request: AuthenticatedRequest) {
+    const userId = await this.authz.resolveUserId(request.clerkUserId);
+    await this.authz.assertHasVerifiedAccount(userId);
+    return userId;
   }
 
+  // Polled by the navigation for its badge, whatever tab or account is open.
   @Get('summary')
   async summary(@Req() request: AuthenticatedRequest) {
-    return this.duos.summary(await this.me(request));
+    return this.duos.summary(
+      await this.authz.resolveUserId(request.clerkUserId),
+    );
   }
 
   @Get('profile')

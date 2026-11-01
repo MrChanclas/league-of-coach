@@ -388,3 +388,14 @@
   color: var(--hf-loss);
   cursor: pointer;
 }
+
+.verify-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: rgba(214, 168, 76, 0.1);
+  border-color: rgba(214, 168, 76, 0.45);
+  color: #f3e2bd;
+}

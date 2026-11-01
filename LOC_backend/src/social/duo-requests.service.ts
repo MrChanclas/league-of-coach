@@ -5,6 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { accountNotVerified } from '../auth/authz.service';
 import { canDuo, type DuoQueue } from '../common/duo-eligibility';
 import { PrismaService } from '../prisma/prisma.service';
 import { DUO_ACCOUNT_SELECT, rankForQueue, toAccountCard } from './duo-cards';
@@ -145,6 +146,12 @@ export class DuoRequestsService {
 
   async accept(userId: string, requestId: string) {
     const request = await this.findPendingFor(requestId, userId, 'to');
+    const myAccount = await this.prisma.lolAccount.findUnique({
+      where: { id: request.toAccountId },
+      select: { verifiedAt: true },
+    });
+    if (!myAccount?.verifiedAt) throw accountNotVerified();
+
     return this.prisma.$transaction(async (tx) => {
       await tx.duoRequest.update({
         where: { id: request.id },

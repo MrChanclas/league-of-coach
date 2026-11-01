@@ -12,9 +12,15 @@ import type { AccountVerificationChallenge } from '../../types/api'
 const ICON_CHECK_INTERVAL_MS = 15_000
 
 /** Proves a Riot account is the user's by having them equip a given profile icon in the game client. */
-export function AccountVerificationModal({ target, ddragonVersion, onClose }: AccountVerificationModalProps) {
+export function AccountVerificationModal({
+  target,
+  initialChallenge,
+  ddragonVersion,
+  onVerified,
+  onClose,
+}: AccountVerificationModalProps) {
   const queryClient = useQueryClient()
-  const [challenge, setChallenge] = useState<AccountVerificationChallenge | null>(null)
+  const [challenge, setChallenge] = useState<AccountVerificationChallenge | null>(initialChallenge ?? null)
   const [isDone, setIsDone] = useState(false)
   const [error, setError] = useState('')
   const [pendingNotice, setPendingNotice] = useState('')
@@ -34,10 +40,11 @@ export function AccountVerificationModal({ target, ddragonVersion, onClose }: Ac
   const checkIcon = useCallback(async () => {
     setError('')
     try {
-      await confirmVerification()
+      const { account } = await confirmVerification()
       setPendingNotice('')
       await queryClient.invalidateQueries()
       setIsDone(true)
+      onVerified?.(account.id)
     } catch (caught) {
       if (caught instanceof ApiError && caught.code === 'ICON_NOT_UPDATED') {
         setPendingNotice(caught.message)
@@ -48,7 +55,7 @@ export function AccountVerificationModal({ target, ddragonVersion, onClose }: Ac
       if (caught instanceof ApiError && caught.code === 'VERIFICATION_EXPIRED') setChallenge(null)
       setError(caught instanceof Error ? caught.message : 'No se pudo comprobar el ícono.')
     }
-  }, [confirmVerification, queryClient])
+  }, [confirmVerification, onVerified, queryClient])
 
   const isWaitingForRiot = pendingNotice !== ''
 

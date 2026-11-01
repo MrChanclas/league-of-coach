@@ -136,6 +136,7 @@ export class RankSnapshotsService {
    */
   async pollAllAccounts() {
     const accounts = await this.prisma.lolAccount.findMany({
+      where: { verifiedAt: { not: null } },
       select: {
         id: true,
         server: true,

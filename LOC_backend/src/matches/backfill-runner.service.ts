@@ -72,6 +72,7 @@ export class BackfillRunnerService {
 
     const pending = await this.prisma.lolAccount.findMany({
       where: {
+        verifiedAt: { not: null },
         OR: [
           { seasonBackfillDoneFor: null },
           { seasonBackfillDoneFor: { not: seasonStart } },

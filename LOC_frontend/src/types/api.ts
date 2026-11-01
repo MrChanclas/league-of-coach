@@ -8,19 +8,6 @@ export type ApiFetchOptions = {
   parseJson?: boolean
 }
 
-export type ResolveAccountInput = {
-  summoner: string
-  tag: string
-  server: string
-  userId: string
-}
-
-export type AccountSearchResponse = {
-  message?: string
-  found?: boolean
-  created?: boolean
-}
-
 export type AccountVerificationTarget = {
   summoner: string
   tag: string

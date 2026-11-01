@@ -29,16 +29,7 @@ export class AccountsService {
     });
     if (existing && existing.userId !== resolved.userId) {
       throw new ConflictException(
-        existing.verifiedAt
-          ? {
-              code: 'ACCOUNT_VERIFIED_ELSEWHERE',
-              message: 'Esta cuenta de Riot ya fue verificada por otro perfil.',
-            }
-          : {
-              code: 'ACCOUNT_CLAIMABLE',
-              message:
-                'Esta cuenta de Riot está vinculada a otro perfil. Si es tuya, verifícala para reclamarla.',
-            },
+        'Esta cuenta de Riot ya está vinculada a otro perfil.',
       );
     }
 

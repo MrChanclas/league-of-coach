@@ -34,10 +34,7 @@ export class LearningController {
     @Body(new ZodValidationPipe(CreateLearningSchema))
     body: z.infer<typeof CreateLearningSchema>,
   ) {
-    await this.authz.assertAccountOwnership(
-      body.accountId,
-      request.clerkUserId,
-    );
+    await this.authz.assertVerifiedAccount(body.accountId, request.clerkUserId);
     return this.learningService.create(body);
   }
 
@@ -46,7 +43,7 @@ export class LearningController {
     @Req() request: AuthenticatedRequest,
     @Param('accountId') accountId: string,
   ) {
-    await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
+    await this.authz.assertVerifiedAccount(accountId, request.clerkUserId);
     return this.learningService.listByAccount(accountId);
   }
 
@@ -55,7 +52,7 @@ export class LearningController {
     @Req() request: AuthenticatedRequest,
     @Param('accountId') accountId: string,
   ) {
-    await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
+    await this.authz.assertVerifiedAccount(accountId, request.clerkUserId);
     return this.lessonsService.generateForAccount(accountId);
   }
 
@@ -65,7 +62,7 @@ export class LearningController {
     @Param('accountId') accountId: string,
     @Query('champion') champion?: string,
   ) {
-    await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
+    await this.authz.assertVerifiedAccount(accountId, request.clerkUserId);
     return this.behaviorFlagsService.getFlags(accountId, champion);
   }
 }

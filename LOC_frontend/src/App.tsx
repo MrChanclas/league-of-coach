@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import './styles/index.css'
 import { AuthenticateWithRedirectCallback, useAuth, useClerk, useUser } from '@clerk/clerk-react'
 import { useQueryClient } from '@tanstack/react-query'
@@ -10,8 +10,8 @@ import {
   useDeleteAccountMutation,
   useDeleteUserMutation,
   useDeleteGoalMutation,
-  useResolveAccountMutation,
   useSavePoolMutation,
+  useStartAccountVerificationMutation,
 } from './hooks/useApiMutations'
 import {
   useAccountActivity,
@@ -31,10 +31,9 @@ import {
 import { useMatchSync } from './hooks/useMatchSync'
 import { useStatusMessage } from './hooks/useStatusMessage'
 import { useTabNavigation } from './hooks/useTabNavigation'
-import { ApiError } from './lib/api'
 import { getDdragonVersion } from './lib/riotAssets'
 import { BLANK_ACCOUNT_FORM, HOME_RECENT_DAYS, queryKeys } from './constants'
-import type { AccountVerificationTarget } from './types/api'
+import type { AccountVerificationChallenge, AccountVerificationTarget } from './types/api'
 import type { AccountForm, GoalCreateInput, PoolSlotKey, ReplacePoolEntryInput, TimeRange } from './types/dashboard'
 
 function App() {
@@ -46,7 +45,7 @@ function App() {
   const { activeTab, handleTabChange } = useTabNavigation(isSignedIn)
   const [currentAccountId, setCurrentAccountId] = useState('')
   const [accountForm, setAccountForm] = useState<AccountForm>(BLANK_ACCOUNT_FORM)
-  const [verificationTarget, setVerificationTarget] = useState<AccountVerificationTarget | null>(null)
+  const [verification, setVerification] = useState<AccountVerificationChallenge | null>(null)
   const [status, setStatus] = useStatusMessage()
   const [ddragonVersion, setDdragonVersion] = useState<string | null>(null)
   const [timeRange, setTimeRange] = useState<TimeRange>('7d')
@@ -99,6 +98,9 @@ function App() {
   )
 
   const primaryQueue = activeAccount && activeAccount.soloTier !== 'Unranked' ? 'solo' : 'flex'
+  // Until verified an account is read-only: the backend refuses lessons, pool
+  // and goals, so they aren't asked for either.
+  const verifiedAccountId = activeAccount?.verifiedAt ? currentAccountId : ''
 
   const matchesQuery = useAccountMatches(currentAccountId)
   const statsQuery = useAccountStats(currentAccountId)
@@ -113,15 +115,15 @@ function App() {
   const lanesQuery = useAccountLanes(currentAccountId)
   const activityQuery = useAccountActivity(currentAccountId)
   const rankHistoryQuery = useAccountRankHistory(currentAccountId, primaryQueue)
-  const lessonsQuery = useAccountLessons(currentAccountId)
+  const lessonsQuery = useAccountLessons(verifiedAccountId)
   // These two are slow to compute and only the tabs that show them need them.
   const behaviorFlagsQuery = useAccountBehaviorFlags(
-    currentAccountId,
+    verifiedAccountId,
     activeTab === 'aprendizaje' || activeTab === 'objetivos',
   )
   const championRosterQuery = useChampionRoster()
-  const poolQuery = useAccountPool(currentAccountId)
-  const poolRecommendationQuery = useAccountPoolRecommendation(currentAccountId, activeTab === 'pool-champ')
+  const poolQuery = useAccountPool(verifiedAccountId)
+  const poolRecommendationQuery = useAccountPoolRecommendation(verifiedAccountId, activeTab === 'pool-champ')
 
   const matches = matchesQuery.data?.items ?? []
   const statsSummary = statsQuery.data ?? null
@@ -134,11 +136,11 @@ function App() {
   const championRoster = championRosterQuery.data ?? []
 
   const goalsByAccount = useMemo(
-    () => (dashboard?.goals ?? []).filter((goal) => goal.accountId === (activeAccount?.id ?? '')),
+    () => (activeAccount?.verifiedAt ? (dashboard?.goals ?? []).filter((goal) => goal.accountId === activeAccount.id) : []),
     [activeAccount, dashboard],
   )
 
-  const resolveAccountMutation = useResolveAccountMutation()
+  const startVerificationMutation = useStartAccountVerificationMutation()
   const deleteAccountMutation = useDeleteAccountMutation()
   const deleteUserMutation = useDeleteUserMutation()
   const createGoalMutation = useCreateGoalMutation()
@@ -162,37 +164,41 @@ function App() {
     }))
   }
 
-  const handleCreateAccount = async (event: React.SubmitEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (!internalUser) return
-
+  const handleStartVerification = async (target: AccountVerificationTarget) => {
     try {
-      const payload = await resolveAccountMutation.mutateAsync({
-        summoner: accountForm.summoner,
-        tag: accountForm.tag,
-        server: accountForm.server,
-        userId: internalUser.id,
-      })
-
-      setAccountForm(BLANK_ACCOUNT_FORM)
-      await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard(internalUser.id) })
-
-      const baseMessage = payload.message ?? 'Cuenta detectada y vinculada correctamente.'
-      setStatus(
-        payload.created
-          ? `${baseMessage} Sincroniza sus partidas para que el análisis sea preciso.`
-          : baseMessage,
-      )
+      setVerification(await startVerificationMutation.mutateAsync(target))
     } catch (error) {
-      if (error instanceof ApiError && error.code === 'ACCOUNT_CLAIMABLE') {
-        setVerificationTarget({
-          summoner: accountForm.summoner,
-          tag: accountForm.tag,
-          server: accountForm.server,
-        })
-      }
-      setStatus(error instanceof Error ? error.message : 'No se pudo detectar la cuenta.')
+      setStatus(error instanceof Error ? error.message : 'No se pudo iniciar la verificación.')
     }
+  }
+
+  // An account is only linked by passing the icon check, so the form just
+  // starts it. Riot's lookup errors stay on the form, where they can be fixed.
+  const handleCreateAccount = (event: React.SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    void handleStartVerification({
+      summoner: accountForm.summoner,
+      tag: accountForm.tag,
+      server: accountForm.server,
+    })
+  }
+
+  // Stable on purpose: the verification modal's automatic check depends on it.
+  const handleAccountVerified = useCallback(
+    (accountId: string) => {
+      setCurrentAccountId(accountId)
+      setAccountForm(BLANK_ACCOUNT_FORM)
+      setStatus('Cuenta verificada. Sincroniza sus partidas para que el análisis sea preciso.')
+    },
+    [setStatus],
+  )
+
+  const handleSyncMatches = () => {
+    if (activeAccount && !activeAccount.verifiedAt) {
+      setStatus('Verifica esta cuenta para sincronizar sus partidas.')
+      return
+    }
+    void syncMatches()
   }
 
   const handleDeleteAccount = async (accountId: string) => {
@@ -331,11 +337,14 @@ function App() {
       onAccountFieldChange={handleAccountFieldChange}
       onCreateAccount={handleCreateAccount}
       onDeleteAccount={handleDeleteAccount}
-      onSyncMatches={syncMatches}
+      onSyncMatches={handleSyncMatches}
       onCreateGoal={handleCreateGoal}
       onDeleteGoal={handleDeleteGoal}
-      verificationTarget={verificationTarget}
-      onCloseVerification={() => setVerificationTarget(null)}
+      verification={verification}
+      isStartingVerification={startVerificationMutation.isPending}
+      onVerifyAccount={(target) => void handleStartVerification(target)}
+      onAccountVerified={handleAccountVerified}
+      onCloseVerification={() => setVerification(null)}
       onDeleteUser={() => void handleDeleteUser()}
     />
   )

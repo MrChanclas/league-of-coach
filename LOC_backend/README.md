@@ -46,7 +46,7 @@ Cada carpeta de `src/` es un módulo de Nest con su controlador, servicio y mód
 |---|---|
 | `auth` | Guard global de Clerk (`@Public()` lo omite), `AuthzService` para validar la propiedad de las cuentas y `InternalSecretGuard`. |
 | `users` | Usuario interno asociado a la identidad de Clerk, y el payload del dashboard. |
-| `accounts` | Cuentas de Riot vinculadas: alta, baja, historial de rango y verificación de propiedad con el ícono de perfil (obligatoria para duos, permite reclamar una cuenta sin verificar). |
+| `accounts` | Cuentas de Riot vinculadas: alta mediante verificación de propiedad con el ícono de perfil, baja e historial de rango. Las cuentas sin verificar quedan en solo lectura y pueden ser reclamadas por quien demuestre ser su dueño. |
 | `riot` | Cliente de la API de Riot con throttle propio y reintentos ante 429. |
 | `matches` | Sincronización de partidas: ingesta, backfill de la temporada, recuperación de partidas compartidas e historial (últimos 90 días). |
 | `rank-snapshots` | Registro periódico del rango de cada cuenta. |

@@ -30,7 +30,7 @@ export class MatchesController {
     @Body(new ZodValidationPipe(SyncMatchesSchema))
     body: z.infer<typeof SyncMatchesSchema>,
   ) {
-    await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
+    await this.authz.assertVerifiedAccount(accountId, request.clerkUserId);
     return this.matchesService.syncAccount(accountId, body.count);
   }
 
