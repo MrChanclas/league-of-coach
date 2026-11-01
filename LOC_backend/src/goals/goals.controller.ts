@@ -29,10 +29,7 @@ export class GoalsController {
     @Body(new ZodValidationPipe(CreateGoalSchema))
     body: CreateGoalInput,
   ) {
-    await this.authz.assertAccountOwnership(
-      body.accountId,
-      request.clerkUserId,
-    );
+    await this.authz.assertVerifiedAccount(body.accountId, request.clerkUserId);
     return this.goalsService.create(body);
   }
 
@@ -41,17 +38,14 @@ export class GoalsController {
     @Req() request: AuthenticatedRequest,
     @Param('accountId') accountId: string,
   ) {
-    await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
+    await this.authz.assertVerifiedAccount(accountId, request.clerkUserId);
     return this.goalsService.listByAccount(accountId);
   }
 
   @Delete(':id')
   async remove(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
     const goal = await this.goalsService.findOneOrThrow(id);
-    await this.authz.assertAccountOwnership(
-      goal.accountId,
-      request.clerkUserId,
-    );
+    await this.authz.assertVerifiedAccount(goal.accountId, request.clerkUserId);
     return this.goalsService.remove(id);
   }
 }

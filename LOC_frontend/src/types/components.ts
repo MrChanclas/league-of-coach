@@ -1,4 +1,4 @@
-import type { AccountVerificationTarget } from './api'
+import type { AccountVerificationChallenge, AccountVerificationTarget } from './api'
 import type { ReactNode } from 'react'
 import type { AuthFlow } from './auth'
 import type {
@@ -125,7 +125,10 @@ export type TooltipPosition = {
 }
 
 export type DashboardScreenProps = {
-  verificationTarget: AccountVerificationTarget | null
+  verification: AccountVerificationChallenge | null
+  isStartingVerification: boolean
+  onVerifyAccount: (target: AccountVerificationTarget) => void
+  onAccountVerified: (accountId: string) => void
   onCloseVerification: () => void
   onDeleteUser: () => void
   isSignedIn: boolean
@@ -189,7 +192,10 @@ export type LegalFooterProps = {
 
 export type AccountVerificationModalProps = {
   target: AccountVerificationTarget
+  // Already started by the caller: the modal opens straight on the icon.
+  initialChallenge?: AccountVerificationChallenge
   ddragonVersion: string | null
+  onVerified?: (accountId: string) => void
   onClose: () => void
 }
 
@@ -381,6 +387,7 @@ export type AccountSearchModalProps = {
   isOpen: boolean
   accountForm: AccountForm
   status: string
+  isSubmitting: boolean
   onClose: () => void
   onAccountFieldChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   onCreateAccount: (event: React.SubmitEvent<HTMLFormElement>) => void

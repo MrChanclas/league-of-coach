@@ -29,9 +29,9 @@ export function pickChallengeIcon(currentIconId: number): number {
 
 /**
  * Proves a Riot account belongs to the signed-in user: only its owner can
- * change its profile icon in the game client. Linking stays open so stats
- * work without friction; this is what the duo feature requires, and what lets
- * the real owner take back an account somebody else linked first.
+ * change its profile icon in the game client. This is the only way to link an
+ * account, what unlocks accounts linked before it existed (read-only until
+ * then), and what lets the real owner take back one somebody else linked first.
  */
 @Injectable()
 export class AccountVerificationService {

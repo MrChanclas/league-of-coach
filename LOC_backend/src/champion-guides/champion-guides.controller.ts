@@ -17,7 +17,7 @@ export class ChampionGuidesController {
     @Query('accountId') accountId?: string,
   ) {
     if (accountId) {
-      await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
+      await this.authz.assertVerifiedAccount(accountId, request.clerkUserId);
     }
     return this.championGuidesService.getGuide(champion, accountId);
   }

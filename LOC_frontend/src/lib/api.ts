@@ -4,7 +4,7 @@ import { API_URL } from '../constants/runtime'
 export { API_URL }
 
 export class ApiError extends Error {
-  // Machine-readable reason, when the backend sends one (e.g. ACCOUNT_CLAIMABLE).
+  // Machine-readable reason, when the backend sends one (e.g. ICON_NOT_UPDATED).
   readonly code?: string
 
   constructor(message: string, code?: string) {

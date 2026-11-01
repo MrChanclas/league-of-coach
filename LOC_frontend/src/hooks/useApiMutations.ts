@@ -2,12 +2,10 @@ import { useAuth } from '@clerk/clerk-react'
 import { useMutation } from '@tanstack/react-query'
 import { apiFetch } from '../lib/api'
 import type {
-  AccountSearchResponse,
   AccountVerificationChallenge,
   AccountVerificationTarget,
   FeedbackInput,
   PoolEntryMutationInput,
-  ResolveAccountInput,
   SavePoolMutationInput,
   SyncMatchesResponse,
   UpdatePoolEntryMutationInput,
@@ -18,24 +16,6 @@ import type { GoalCreateInput } from '../types/dashboard'
 // invalidation. That stays in App.tsx alongside the rest of each action's
 // orchestration (status messages, selecting a new current account, etc.),
 // the same place it lived before this migration.
-
-export function useResolveAccountMutation() {
-  const { getToken } = useAuth()
-  return useMutation({
-    mutationFn: async (input: ResolveAccountInput) => {
-      const token = await getToken()
-      const payload = await apiFetch<AccountSearchResponse>('/accounts', {
-        method: 'POST',
-        token,
-        body: input,
-      })
-      if (!payload.found) {
-        throw new Error(payload.message ?? 'No se pudo detectar la cuenta de Riot.')
-      }
-      return payload
-    },
-  })
-}
 
 export function useStartAccountVerificationMutation() {
   const { getToken } = useAuth()
@@ -53,7 +33,10 @@ export function useConfirmAccountVerificationMutation() {
   const { getToken } = useAuth()
   return useMutation({
     mutationFn: async () =>
-      apiFetch('/accounts/verification/confirm', { method: 'POST', token: await getToken() }),
+      apiFetch<{ account: { id: string } }>('/accounts/verification/confirm', {
+        method: 'POST',
+        token: await getToken(),
+      }),
   })
 }
 

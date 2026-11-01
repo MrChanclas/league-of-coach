@@ -51,7 +51,7 @@ export class ChampionPoolsController {
     @Req() request: AuthenticatedRequest,
     @Param('accountId') accountId: string,
   ) {
-    await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
+    await this.authz.assertVerifiedAccount(accountId, request.clerkUserId);
     return this.championPoolsService.getPoolView(accountId);
   }
 
@@ -60,7 +60,7 @@ export class ChampionPoolsController {
     @Req() request: AuthenticatedRequest,
     @Param('accountId') accountId: string,
   ) {
-    await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
+    await this.authz.assertVerifiedAccount(accountId, request.clerkUserId);
     return this.championPoolsService.getRecommendation(accountId);
   }
 
@@ -70,7 +70,7 @@ export class ChampionPoolsController {
     @Param('accountId') accountId: string,
     @Body(new ZodValidationPipe(ReplacePoolSchema)) body: ReplacePoolInput,
   ) {
-    await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
+    await this.authz.assertVerifiedAccount(accountId, request.clerkUserId);
     return this.championPoolsService.replacePool(accountId, body);
   }
 
@@ -80,7 +80,7 @@ export class ChampionPoolsController {
     @Param('accountId') accountId: string,
     @Body(new ZodValidationPipe(AddPoolEntrySchema)) body: AddPoolEntryInput,
   ) {
-    await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
+    await this.authz.assertVerifiedAccount(accountId, request.clerkUserId);
     return this.championPoolsService.addEntry(accountId, body);
   }
 
@@ -93,7 +93,7 @@ export class ChampionPoolsController {
     @Body(new ZodValidationPipe(UpdatePoolEntrySchema))
     body: UpdatePoolEntryInput,
   ) {
-    await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
+    await this.authz.assertVerifiedAccount(accountId, request.clerkUserId);
     return this.championPoolsService.updateEntry(
       accountId,
       championKey,
@@ -109,7 +109,7 @@ export class ChampionPoolsController {
     @Param('championKey') championKey: string,
     @Param('slot') slot: string,
   ) {
-    await this.authz.assertAccountOwnership(accountId, request.clerkUserId);
+    await this.authz.assertVerifiedAccount(accountId, request.clerkUserId);
     return this.championPoolsService.removeEntry(
       accountId,
       championKey,

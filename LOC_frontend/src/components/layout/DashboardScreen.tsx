@@ -11,6 +11,7 @@ import { GoalFormModal } from '../goals/GoalFormModal'
 import { FirstStepsChecklist } from '../onboarding/FirstStepsChecklist'
 import { OnboardingTour } from '../onboarding/OnboardingTour'
 import { LegalFooter } from '../shared/LegalFooter'
+import { LockedTabState } from '../shared/LockedTabState'
 import { useSocialSummary } from '../../hooks/useSocial'
 
 import type {
@@ -33,8 +34,14 @@ const PoolChampTabPanel = lazy(() =>
 )
 const SocialTabPanel = lazy(() => import('../social/SocialTabPanel').then((module) => ({ default: module.SocialTabPanel })))
 
+// An unverified account keeps its home and match history, read-only.
+const VERIFICATION_LOCKED_TABS: TabKey[] = ['aprendizaje', 'pool-champ', 'objetivos', 'social']
+
 export function DashboardScreen({
-  verificationTarget,
+  verification,
+  isStartingVerification,
+  onVerifyAccount,
+  onAccountVerified,
   onCloseVerification,
   onDeleteUser,
   isSignedIn,
@@ -97,7 +104,25 @@ export function DashboardScreen({
   // Solo se evalúa una vez que poolView resolvió, para no mostrar un flash de
   // "bloqueado" mientras carga a una cuenta que sí tiene pool armado.
   const hasPool = poolView !== undefined && Boolean(poolView.pool)
-  const lockedTabs: TabKey[] = poolView !== undefined && !hasPool ? ['aprendizaje', 'objetivos'] : []
+  const needsVerification = Boolean(activeAccount && !activeAccount.verifiedAt)
+  const poolLockedTabs: TabKey[] = poolView !== undefined && !hasPool ? ['aprendizaje', 'objetivos'] : []
+  const lockedTabs = needsVerification ? VERIFICATION_LOCKED_TABS : poolLockedTabs
+  const panelTab = needsVerification && VERIFICATION_LOCKED_TABS.includes(activeTab) ? null : activeTab
+
+  const handleVerifyActiveAccount = () => {
+    if (!activeAccount) return
+    onVerifyAccount({ summoner: activeAccount.summoner, tag: activeAccount.tag, server: activeAccount.server })
+  }
+
+  const handleCloseVerification = () => {
+    setIsAccountModalOpen(false)
+    onCloseVerification()
+  }
+
+  const handleOpenGoalModal = () => {
+    if (needsVerification) onTabChange('objetivos')
+    else setGoalModalPrefill(null)
+  }
 
   const handleOpenLesson = (index: number) => {
     setSelectedLessonIndex(index)
@@ -196,6 +221,32 @@ export function DashboardScreen({
         {status && <p className="dashboard-status">{status}</p>}
         {isLoadingDashboard && <p className="dashboard-status">Cargando dashboard…</p>}
 
+        {needsVerification && activeAccount && (
+          <div className="dashboard-status verify-banner" role="status">
+            <span>
+              {activeAccount.summoner}#{activeAccount.tag} está en modo de solo lectura. Verifica que es tuya para
+              desbloquear todas las funciones.
+            </span>
+            <button
+              type="button"
+              className="primary-btn"
+              disabled={isStartingVerification}
+              onClick={handleVerifyActiveAccount}
+            >
+              {isStartingVerification ? 'Preparando…' : 'Verificar cuenta'}
+            </button>
+          </div>
+        )}
+
+        {panelTab === null && (
+          <LockedTabState
+            title="Verifica tu cuenta"
+            body="Esta función se desbloquea cuando compruebas que la cuenta de Riot es tuya. Solo tienes que cambiar por un momento su ícono de perfil."
+            ctaLabel={isStartingVerification ? 'Preparando…' : 'Verificar cuenta'}
+            onCtaClick={handleVerifyActiveAccount}
+          />
+        )}
+
         <Suspense fallback={<p className="dashboard-status">Cargando…</p>}>
         {activeTab === 'cuentas' && (
           <AccountTabPanel
@@ -223,7 +274,7 @@ export function DashboardScreen({
             onGoToGoals={() => onTabChange('objetivos')}
             onGoToLearning={() => onTabChange('aprendizaje')}
             onGoToPoolChamp={() => onTabChange('pool-champ')}
-            onOpenGoalModal={() => setGoalModalPrefill(null)}
+            onOpenGoalModal={handleOpenGoalModal}
             onOpenLesson={handleOpenLesson}
           />
         )}
@@ -239,7 +290,7 @@ export function DashboardScreen({
           />
         )}
 
-        {activeTab === 'aprendizaje' && (
+        {panelTab === 'aprendizaje' && (
           <LearningTabPanel
             activeAccount={activeAccount}
             lessons={lessons}
@@ -257,7 +308,7 @@ export function DashboardScreen({
           />
         )}
 
-        {activeTab === 'pool-champ' && (
+        {panelTab === 'pool-champ' && (
           <PoolChampTabPanel
             activeAccount={activeAccount}
             poolView={poolView}
@@ -274,11 +325,20 @@ export function DashboardScreen({
           />
         )}
 
-        {activeTab === 'social' && (
+        {panelTab === 'social' && userAccounts.length === 0 && (
+          <LockedTabState
+            title="Agrega tu cuenta"
+            body="Para buscar duo primero vincula y verifica tu cuenta de Riot."
+            ctaLabel="Agregar cuenta"
+            onCtaClick={handleOpenAccountModal}
+          />
+        )}
+
+        {panelTab === 'social' && userAccounts.length > 0 && (
           <SocialTabPanel userAccounts={userAccounts} activeAccount={activeAccount} ddragonVersion={ddragonVersion} />
         )}
 
-        {activeTab === 'objetivos' && (
+        {panelTab === 'objetivos' && (
           <GoalsTabPanel
             goalsByAccount={goalsByAccount}
             behaviorFlagsCount={behaviorFlags.length}
@@ -296,16 +356,23 @@ export function DashboardScreen({
       </main>
 
       <AccountSearchModal
-        isOpen={isAccountModalOpen}
+        isOpen={isAccountModalOpen && !verification}
         accountForm={accountForm}
         status={status}
+        isSubmitting={isStartingVerification}
         onClose={() => setIsAccountModalOpen(false)}
         onAccountFieldChange={onAccountFieldChange}
         onCreateAccount={onCreateAccount}
       />
 
-      {verificationTarget && (
-        <AccountVerificationModal target={verificationTarget} ddragonVersion={ddragonVersion} onClose={onCloseVerification} />
+      {verification && (
+        <AccountVerificationModal
+          target={verification}
+          initialChallenge={verification}
+          ddragonVersion={ddragonVersion}
+          onVerified={onAccountVerified}
+          onClose={handleCloseVerification}
+        />
       )}
 
       <GoalFormModal

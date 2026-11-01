@@ -5,6 +5,13 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
+export function accountNotVerified() {
+  return new ForbiddenException({
+    code: 'ACCOUNT_NOT_VERIFIED',
+    message: 'Verifica que esta cuenta de Riot es tuya para usar esta función.',
+  });
+}
+
 @Injectable()
 export class AuthzService {
   constructor(private readonly prisma: PrismaService) {}
@@ -47,6 +54,32 @@ export class AuthzService {
     if (!account || account.userId !== userId) {
       throw new ForbiddenException('No tienes acceso a esta cuenta.');
     }
+  }
+
+  /** For everything past read-only stats: the account must be proven theirs. */
+  async assertVerifiedAccount(
+    accountId: string,
+    clerkUserId: string,
+  ): Promise<void> {
+    const userId = await this.resolveUserId(clerkUserId);
+    const account = await this.prisma.lolAccount.findUnique({
+      where: { id: accountId },
+      select: { userId: true, verifiedAt: true },
+    });
+
+    if (!account || account.userId !== userId) {
+      throw new ForbiddenException('No tienes acceso a esta cuenta.');
+    }
+    if (!account.verifiedAt) throw accountNotVerified();
+  }
+
+  async assertHasVerifiedAccount(userId: string): Promise<void> {
+    const verified = await this.prisma.lolAccount.findFirst({
+      where: { userId, verifiedAt: { not: null } },
+      select: { id: true },
+    });
+
+    if (!verified) throw accountNotVerified();
   }
 
   async assertMatchParticipant(
