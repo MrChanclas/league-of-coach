@@ -111,9 +111,11 @@ export class AccountVerificationService {
       where: { userId },
     });
     if (!challenge || challenge.expiresAt.getTime() < Date.now()) {
-      throw new BadRequestException(
-        'La verificación venció. Empieza de nuevo para recibir otro ícono.',
-      );
+      throw new BadRequestException({
+        code: 'VERIFICATION_EXPIRED',
+        message:
+          'La verificación venció. Empieza de nuevo para recibir otro ícono.',
+      });
     }
 
     const riotSummoner = await this.riotApi.getSummonerByPuuid(
@@ -121,9 +123,10 @@ export class AccountVerificationService {
       challenge.puuid,
     );
     if (riotSummoner.profileIconId !== challenge.iconId) {
-      throw new BadRequestException(
-        `Riot todavía muestra el ícono n.º ${riotSummoner.profileIconId} y pedimos el n.º ${challenge.iconId}. Si ya lo cambiaste, puede tardar en actualizarse: inténtalo de nuevo en unos minutos.`,
-      );
+      throw new BadRequestException({
+        code: 'ICON_NOT_UPDATED',
+        message: `Riot todavía muestra el ícono n.º ${riotSummoner.profileIconId} y pedimos el n.º ${challenge.iconId}.`,
+      });
     }
 
     const existing = await this.prisma.lolAccount.findUnique({
