@@ -4,6 +4,8 @@ export function AuthCheckbox({ checked, onToggle, label, variant }: AuthCheckbox
   return (
     <button
       type="button"
+      role="checkbox"
+      aria-checked={checked}
       className={variant === 'terms' ? 'auth-checkbox-row auth-checkbox-row--terms' : 'auth-checkbox-row'}
       onClick={onToggle}
     >

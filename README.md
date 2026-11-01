@@ -67,7 +67,7 @@ El frontend lee `VITE_API_URL`, `VITE_CLERK_PUBLISHABLE_KEY` y `VITE_SENTRY_DSN`
 ## Verificación y deploy
 
 - [`.github/workflows/ci.yml`](.github/workflows/ci.yml) corre lint, tests y build de ambas apps en cada pull request.
-- [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) corre esa misma verificación en cada push a `main`. Si pasa, construye las imágenes, aplica las migraciones de Prisma y despliega en Cloud Run.
+- [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) corre esa misma verificación en cada push a `main`. Si pasa, construye las imágenes, aplica las migraciones de Prisma, despliega en Cloud Run y comprueba `GET /health` y la portada.
 
 Para correr lo mismo en local:
 

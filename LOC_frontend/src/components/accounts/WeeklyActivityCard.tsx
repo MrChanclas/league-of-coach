@@ -14,7 +14,13 @@ export function WeeklyActivityCard({ activity }: WeeklyActivityCardProps) {
 
       <div className="weekly-bars">
         {days.map((day) => (
-          <div key={day.date} className="weekly-bar-col">
+          <div
+            key={day.date}
+            className="weekly-bar-col"
+            role="img"
+            title={`${day.wins} victorias, ${day.losses} derrotas`}
+            aria-label={`${WEEKDAY_LABELS[new Date(day.date).getUTCDay()]}: ${day.wins} victorias, ${day.losses} derrotas`}
+          >
             <div className="weekly-bar-win" style={{ height: `${day.wins * BAR_SCALE_PX}px` }} />
             <div className="weekly-bar-loss" style={{ height: `${day.losses * BAR_SCALE_PX}px` }} />
           </div>

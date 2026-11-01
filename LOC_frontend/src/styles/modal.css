@@ -165,3 +165,27 @@
   color: var(--hf-muted-2);
   font-size: 0.82rem;
 }
+
+.verify-icon-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.verify-icon {
+  flex: none;
+  border-radius: 12px;
+  border: 1px solid var(--hf-gold);
+}
+
+.verify-steps {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 14px;
+  color: var(--hf-text-soft);
+}
+
+.verify-steps li + li {
+  margin-top: 6px;
+}

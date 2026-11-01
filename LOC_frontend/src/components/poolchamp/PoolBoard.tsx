@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { getChampionIconUrl } from '../../lib/riotAssets'
 import {
   MAX_CHAMPIONS_PER_ROLE,
@@ -15,6 +16,9 @@ import {
   poolEntryKey,
 } from '../../lib/poolLabels'
 import type { PerformanceTipProps, PoolBoardProps } from '../../types/components'
+
+// The list can run past 100 champions: start with the most played.
+const OUTSIDERS_PREVIEW = 12
 
 /** Per-champion "seguí así o cambiá" note — null once there isn't enough data yet to say either way. */
 function PerformanceTip({
@@ -50,6 +54,14 @@ export function PoolBoard({
   onAddOutsider,
 }: PoolBoardProps) {
   const { pool, roleProfile, entries, outsiders, health } = poolView
+  const [outsiderSearch, setOutsiderSearch] = useState('')
+  const [showAllOutsiders, setShowAllOutsiders] = useState(false)
+  const normalizedSearch = outsiderSearch.trim().toLowerCase()
+  const matchingOutsiders = normalizedSearch
+    ? outsiders.filter((outsider) => outsider.name.toLowerCase().includes(normalizedSearch))
+    : outsiders
+  const visibleOutsiders =
+    normalizedSearch || showAllOutsiders ? matchingOutsiders : matchingOutsiders.slice(0, OUTSIDERS_PREVIEW)
 
   const groups = getPoolSlots(roleProfile).map((role) => ({
     role,
@@ -183,7 +195,15 @@ export function PoolBoard({
           {outsiders.length > 0 && (
             <div className="pool-outsiders-card">
               <div className="pool-outsiders-title">FUERA DEL POOL</div>
-              {outsiders.map((outsider) => {
+              <input
+                type="search"
+                className="pool-outsiders-search"
+                value={outsiderSearch}
+                onChange={(event) => setOutsiderSearch(event.target.value)}
+                placeholder="Buscar campeón"
+                aria-label="Buscar campeón fuera del pool"
+              />
+              {visibleOutsiders.map((outsider) => {
                 const wr = formatPoolWinrate(outsider.gamesPlayed, outsider.winrate)
                 return (
                   <div key={poolEntryKey(outsider.championKey, outsider.role)} className="pool-outsider-block">
@@ -217,6 +237,15 @@ export function PoolBoard({
                   </div>
                 )
               })}
+              {!normalizedSearch && matchingOutsiders.length > OUTSIDERS_PREVIEW && (
+                <button
+                  type="button"
+                  className="pool-outsiders-toggle"
+                  onClick={() => setShowAllOutsiders((previous) => !previous)}
+                >
+                  {showAllOutsiders ? 'Ver menos' : `Ver todos (${matchingOutsiders.length})`}
+                </button>
+              )}
             </div>
           )}
         </div>

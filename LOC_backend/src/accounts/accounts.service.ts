@@ -1,16 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { z } from 'zod';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { DiscordService } from '../discord/discord.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RankSnapshotsService } from '../rank-snapshots/rank-snapshots.service';
 import { RiotApiService, RiotLeagueEntryDto } from '../riot/riot-api.service';
 
-const AccountSchema = z.object({
-  summoner: z.string().min(2).max(80),
-  tag: z.string().min(2).max(20),
-  server: z.string().min(2).max(30),
-  userId: z.string().min(1),
-});
+type AccountInput = {
+  summoner: string;
+  tag: string;
+  server: string;
+  userId: string;
+};
 
 @Injectable()
 export class AccountsService {
@@ -21,20 +20,27 @@ export class AccountsService {
     private readonly discord: DiscordService,
   ) {}
 
-  async create(input: z.infer<typeof AccountSchema>) {
-    return this.detectAndSave(input);
-  }
+  /** Links the Riot account to the user, or refreshes it if it's already theirs. */
+  async create(input: AccountInput) {
+    const resolved = await this.populateFromRiot(input);
 
-  async search(input: z.infer<typeof AccountSchema>) {
-    const payload = AccountSchema.parse(input);
-    const resolved = await this.populateFromRiot(payload);
-
-    const existing = await this.prisma.lolAccount.findFirst({
-      where: {
-        userId: resolved.userId,
-        puuid: resolved.puuid,
-      },
+    const existing = await this.prisma.lolAccount.findUnique({
+      where: { puuid: resolved.puuid },
     });
+    if (existing && existing.userId !== resolved.userId) {
+      throw new ConflictException(
+        existing.verifiedAt
+          ? {
+              code: 'ACCOUNT_VERIFIED_ELSEWHERE',
+              message: 'Esta cuenta de Riot ya fue verificada por otro perfil.',
+            }
+          : {
+              code: 'ACCOUNT_CLAIMABLE',
+              message:
+                'Esta cuenta de Riot está vinculada a otro perfil. Si es tuya, verifícala para reclamarla.',
+            },
+      );
+    }
 
     const data = {
       summoner: resolved.summoner,
@@ -94,10 +100,6 @@ export class AccountsService {
     };
   }
 
-  private async detectAndSave(input: z.infer<typeof AccountSchema>) {
-    return this.search(input);
-  }
-
   async listByUser(userId: string) {
     return this.prisma.lolAccount.findMany({
       where: { userId },
@@ -122,7 +124,7 @@ export class AccountsService {
     return this.prisma.lolAccount.delete({ where: { id } });
   }
 
-  private async populateFromRiot(input: z.infer<typeof AccountSchema>) {
+  private async populateFromRiot(input: AccountInput) {
     const riotAccount = await this.riotApi.getAccountByRiotId(
       input.server,
       input.summoner,

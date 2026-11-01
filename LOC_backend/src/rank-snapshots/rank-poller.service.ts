@@ -3,11 +3,11 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { RankSnapshotsService } from './rank-snapshots.service';
 
 /**
- * Runs the rank poll automatically as long as this Nest process stays alive
- * (great for local dev with `start:dev`). In production on Cloud Run, where
- * the process can scale to zero between requests, this is only a bonus —
- * the reliable trigger there is Cloud Scheduler hitting the internal HTTP
- * endpoint in RankSnapshotsController.
+ * Runs the rank poll automatically in local dev, where the Nest process just
+ * stays up. Deliberately inert on Cloud Run, for the same reason as
+ * BackfillPollerService: Cloud Scheduler already polls there through
+ * RankSnapshotsController, and a tick from any instance that happens to be up
+ * would only repeat the poll, spending the shared Riot key twice.
  */
 @Injectable()
 export class RankPollerService {
@@ -17,6 +17,8 @@ export class RankPollerService {
 
   @Cron(CronExpression.EVERY_30_MINUTES)
   async handlePeriodicPoll() {
+    if (process.env.K_SERVICE) return;
+
     this.logger.log('Ejecutando polling automático de rango (proceso local).');
     await this.rankSnapshots.pollAllAccounts();
   }

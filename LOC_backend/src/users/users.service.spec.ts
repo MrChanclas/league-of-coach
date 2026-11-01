@@ -3,6 +3,25 @@ import { UsersService } from './users.service';
 import { DiscordService } from '../discord/discord.service';
 import { GoalsService } from '../goals/goals.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { getClerkClient } from '../auth/clerk-client';
+
+jest.mock('../auth/clerk-client', () => ({
+  DISCORD_PROVIDERS: new Set(['oauth_discord']),
+  getClerkClient: jest.fn(),
+}));
+
+function mockClerkEmail(email: string, status = 'verified') {
+  (getClerkClient as jest.Mock).mockReturnValue({
+    users: {
+      getUser: jest.fn().mockResolvedValue({
+        primaryEmailAddressId: 'email-1',
+        emailAddresses: [
+          { id: 'email-1', emailAddress: email, verification: { status } },
+        ],
+      }),
+    },
+  });
+}
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -96,11 +115,7 @@ describe('UsersService', () => {
       clerkId: 'clerk-1',
     });
 
-    const result = await service.findOrCreateByClerkId(
-      'clerk-1',
-      'Cris',
-      'cris@leagueofcoach.com',
-    );
+    const result = await service.findOrCreateByClerkId('clerk-1', 'Cris');
 
     expect(result).toMatchObject({ id: 'user-1', clerkId: 'clerk-1' });
     expect(prismaMock.user.create).not.toHaveBeenCalled();
@@ -115,11 +130,9 @@ describe('UsersService', () => {
       clerkId: 'clerk-2',
     });
 
-    const result = await service.findOrCreateByClerkId(
-      'clerk-2',
-      'Nueva',
-      'nueva@leagueofcoach.com',
-    );
+    mockClerkEmail('nueva@leagueofcoach.com');
+
+    const result = await service.findOrCreateByClerkId('clerk-2', 'Nueva');
 
     expect(result).toMatchObject({ id: 'user-2', clerkId: 'clerk-2' });
     expect(prismaMock.user.create).toHaveBeenCalledWith({
@@ -148,17 +161,27 @@ describe('UsersService', () => {
       clerkId: 'clerk-new',
     });
 
-    const result = await service.findOrCreateByClerkId(
-      'clerk-new',
-      'Cris',
-      'cchala@utem.cl',
-    );
+    mockClerkEmail('cchala@utem.cl');
+
+    const result = await service.findOrCreateByClerkId('clerk-new', 'Cris');
 
     expect(result).toMatchObject({ id: 'user-1', clerkId: 'clerk-new' });
     expect(prismaMock.user.update).toHaveBeenCalledWith({
       where: { id: 'user-1' },
       data: { clerkId: 'clerk-new', name: 'Cris' },
     });
+    expect(prismaMock.user.create).not.toHaveBeenCalled();
+  });
+
+  it('should refuse to attach an identity whose email Clerk has not verified', async () => {
+    prismaMock.user.findUnique.mockResolvedValue(null);
+    mockClerkEmail('victima@correo.com', 'unverified');
+
+    await expect(
+      service.findOrCreateByClerkId('clerk-attacker', 'Atacante'),
+    ).rejects.toThrow('Verifica tu correo');
+
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
     expect(prismaMock.user.create).not.toHaveBeenCalled();
   });
 

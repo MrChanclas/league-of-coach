@@ -1,3 +1,4 @@
+import { Modal } from '../shared/Modal'
 import { useState } from 'react'
 import type { SubmitEvent } from 'react'
 import { useSubmitFeedbackMutation } from '../../hooks/useApiMutations'
@@ -33,14 +34,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
   }
 
   return (
-    <div className="modal-backdrop" onClick={handleClose}>
-      <div className="modal-card" onClick={(event) => event.stopPropagation()}>
-        <div className="modal-header">
-          <h3>Déjanos tu feedback</h3>
-          <button type="button" className="modal-close" onClick={handleClose} aria-label="Cerrar">
-            ×
-          </button>
-        </div>
+    <Modal title="Déjanos tu feedback" onClose={handleClose}>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <label>
@@ -73,7 +67,6 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
         </form>
 
         {status && <p className="auth-status">{status}</p>}
-      </div>
-    </div>
+    </Modal>
   )
 }

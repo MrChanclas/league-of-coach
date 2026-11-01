@@ -62,7 +62,7 @@
   background: rgba(216, 181, 106, 0.16);
   border: 1px solid rgba(216, 181, 106, 0.4);
   color: var(--hf-gold-strong);
-  font: 600 9px/1 var(--font-mono);
+  font: 600 10px/1 var(--font-mono);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -76,7 +76,7 @@
 }
 
 .lesson-tag {
-  font: 600 9px/1 var(--font-mono);
+  font: 600 10px/1 var(--font-mono);
   letter-spacing: 0.18em;
   color: var(--hf-gold-dim);
 }
@@ -311,7 +311,7 @@
 }
 
 .diagnosis-tag {
-  font: 600 9px var(--font-mono);
+  font: 600 10px var(--font-mono);
   letter-spacing: 0.18em;
   color: var(--hf-gold-dim);
   margin-bottom: 6px;
@@ -344,7 +344,7 @@
 }
 
 .diagnosis-stat-label {
-  font: 400 9px var(--font-mono);
+  font: 400 10px var(--font-mono);
   letter-spacing: 0.14em;
   color: var(--hf-muted-3);
 }
@@ -357,7 +357,7 @@
 }
 
 .diagnosis-why-label {
-  font: 600 9px var(--font-mono);
+  font: 600 10px var(--font-mono);
   letter-spacing: 0.16em;
   color: var(--hf-gold-dim);
   margin-bottom: 8px;
@@ -382,7 +382,7 @@
 }
 
 .guide-header-eyebrow {
-  font: 600 9px var(--font-mono);
+  font: 600 10px var(--font-mono);
   letter-spacing: 0.2em;
   color: var(--hf-gold-soft);
   margin-bottom: 6px;
@@ -411,7 +411,7 @@
 }
 
 .guide-fact-label {
-  font: 600 9px var(--font-mono);
+  font: 600 10px var(--font-mono);
   letter-spacing: 0.14em;
   color: var(--hf-muted-4);
 }

@@ -108,7 +108,7 @@
   border-radius: 20px;
   background: rgba(63, 174, 143, 0.14);
   border: 1px solid rgba(63, 174, 143, 0.35);
-  font: 600 8px/1 var(--font-mono);
+  font: 600 10px/1 var(--font-mono);
   letter-spacing: 0.14em;
   color: var(--hf-win-green);
 }
@@ -147,7 +147,7 @@
   display: flex;
   justify-content: space-between;
   margin-top: 6px;
-  font: 400 9px/1 var(--font-mono);
+  font: 400 10px/1 var(--font-mono);
   color: var(--hf-muted-4);
 }
 
@@ -199,7 +199,7 @@
 }
 
 .account-band-metric-label {
-  font: 600 8px/1 var(--font-mono);
+  font: 600 10px/1 var(--font-mono);
   letter-spacing: 0.16em;
   color: var(--hf-muted-4);
 }
@@ -210,7 +210,7 @@
 }
 
 .account-band-metric-sub {
-  font: 400 9px/1 var(--font-mono);
+  font: 400 10px/1 var(--font-mono);
   color: var(--hf-muted-3);
   margin-top: 6px;
 }
@@ -290,7 +290,7 @@
   border-radius: 20px;
   background: rgba(205, 106, 99, 0.16);
   border: 1px solid rgba(205, 106, 99, 0.4);
-  font: 600 8px/1 var(--font-mono);
+  font: 600 10px/1 var(--font-mono);
   letter-spacing: 0.14em;
   color: #e79790;
 }
@@ -357,7 +357,7 @@
 
 .learning-row-figure-label {
   margin-top: 4px;
-  font: 600 8px/1.3 var(--font-mono);
+  font: 600 10px/1.3 var(--font-mono);
   letter-spacing: 0.12em;
   color: var(--hf-muted-4);
   text-align: right;

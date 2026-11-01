@@ -43,7 +43,6 @@ export class UsersController {
     return this.usersService.findOrCreateByClerkId(
       request.clerkUserId,
       body.name,
-      body.email,
     );
   }
 

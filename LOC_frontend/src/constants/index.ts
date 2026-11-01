@@ -39,8 +39,14 @@ export const HOME_RECENT_DAYS = 7
 export const WEEKDAY_LABELS = ['D', 'L', 'M', 'X', 'J', 'V', 'S']
 export const BAR_SCALE_PX = 26
 export const APP_VERSION = __APP_VERSION__
+// Below this, the count on the landing works against us instead of for us.
+export const MIN_ACCOUNTS_TO_SHOW = 100
+
+export const RIOT_LEGAL_NOTICE =
+  "League of Coach isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc."
+
 export const STATIC_PROOF = [
-  { big: '20', label: 'PARTIDAS POR ANÁLISIS' },
+  { big: '1', label: 'TEMPORADA COMPLETA ANALIZADA' },
   { big: '0$', label: 'DURANTE LA BETA' },
 ]
 
@@ -236,7 +242,7 @@ export const MATCH_QUEUE_FILTERS: { key: QueueFilter; label: string }[] = [
 ]
 
 export const CLAIMS = [
-  'Tres correcciones concretas por semana, no cien estadísticas sueltas.',
+  'Correcciones concretas y priorizadas, no cien estadísticas sueltas.',
   'Objetivos con progreso medible hasta el final del split.',
   'Múltiples cuentas en un solo panel: smurf, flex y principal.',
 ]

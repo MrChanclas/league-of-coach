@@ -13,14 +13,18 @@ COPY . .
 ARG VITE_API_URL
 ARG VITE_CLERK_PUBLISHABLE_KEY
 ARG VITE_SENTRY_DSN
+ARG VITE_RELEASE
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
 ENV VITE_SENTRY_DSN=$VITE_SENTRY_DSN
+ENV VITE_RELEASE=$VITE_RELEASE
 RUN pnpm run build
 
-FROM nginx:1.27-alpine AS runner
+# Unprivileged variant: runs as a non-root user, listening on a high port.
+FROM nginxinc/nginx-unprivileged:1.28-alpine AS runner
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY nginx-security-headers.conf /etc/nginx/snippets/security-headers.conf
 
 # Cloud Run sets $PORT at container start; the nginx image's entrypoint runs
 # envsubst on templates/*.template into conf.d/ before nginx starts.

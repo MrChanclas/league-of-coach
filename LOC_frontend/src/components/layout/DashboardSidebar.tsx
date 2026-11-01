@@ -26,7 +26,7 @@ export function DashboardSidebar({
         <div className="sidebar-brand">
           <img className="sidebar-brand-mark" src="/loc-mark.svg" alt="" />
           <div>
-            <div className="sidebar-brand-eyebrow">LEAGUE OF COACHING</div>
+            <div className="sidebar-brand-eyebrow">LEAGUE OF COACH</div>
             <div className="sidebar-brand-name">LoC</div>
           </div>
         </div>

@@ -1,19 +1,16 @@
-import { useState } from 'react'
+import { Suspense, lazy, useState } from 'react'
 import { AccountSearchModal } from '../accounts/AccountSearchModal'
 import { AccountTabPanel } from '../accounts/AccountTabPanel'
+import { AccountVerificationModal } from '../accounts/AccountVerificationModal'
 import { CuentaTabPanel } from '../auth/CuentaTabPanel'
 import { DashboardHeader } from './DashboardHeader'
 import { DashboardSidebar } from './DashboardSidebar'
 import { MobileTabBar } from './MobileTabBar'
 import { TwitchLiveBanner } from './TwitchLiveBanner'
 import { GoalFormModal } from '../goals/GoalFormModal'
-import { GoalsTabPanel } from '../goals/GoalsTabPanel'
-import { LearningTabPanel } from '../learning/LearningTabPanel'
-import { MatchesTabPanel } from '../matches/MatchesTabPanel'
 import { FirstStepsChecklist } from '../onboarding/FirstStepsChecklist'
 import { OnboardingTour } from '../onboarding/OnboardingTour'
-import { PoolChampTabPanel } from '../poolchamp/PoolChampTabPanel'
-import { SocialTabPanel } from '../social/SocialTabPanel'
+import { LegalFooter } from '../shared/LegalFooter'
 import { useSocialSummary } from '../../hooks/useSocial'
 
 import type {
@@ -23,7 +20,23 @@ import type {
 } from '../../types/dashboard'
 import type { DashboardScreenProps } from '../../types/components'
 
+// Every tab past the home loads on demand, so opening the app doesn't download them all.
+const GoalsTabPanel = lazy(() => import('../goals/GoalsTabPanel').then((module) => ({ default: module.GoalsTabPanel })))
+const LearningTabPanel = lazy(() =>
+  import('../learning/LearningTabPanel').then((module) => ({ default: module.LearningTabPanel })),
+)
+const MatchesTabPanel = lazy(() =>
+  import('../matches/MatchesTabPanel').then((module) => ({ default: module.MatchesTabPanel })),
+)
+const PoolChampTabPanel = lazy(() =>
+  import('../poolchamp/PoolChampTabPanel').then((module) => ({ default: module.PoolChampTabPanel })),
+)
+const SocialTabPanel = lazy(() => import('../social/SocialTabPanel').then((module) => ({ default: module.SocialTabPanel })))
+
 export function DashboardScreen({
+  verificationTarget,
+  onCloseVerification,
+  onDeleteUser,
   isSignedIn,
   userDisplayName,
   userDisplayEmail,
@@ -183,8 +196,10 @@ export function DashboardScreen({
         {status && <p className="dashboard-status">{status}</p>}
         {isLoadingDashboard && <p className="dashboard-status">Cargando dashboard…</p>}
 
+        <Suspense fallback={<p className="dashboard-status">Cargando…</p>}>
         {activeTab === 'cuentas' && (
           <AccountTabPanel
+            onOpenAccountModal={handleOpenAccountModal}
             userAccounts={userAccounts}
             activeAccount={activeAccount}
             currentAccountId={currentAccountId}
@@ -275,6 +290,9 @@ export function DashboardScreen({
             onGoToPoolChamp={() => onTabChange('pool-champ')}
           />
         )}
+        </Suspense>
+
+        <LegalFooter onDeleteUser={onDeleteUser} />
       </main>
 
       <AccountSearchModal
@@ -285,6 +303,10 @@ export function DashboardScreen({
         onAccountFieldChange={onAccountFieldChange}
         onCreateAccount={onCreateAccount}
       />
+
+      {verificationTarget && (
+        <AccountVerificationModal target={verificationTarget} ddragonVersion={ddragonVersion} onClose={onCloseVerification} />
+      )}
 
       <GoalFormModal
         isOpen={goalModalPrefill !== undefined}

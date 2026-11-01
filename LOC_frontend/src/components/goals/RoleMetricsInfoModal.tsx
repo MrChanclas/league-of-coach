@@ -1,25 +1,12 @@
+import { Modal } from '../shared/Modal'
 import { ROLE_KEYS, ROLE_LABELS, ROLE_METRIC_LABELS } from '../../constants'
 import type { RoleMetricsInfoModalProps } from '../../types/components'
 
 export function RoleMetricsInfoModal({ isOpen, onClose }: RoleMetricsInfoModalProps) {
   if (!isOpen) return null
 
-  const handleBackdropClick = (event: React.MouseEvent) => {
-    // Nested inside GoalFormModal's own backdrop, so a click here must not
-    // bubble up and close the form behind it too.
-    event.stopPropagation()
-    onClose()
-  }
-
   return (
-    <div className="modal-backdrop" onClick={handleBackdropClick}>
-      <div className="modal-card" onClick={(event) => event.stopPropagation()}>
-        <div className="modal-header">
-          <h3>¿Qué datos miden por rol?</h3>
-          <button type="button" className="modal-close" onClick={onClose} aria-label="Cerrar">
-            ×
-          </button>
-        </div>
+    <Modal title="¿Qué datos miden por rol?" onClose={onClose}>
 
         {ROLE_KEYS.map((role) => (
           <div key={role} style={{ marginBottom: 16 }}>
@@ -31,7 +18,6 @@ export function RoleMetricsInfoModal({ isOpen, onClose }: RoleMetricsInfoModalPr
             </ul>
           </div>
         ))}
-      </div>
-    </div>
+    </Modal>
   )
 }

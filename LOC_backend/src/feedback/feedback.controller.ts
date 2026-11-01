@@ -1,4 +1,5 @@
 import { Body, Controller, Post, Req } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { z } from 'zod';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
@@ -16,14 +17,15 @@ export class FeedbackController {
   constructor(private readonly feedbackService: FeedbackService) {}
 
   @Public()
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @Post()
-  submitFeedback(
+  async submitFeedback(
     @Req() request: Request,
     @Body(new ZodValidationPipe(FeedbackSchema))
     body: z.infer<typeof FeedbackSchema>,
   ) {
     const ip = request.ip ?? 'unknown';
-    this.feedbackService.submitFeedback(body.message, body.email, ip);
+    await this.feedbackService.submitFeedback(body.message, body.email, ip);
     return { ok: true };
   }
 }

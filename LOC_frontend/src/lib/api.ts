@@ -3,7 +3,15 @@ import { API_URL } from '../constants/runtime'
 
 export { API_URL }
 
-export class ApiError extends Error {}
+export class ApiError extends Error {
+  // Machine-readable reason, when the backend sends one (e.g. ACCOUNT_CLAIMABLE).
+  readonly code?: string
+
+  constructor(message: string, code?: string) {
+    super(message)
+    this.code = code
+  }
+}
 
 /**
  * Every backend call goes through here so token attachment and error shape
@@ -35,6 +43,7 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
       .join(' ')
     throw new ApiError(
       detailedMessage || payload?.message || `No se pudo completar la solicitud (${response.status}).`,
+      payload?.code,
     )
   }
 

@@ -23,7 +23,7 @@ function BrandLockup() {
     <div className="onboard-brand">
       <LocMark size={30} className="onboard-brand-mark" />
       <div>
-        <div className="onboard-brand-eyebrow">LEAGUE OF COACHING</div>
+        <div className="onboard-brand-eyebrow">LEAGUE OF COACH</div>
         <div className="onboard-brand-name">LoC</div>
       </div>
     </div>
@@ -201,7 +201,7 @@ export function OnboardingTour({ onClose, onLoadMatches }: OnboardingTourProps) 
       {isWelcome && (
         <>
           <div aria-hidden className="onboard-backdrop" onClick={onClose} />
-          <div role="dialog" aria-modal="true" aria-label="Bienvenida a League of Coaching" className="onboard-modal onboard-modal--welcome">
+          <div role="dialog" aria-modal="true" aria-label="Bienvenida a League of Coach" className="onboard-modal onboard-modal--welcome">
             <BrandLockup />
             <h2 className="onboard-modal-title">Cuatro minutos y tu panel queda armado</h2>
             <p className="onboard-modal-body">

@@ -25,13 +25,11 @@ export type AuthFlow = {
   resetEmail: string
   resetCode: string
   newPassword: string
-  remember: boolean
   terms: boolean
   setCode: (value: string) => void
   setResetEmail: (value: string) => void
   setResetCode: (value: string) => void
   setNewPassword: (value: string) => void
-  toggleRemember: () => void
   toggleTerms: () => void
   openForgotPassword: () => void
   handleModeChange: (mode: AuthMode) => void
