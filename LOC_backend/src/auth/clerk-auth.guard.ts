@@ -7,6 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { verifyToken } from '@clerk/backend';
 import type { Request } from 'express';
+import { getAllowedOrigins } from '../common/allowed-origins';
 import { IS_PUBLIC_KEY } from './public.decorator';
 
 export type AuthenticatedRequest = Request & { clerkUserId: string };
@@ -38,6 +39,7 @@ export class ClerkAuthGuard implements CanActivate {
     try {
       const payload = await verifyToken(token, {
         secretKey: process.env.CLERK_SECRET_KEY,
+        authorizedParties: getAllowedOrigins(),
       });
       request.clerkUserId = payload.sub;
       return true;

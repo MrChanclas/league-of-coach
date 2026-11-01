@@ -9,6 +9,9 @@ const WEBHOOK_ENV_VAR: Record<DiscordChannel, string> = {
   feedback: 'DISCORD_FEEDBACK_WEBHOOK_URL',
 };
 
+// Discord rejects longer messages outright.
+const MAX_CONTENT_LENGTH = 2000;
+
 @Injectable()
 export class DiscordService {
   private readonly logger = new Logger(DiscordService.name);
@@ -26,8 +29,9 @@ export class DiscordService {
     void this.send('deploys', content);
   }
 
-  notifyFeedback(content: string) {
-    void this.send('feedback', content);
+  /** Resolves to whether Discord took it, for callers that must not lose it. */
+  notifyFeedback(content: string): Promise<boolean> {
+    return this.send('feedback', content);
   }
 
   /** Same as notifyIssue, but skips sending if the same `key` fired within `cooldownMs` — keeps a flapping dependency (e.g. an expired Riot key) from flooding the channel. */
@@ -44,15 +48,23 @@ export class DiscordService {
     this.notifyIssue(content);
   }
 
-  private async send(channel: DiscordChannel, content: string) {
+  private async send(
+    channel: DiscordChannel,
+    content: string,
+  ): Promise<boolean> {
     const webhookUrl = process.env[WEBHOOK_ENV_VAR[channel]];
-    if (!webhookUrl) return;
+    if (!webhookUrl) return true;
 
     try {
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content }),
+        // Content carries user input (feedback, names, reports): without
+        // this, anyone could ping @everyone in the server.
+        body: JSON.stringify({
+          content: content.slice(0, MAX_CONTENT_LENGTH),
+          allowed_mentions: { parse: [] },
+        }),
       });
 
       if (!response.ok) {
@@ -60,10 +72,12 @@ export class DiscordService {
           `Discord webhook (${channel}) respondió ${response.status}`,
         );
       }
+      return response.ok;
     } catch (error) {
       this.logger.warn(
         `No se pudo notificar a Discord (${channel}): ${(error as Error).message}`,
       );
+      return false;
     }
   }
 }

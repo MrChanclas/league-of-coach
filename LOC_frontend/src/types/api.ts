@@ -21,6 +21,17 @@ export type AccountSearchResponse = {
   created?: boolean
 }
 
+export type AccountVerificationTarget = {
+  summoner: string
+  tag: string
+  server: string
+}
+
+export type AccountVerificationChallenge = AccountVerificationTarget & {
+  iconId: number
+  expiresAt: string
+}
+
 export type PlatformStatsResponse = {
   totalAccountsAnalyzed: number
 }
@@ -82,6 +93,7 @@ export type ApiValidationIssue = {
 
 export type ApiErrorPayload = {
   message?: string
+  code?: string
   errors?: ApiValidationIssue[]
 }
 

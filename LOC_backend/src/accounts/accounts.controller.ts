@@ -8,11 +8,17 @@ import {
   Query,
   Req,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { z } from 'zod';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { AuthzService } from '../auth/authz.service';
 import type { AuthenticatedRequest } from '../auth/clerk-auth.guard';
 import { RankSnapshotsService } from '../rank-snapshots/rank-snapshots.service';
+import {
+  AccountVerificationService,
+  StartVerificationSchema,
+  type StartVerificationInput,
+} from './account-verification.service';
 import { AccountsService } from './accounts.service';
 
 const CreateAccountSchema = z.object({
@@ -21,6 +27,10 @@ const CreateAccountSchema = z.object({
   server: z.string().min(2).max(30),
   userId: z.string().min(1),
 });
+
+// Each of these spends the shared Riot key, so they get less room than the
+// global per-IP limit.
+const RIOT_LOOKUP_THROTTLE = { default: { ttl: 60_000, limit: 10 } };
 
 const RankHistoryQuerySchema = z.object({
   queue: z.enum(['solo', 'flex']).default('solo'),
@@ -32,9 +42,11 @@ export class AccountsController {
   constructor(
     private readonly accountsService: AccountsService,
     private readonly rankSnapshotsService: RankSnapshotsService,
+    private readonly verification: AccountVerificationService,
     private readonly authz: AuthzService,
   ) {}
 
+  @Throttle(RIOT_LOOKUP_THROTTLE)
   @Post()
   async create(
     @Req() request: AuthenticatedRequest,
@@ -45,14 +57,22 @@ export class AccountsController {
     return this.accountsService.create(body);
   }
 
-  @Post('search')
-  async search(
+  @Throttle(RIOT_LOOKUP_THROTTLE)
+  @Post('verification')
+  async startVerification(
     @Req() request: AuthenticatedRequest,
-    @Body(new ZodValidationPipe(CreateAccountSchema))
-    body: z.infer<typeof CreateAccountSchema>,
+    @Body(new ZodValidationPipe(StartVerificationSchema))
+    body: StartVerificationInput,
   ) {
-    await this.authz.assertUserOwnership(body.userId, request.clerkUserId);
-    return this.accountsService.search(body);
+    const userId = await this.authz.resolveUserId(request.clerkUserId);
+    return this.verification.start(userId, body);
+  }
+
+  @Throttle(RIOT_LOOKUP_THROTTLE)
+  @Post('verification/confirm')
+  async confirmVerification(@Req() request: AuthenticatedRequest) {
+    const userId = await this.authz.resolveUserId(request.clerkUserId);
+    return this.verification.confirm(userId);
   }
 
   @Get('user/:userId')

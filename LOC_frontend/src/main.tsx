@@ -15,6 +15,9 @@ if (!CLERK_PUBLISHABLE_KEY) {
 
 initSentry()
 
+// A tab left open across a deploy still points at chunks that no longer exist.
+window.addEventListener('vite:preloadError', () => window.location.reload())
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Sentry.ErrorBoundary fallback={<p>Ocurrió un error inesperado. Recarga la página.</p>}>

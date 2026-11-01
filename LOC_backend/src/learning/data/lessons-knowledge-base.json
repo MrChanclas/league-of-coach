@@ -125,7 +125,7 @@
       "roleScope": ["MIDDLE"],
       "condition": { "operator": "lt", "value": 0.1, "minGames": 15 },
       "title": "¡Soy una torre!",
-      "body": "Pasaste el {{midRoamAwayPct}}% del early game fuera de tu línea, contando cualquier movimiento (peleas, wardeos, contestar un gank) y no solo las que terminan en kill. Como mid tenés el camino más corto a top, bot y jungla — después de empujar tu ola, salí a ayudar en una pelea, poner visión en el río o contestar un gank rival, en vez de quedarte plantado esperando que la partida pase por vos.",
+      "body": "Pasaste el {{midRoamAwayPct}}% del early game fuera de tu línea, contando cualquier movimiento (peleas, wardeos, contestar un gank) y no solo las que terminan en kill. Como mid tienes el camino más corto a top, bot y jungla — después de empujar tu ola, salí a ayudar en una pelea, poner visión en el río o contestar un gank rival, en vez de quedarte plantado esperando que la partida pase por vos.",
       "mediaType": "HEATMAP"
     },
     {

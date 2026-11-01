@@ -2,32 +2,32 @@ import './instrument';
 
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import helmet from 'helmet';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
+import { getAllowedOrigins } from './common/allowed-origins';
 import { TRUSTED_PROXY_HOPS } from './common/rate-limit';
 import { DiscordService } from './discord/discord.service';
 
-const DEFAULT_DEV_FRONTEND_URL = 'http://localhost:5173';
+// How long browsers reuse a CORS preflight (Chromium caps it at two hours).
+// Every call carries an Authorization header, so without this nearly each one
+// pays an extra round trip to the API first.
+const CORS_PREFLIGHT_MAX_AGE_SECONDS = 2 * 60 * 60;
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.set('trust proxy', TRUSTED_PROXY_HOPS);
+  app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
-  const frontendUrl = process.env.FRONTEND_URL;
-  if (!frontendUrl) {
+  if (!process.env.FRONTEND_URL) {
     new Logger('Bootstrap').warn(
-      `FRONTEND_URL no está definida; usando "${DEFAULT_DEV_FRONTEND_URL}" para CORS. Defínela explícitamente en producción.`,
+      'FRONTEND_URL no está definida; usando localhost para CORS. Defínela explícitamente en producción.',
     );
   }
 
-  const allowedOrigins = (frontendUrl ?? DEFAULT_DEV_FRONTEND_URL)
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-
   app.enableCors({
-    origin: allowedOrigins,
-    credentials: true,
+    origin: getAllowedOrigins(),
+    maxAge: CORS_PREFLIGHT_MAX_AGE_SECONDS,
   });
 
   const port = process.env.PORT ?? 3000;

@@ -56,7 +56,7 @@
 }
 
 .sidebar-brand-eyebrow {
-  font: 600 9px/1 var(--font-mono);
+  font: 600 10px/1 var(--font-mono);
   letter-spacing: 0.22em;
   color: var(--hf-muted-4);
 }
@@ -69,7 +69,7 @@
 }
 
 .sidebar-section-label {
-  font: 600 9px/1 var(--font-mono);
+  font: 600 10px/1 var(--font-mono);
   letter-spacing: 0.2em;
   color: var(--hf-muted-5);
   padding: 0 8px 10px;
@@ -348,4 +348,43 @@
   border-radius: 50%;
   border: 1px dashed rgba(255, 255, 255, 0.15);
   background: rgba(255, 255, 255, 0.03);
+}
+
+.legal-footer {
+  margin-top: 32px;
+  padding: 16px 0 72px;
+  border-top: 1px solid var(--hf-border-soft);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--hf-muted-3);
+}
+
+.forge-main > .legal-footer {
+  margin-inline: 28px;
+  padding-bottom: 20px;
+}
+
+.legal-footer p {
+  margin: 8px 0 0;
+  max-width: 80ch;
+}
+
+.legal-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 12px;
+}
+
+.legal-footer-links a {
+  color: var(--hf-muted-1);
+}
+
+.legal-footer-danger {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: var(--hf-loss);
+  cursor: pointer;
 }

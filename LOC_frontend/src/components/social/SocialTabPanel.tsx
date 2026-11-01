@@ -138,6 +138,7 @@ export function SocialTabPanel({ userAccounts, activeAccount, ddragonVersion }: 
                 key={profile?.id ?? 'new'}
                 profile={profile}
                 userAccounts={userAccounts}
+                ddragonVersion={ddragonVersion}
                 defaultAccountId={activeAccount?.id}
                 isSaving={saveProfileMutation.isPending}
                 onSave={(input) => void handleSaveProfile(input)}

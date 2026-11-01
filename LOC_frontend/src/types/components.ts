@@ -1,3 +1,4 @@
+import type { AccountVerificationTarget } from './api'
 import type { ReactNode } from 'react'
 import type { AuthFlow } from './auth'
 import type {
@@ -124,6 +125,9 @@ export type TooltipPosition = {
 }
 
 export type DashboardScreenProps = {
+  verificationTarget: AccountVerificationTarget | null
+  onCloseVerification: () => void
+  onDeleteUser: () => void
   isSignedIn: boolean
   userDisplayName: string
   userDisplayEmail: string
@@ -171,6 +175,22 @@ export type DashboardScreenProps = {
   onSyncMatches: () => void
   onCreateGoal: (input: GoalCreateInput) => Promise<boolean>
   onDeleteGoal: (goalId: string) => void
+}
+
+export type ModalProps = {
+  title: string
+  onClose: () => void
+  children: React.ReactNode
+}
+
+export type LegalFooterProps = {
+  onDeleteUser?: () => void
+}
+
+export type AccountVerificationModalProps = {
+  target: AccountVerificationTarget
+  ddragonVersion: string | null
+  onClose: () => void
 }
 
 export type RoleMetricsInfoModalProps = {
@@ -375,6 +395,7 @@ export type AccountsGridProps = {
 }
 
 export type AccountTabPanelProps = {
+  onOpenAccountModal: () => void
   userAccounts: AccountCard[]
   activeAccount?: AccountCard
   currentAccountId: string
@@ -450,6 +471,7 @@ export type DiscordLinkCardProps = {
 export type DuoProfileFormProps = {
   profile: DuoProfile | null
   userAccounts: AccountCard[]
+  ddragonVersion: string | null
   defaultAccountId: string | undefined
   isSaving: boolean
   onSave: (input: DuoProfileInput) => void

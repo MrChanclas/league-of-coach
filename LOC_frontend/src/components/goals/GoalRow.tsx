@@ -8,7 +8,19 @@ export function GoalRow({ goal, onClick, onDelete }: GoalRowProps) {
   const missingData = goal.status !== 'completed' && goal.pace == null
 
   return (
-    <div className="goal-row" onClick={onClick} role="button" tabIndex={0}>
+    <div
+      className="goal-row"
+      onClick={onClick}
+      onKeyDown={(event) => {
+        if (event.target !== event.currentTarget) return
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onClick()
+        }
+      }}
+      role="button"
+      tabIndex={0}
+    >
       <div className="goal-row-type">
         <div className="goal-row-kind">{KIND_LABELS[goal.type]}</div>
         <span className={`goal-status-badge goal-status-badge--${goal.status}`}>{GOAL_STATUS_LABELS[goal.status]}</span>

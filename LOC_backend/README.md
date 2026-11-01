@@ -46,7 +46,7 @@ Cada carpeta de `src/` es un módulo de Nest con su controlador, servicio y mód
 |---|---|
 | `auth` | Guard global de Clerk (`@Public()` lo omite), `AuthzService` para validar la propiedad de las cuentas y `InternalSecretGuard`. |
 | `users` | Usuario interno asociado a la identidad de Clerk, y el payload del dashboard. |
-| `accounts` | Cuentas de Riot vinculadas: búsqueda, alta, baja e historial de rango. |
+| `accounts` | Cuentas de Riot vinculadas: alta, baja, historial de rango y verificación de propiedad con el ícono de perfil (obligatoria para duos, permite reclamar una cuenta sin verificar). |
 | `riot` | Cliente de la API de Riot con throttle propio y reintentos ante 429. |
 | `matches` | Sincronización de partidas: ingesta, backfill de la temporada, recuperación de partidas compartidas e historial (últimos 90 días). |
 | `rank-snapshots` | Registro periódico del rango de cada cuenta. |
@@ -55,7 +55,7 @@ Cada carpeta de `src/` es un módulo de Nest con su controlador, servicio y mód
 | `goals` | Objetivos con progreso, brecha y ritmo. |
 | `champion-pools` | Pool Champ: pool por línea, recomendación y rendimiento por campeón. |
 | `champion-guides` | Guías por campeón (`data/manual-guides/`) y versión de Data Dragon. |
-| `feedback`, `discord` | Feedback del login y alertas a Discord. Además, el filtro global de excepciones. |
+| `feedback`, `discord` | Feedback del login y alertas a Discord, sin menciones. Además, el filtro global de excepciones. |
 | `common` | Lógica pura y constantes compartidas: colas, temporada, orden de rangos, benchmarks por rol, rate limit. |
 
 ## Seguridad y límites

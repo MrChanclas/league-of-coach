@@ -26,7 +26,6 @@ export function useInternalUser(
   isSignedIn: boolean,
   clerkUserId: string | null | undefined,
   displayName: string,
-  email: string,
 ) {
   const { getToken } = useAuth()
 
@@ -37,7 +36,7 @@ export function useInternalUser(
       return apiFetch<AuthUser>('/users/me', {
         method: 'POST',
         token,
-        body: { name: displayName, email },
+        body: { name: displayName },
       })
     },
     enabled: Boolean(isSignedIn && clerkUserId),
@@ -170,7 +169,7 @@ export function useAccountLessons(accountId: string | undefined) {
 }
 
 /** Account-wide detected weaknesses (role and champion), no champion filter — used to surface "errores detectados" in Aprendizaje. */
-export function useAccountBehaviorFlags(accountId: string | undefined) {
+export function useAccountBehaviorFlags(accountId: string | undefined, isNeeded: boolean) {
   const { getToken } = useAuth()
   return useQuery({
     queryKey: queryKeys.accountBehaviorFlags(accountId),
@@ -178,7 +177,7 @@ export function useAccountBehaviorFlags(accountId: string | undefined) {
       const token = await getToken()
       return apiFetch<BehaviorFlag[]>(`/learning/account/${accountId}/behavior-flags`, { token })
     },
-    enabled: Boolean(accountId),
+    enabled: Boolean(accountId) && isNeeded,
   })
 }
 
@@ -199,13 +198,14 @@ export function useChampionGuide(accountId: string | undefined, champion: string
 
 /** Full champion roster (id, name, role, class) for the Pool Champ grid — not account-scoped. */
 export function useChampionRoster() {
-  const { getToken } = useAuth()
+  const { getToken, isSignedIn } = useAuth()
   return useQuery({
     queryKey: queryKeys.championRoster(),
     queryFn: async () => {
       const token = await getToken()
       return apiFetch<RosterChampion[]>('/champion-pools/roster', { token })
     },
+    enabled: Boolean(isSignedIn),
     // The champion list only changes with a patch — no need to refetch often.
     staleTime: 30 * 60_000,
   })
@@ -223,7 +223,7 @@ export function useAccountPool(accountId: string | undefined) {
   })
 }
 
-export function useAccountPoolRecommendation(accountId: string | undefined) {
+export function useAccountPoolRecommendation(accountId: string | undefined, isNeeded: boolean) {
   const { getToken } = useAuth()
   return useQuery({
     queryKey: queryKeys.accountPoolRecommendation(accountId),
@@ -231,7 +231,7 @@ export function useAccountPoolRecommendation(accountId: string | undefined) {
       const token = await getToken()
       return apiFetch<PoolRecommendation>(`/champion-pools/account/${accountId}/recommendation`, { token })
     },
-    enabled: Boolean(accountId),
+    enabled: Boolean(accountId) && isNeeded,
     // Only shifts when the account's stats shift meaningfully — no need to
     // recompute on every focus while the Pool Champ tab is just sitting open.
     staleTime: 60_000,

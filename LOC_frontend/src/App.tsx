@@ -8,6 +8,7 @@ import {
   useCompleteOnboardingMutation,
   useCreateGoalMutation,
   useDeleteAccountMutation,
+  useDeleteUserMutation,
   useDeleteGoalMutation,
   useResolveAccountMutation,
   useSavePoolMutation,
@@ -30,8 +31,10 @@ import {
 import { useMatchSync } from './hooks/useMatchSync'
 import { useStatusMessage } from './hooks/useStatusMessage'
 import { useTabNavigation } from './hooks/useTabNavigation'
+import { ApiError } from './lib/api'
 import { getDdragonVersion } from './lib/riotAssets'
 import { BLANK_ACCOUNT_FORM, HOME_RECENT_DAYS, queryKeys } from './constants'
+import type { AccountVerificationTarget } from './types/api'
 import type { AccountForm, GoalCreateInput, PoolSlotKey, ReplacePoolEntryInput, TimeRange } from './types/dashboard'
 
 function App() {
@@ -43,6 +46,7 @@ function App() {
   const { activeTab, handleTabChange } = useTabNavigation(isSignedIn)
   const [currentAccountId, setCurrentAccountId] = useState('')
   const [accountForm, setAccountForm] = useState<AccountForm>(BLANK_ACCOUNT_FORM)
+  const [verificationTarget, setVerificationTarget] = useState<AccountVerificationTarget | null>(null)
   const [status, setStatus] = useStatusMessage()
   const [ddragonVersion, setDdragonVersion] = useState<string | null>(null)
   const [timeRange, setTimeRange] = useState<TimeRange>('7d')
@@ -57,15 +61,14 @@ function App() {
     [user],
   )
   const userDisplayEmail = useMemo(
-    () => user?.primaryEmailAddress?.emailAddress ?? 'coach@leagueofcoach.com',
+    () => user?.primaryEmailAddress?.emailAddress ?? '',
     [user],
   )
 
   const internalUserQuery = useInternalUser(
     Boolean(isSignedIn),
     user?.id,
-    user?.fullName ?? user?.primaryEmailAddress?.emailAddress ?? 'Coach',
-    user?.primaryEmailAddress?.emailAddress ?? '',
+    user?.fullName ?? 'Coach',
   )
   const internalUser = internalUserQuery.data
 
@@ -111,10 +114,14 @@ function App() {
   const activityQuery = useAccountActivity(currentAccountId)
   const rankHistoryQuery = useAccountRankHistory(currentAccountId, primaryQueue)
   const lessonsQuery = useAccountLessons(currentAccountId)
-  const behaviorFlagsQuery = useAccountBehaviorFlags(currentAccountId)
+  // These two are slow to compute and only the tabs that show them need them.
+  const behaviorFlagsQuery = useAccountBehaviorFlags(
+    currentAccountId,
+    activeTab === 'aprendizaje' || activeTab === 'objetivos',
+  )
   const championRosterQuery = useChampionRoster()
   const poolQuery = useAccountPool(currentAccountId)
-  const poolRecommendationQuery = useAccountPoolRecommendation(currentAccountId)
+  const poolRecommendationQuery = useAccountPoolRecommendation(currentAccountId, activeTab === 'pool-champ')
 
   const matches = matchesQuery.data?.items ?? []
   const statsSummary = statsQuery.data ?? null
@@ -133,6 +140,7 @@ function App() {
 
   const resolveAccountMutation = useResolveAccountMutation()
   const deleteAccountMutation = useDeleteAccountMutation()
+  const deleteUserMutation = useDeleteUserMutation()
   const createGoalMutation = useCreateGoalMutation()
   const deleteGoalMutation = useDeleteGoalMutation()
   const completeOnboardingMutation = useCompleteOnboardingMutation()
@@ -176,6 +184,13 @@ function App() {
           : baseMessage,
       )
     } catch (error) {
+      if (error instanceof ApiError && error.code === 'ACCOUNT_CLAIMABLE') {
+        setVerificationTarget({
+          summoner: accountForm.summoner,
+          tag: accountForm.tag,
+          server: accountForm.server,
+        })
+      }
       setStatus(error instanceof Error ? error.message : 'No se pudo detectar la cuenta.')
     }
   }
@@ -245,6 +260,24 @@ function App() {
     }
   }
 
+  const handleDeleteUser = async () => {
+    if (!internalUser) return
+    const confirmed = window.confirm(
+      '¿Seguro que quieres eliminar tu cuenta de League of Coach? Se borrarán tus cuentas vinculadas, objetivos, pools, duos y chats. No se puede deshacer.',
+    )
+    if (!confirmed) return
+
+    try {
+      await deleteUserMutation.mutateAsync(internalUser.id)
+      queryClient.clear()
+      // The Clerk identity is already gone, so signOut may have nothing left to end.
+      await signOut().catch(() => undefined)
+      window.location.assign('/')
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'No se pudo eliminar tu cuenta.')
+    }
+  }
+
   const handleLogout = () => {
     setStatus('Sesión cerrada.')
     void signOut()
@@ -301,6 +334,9 @@ function App() {
       onSyncMatches={syncMatches}
       onCreateGoal={handleCreateGoal}
       onDeleteGoal={handleDeleteGoal}
+      verificationTarget={verificationTarget}
+      onCloseVerification={() => setVerificationTarget(null)}
+      onDeleteUser={() => void handleDeleteUser()}
     />
   )
 }

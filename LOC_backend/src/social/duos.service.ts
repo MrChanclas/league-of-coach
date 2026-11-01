@@ -268,7 +268,7 @@ export class DuosService {
       }),
     ]);
 
-    this.discord.notifyFeedback(
+    await this.discord.notifyFeedback(
       `🚩 **Reporte de duo** \`${duoId}\`: **${myAccount.summoner}#${myAccount.tag}** reporta a **${partnerAccount.summoner}#${partnerAccount.tag}**\n> ${input.reason.replace(/\n/g, '\n> ')}`,
     );
   }

@@ -22,6 +22,7 @@ export type AccountCard = {
   flexTier: string
   flexDivision: string
   flexLp: number
+  verifiedAt: string | null
 }
 
 export type ChampionStat = {

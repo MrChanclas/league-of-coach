@@ -29,7 +29,7 @@
 }
 
 .onboard-brand-eyebrow {
-  font: 600 9px/1 var(--font-mono);
+  font: 600 10px/1 var(--font-mono);
   letter-spacing: 0.22em;
   color: var(--hf-muted-4);
 }
@@ -70,7 +70,7 @@
 }
 
 .onboard-tooltip-tag {
-  font: 600 9px/1 var(--font-mono);
+  font: 600 10px/1 var(--font-mono);
   letter-spacing: 0.18em;
   color: var(--hf-gold-dim);
 }

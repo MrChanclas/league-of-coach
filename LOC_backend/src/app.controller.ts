@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { AppService } from './app.service';
 import { Public } from './auth/public.decorator';
 
@@ -8,7 +9,14 @@ export class AppController {
 
   @Public()
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  getRoot() {
+    return { name: 'League of Coach API' };
+  }
+
+  @Public()
+  @SkipThrottle()
+  @Get('health')
+  getHealth() {
+    return this.appService.checkHealth();
   }
 }

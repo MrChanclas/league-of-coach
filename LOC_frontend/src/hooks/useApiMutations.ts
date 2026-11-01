@@ -3,6 +3,8 @@ import { useMutation } from '@tanstack/react-query'
 import { apiFetch } from '../lib/api'
 import type {
   AccountSearchResponse,
+  AccountVerificationChallenge,
+  AccountVerificationTarget,
   FeedbackInput,
   PoolEntryMutationInput,
   ResolveAccountInput,
@@ -22,7 +24,7 @@ export function useResolveAccountMutation() {
   return useMutation({
     mutationFn: async (input: ResolveAccountInput) => {
       const token = await getToken()
-      const payload = await apiFetch<AccountSearchResponse>('/accounts/search', {
+      const payload = await apiFetch<AccountSearchResponse>('/accounts', {
         method: 'POST',
         token,
         body: input,
@@ -31,6 +33,35 @@ export function useResolveAccountMutation() {
         throw new Error(payload.message ?? 'No se pudo detectar la cuenta de Riot.')
       }
       return payload
+    },
+  })
+}
+
+export function useStartAccountVerificationMutation() {
+  const { getToken } = useAuth()
+  return useMutation({
+    mutationFn: async (target: AccountVerificationTarget) =>
+      apiFetch<AccountVerificationChallenge>('/accounts/verification', {
+        method: 'POST',
+        token: await getToken(),
+        body: target,
+      }),
+  })
+}
+
+export function useConfirmAccountVerificationMutation() {
+  const { getToken } = useAuth()
+  return useMutation({
+    mutationFn: async () =>
+      apiFetch('/accounts/verification/confirm', { method: 'POST', token: await getToken() }),
+  })
+}
+
+export function useDeleteUserMutation() {
+  const { getToken } = useAuth()
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      await apiFetch(`/users/${userId}`, { method: 'DELETE', token: await getToken(), parseJson: false })
     },
   })
 }

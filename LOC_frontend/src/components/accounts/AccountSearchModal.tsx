@@ -1,3 +1,4 @@
+import { Modal } from '../shared/Modal'
 import type { AccountSearchModalProps } from '../../types/components'
 
 export function AccountSearchModal({
@@ -11,14 +12,7 @@ export function AccountSearchModal({
   if (!isOpen) return null
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-card" onClick={(event) => event.stopPropagation()}>
-        <div className="modal-header">
-          <h3>Buscar cuenta Riot</h3>
-          <button type="button" className="modal-close" onClick={onClose} aria-label="Cerrar">
-            ×
-          </button>
-        </div>
+    <Modal title="Buscar cuenta Riot" onClose={onClose}>
 
         <form className="auth-form" onSubmit={onCreateAccount}>
           <label>
@@ -46,7 +40,6 @@ export function AccountSearchModal({
         </form>
 
         {status && <p className="auth-status">{status}</p>}
-      </div>
-    </div>
+    </Modal>
   )
 }

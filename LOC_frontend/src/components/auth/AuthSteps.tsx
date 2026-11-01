@@ -83,7 +83,7 @@ export function ForgotResetStep({ flow }: AuthStepProps) {
             type="password"
             value={flow.newPassword}
             onChange={(event) => flow.setNewPassword(event.target.value)}
-            placeholder="••••••••••••"
+            placeholder="Tu contraseña"
             minLength={8}
             required
           />
@@ -177,16 +177,10 @@ export function LoginStep({ flow }: AuthStepProps) {
             type="password"
             value={flow.form.password}
             onChange={flow.handleFieldChange}
-            placeholder="••••••••••••"
+            placeholder="Tu contraseña"
             required
           />
         </label>
-
-        <AuthCheckbox
-          checked={flow.remember}
-          onToggle={flow.toggleRemember}
-          label="Mantener la sesión abierta en este equipo"
-        />
 
         <button type="submit" className="auth-submit" disabled={flow.isSubmitting}>
           {flow.isSubmitting ? 'Procesando...' : 'Entrar'}
@@ -269,7 +263,7 @@ export function RegisterStep({ flow }: AuthStepProps) {
           checked={flow.terms}
           onToggle={flow.toggleTerms}
           variant="terms"
-          label="Acepto los términos y el uso de mis datos de partida para generar el análisis. League of Coaching no es un producto oficial de Riot Games."
+          label="Acepto los Términos y la Política de privacidad, y el uso de mis datos de partida para generar el análisis."
         />
 
         <button type="submit" className="auth-submit" disabled={flow.isSubmitting || !flow.terms}>

@@ -37,7 +37,7 @@ export function AccountsGrid({
 
       {userAccounts.length === 0 ? (
         <p className="empty-state">
-          No hay cuentas detectadas todavía. Usa &quot;+ Vincular cuenta Riot&quot; para buscar una cuenta real y
+          No hay cuentas vinculadas todavía.
           empezar a entrenar.
         </p>
       ) : (

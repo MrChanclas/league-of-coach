@@ -1,3 +1,4 @@
+import { Modal } from '../shared/Modal'
 import { useEffect, useState } from 'react'
 import type { SubmitEvent } from 'react'
 import type { GoalCreateInput, GoalType } from '../../types/dashboard'
@@ -101,14 +102,7 @@ export function GoalFormModal({ isOpen, accountId, status, prefill, onClose, onS
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-card" onClick={(event) => event.stopPropagation()}>
-        <div className="modal-header">
-          <h3>Nuevo objetivo</h3>
-          <button type="button" className="modal-close" onClick={onClose} aria-label="Cerrar">
-            ×
-          </button>
-        </div>
+    <Modal title="Nuevo objetivo" onClose={onClose}>
 
         <div className="time-toggle" style={{ marginBottom: 16 }}>
           {TYPE_TABS.map((tab) => (
@@ -235,9 +229,8 @@ export function GoalFormModal({ isOpen, accountId, status, prefill, onClose, onS
         </form>
 
         {status && <p className="auth-status">{status}</p>}
-      </div>
 
       <RoleMetricsInfoModal isOpen={isRoleInfoOpen} onClose={() => setIsRoleInfoOpen(false)} />
-    </div>
+    </Modal>
   )
 }

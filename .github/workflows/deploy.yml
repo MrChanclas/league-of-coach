@@ -72,7 +72,7 @@ jobs:
             --service-account="${{ vars.RUNTIME_SA_EMAIL }}" \
             --add-cloudsql-instances="${{ vars.CLOUDSQL_CONNECTION_NAME }}" \
             --set-secrets="DATABASE_URL=loc-database-url:latest,CLERK_SECRET_KEY=loc-clerk-secret-key:latest,RIOT_API_KEY=loc-riot-api-key:latest,INTERNAL_POLL_SECRET=loc-internal-poll-secret:latest,DISCORD_SESSION_WEBHOOK_URL=loc-discord-session-webhook:latest,DISCORD_ISSUES_WEBHOOK_URL=loc-discord-issues-webhook:latest,DISCORD_DEPLOYS_WEBHOOK_URL=loc-discord-deploys-webhook:latest,DISCORD_FEEDBACK_WEBHOOK_URL=loc-discord-feedback-webhook:latest,TWITCH_CLIENT_ID=loc-twitch-client-id:latest,TWITCH_CLIENT_SECRET=loc-twitch-client-secret:latest" \
-            --set-env-vars="^|^RIOT_DEFAULT_SERVER=LAS|FRONTEND_URL=https://leagueofcoach.pro,https://www.leagueofcoach.pro|SENTRY_DSN=${{ vars.BACKEND_SENTRY_DSN }}" \
+            --set-env-vars="^|^RIOT_DEFAULT_SERVER=LAS|FRONTEND_URL=https://leagueofcoach.pro,https://www.leagueofcoach.pro|SENTRY_DSN=${{ vars.BACKEND_SENTRY_DSN }}|CURRENT_SEASON_START_DATE=${{ vars.CURRENT_SEASON_START_DATE }}" \
             --port=8080 \
             --allow-unauthenticated \
             --quiet
@@ -90,6 +90,7 @@ jobs:
             --build-arg VITE_API_URL="https://api.leagueofcoach.pro" \
             --build-arg VITE_CLERK_PUBLISHABLE_KEY="${{ vars.VITE_CLERK_PUBLISHABLE_KEY }}" \
             --build-arg VITE_SENTRY_DSN="${{ vars.VITE_SENTRY_DSN }}" \
+            --build-arg VITE_RELEASE="${{ github.sha }}" \
             -t "${FRONTEND_IMAGE}" .
           docker push "${FRONTEND_IMAGE}"
 
@@ -99,23 +100,34 @@ jobs:
             --image="${FRONTEND_IMAGE}" \
             --region="${REGION}" \
             --platform=managed \
-            --service-account="${{ vars.RUNTIME_SA_EMAIL }}" \
+            --service-account="${{ vars.FRONTEND_RUNTIME_SA_EMAIL }}" \
             --port=8080 \
             --allow-unauthenticated \
             --quiet
 
+      - name: Smoke test the deployed services
+        run: |
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 --retry-all-errors --max-time 30 "${{ steps.backend_url.outputs.url }}/health"
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 --retry-all-errors --max-time 30 --output /dev/null https://leagueofcoach.pro/
+
+      # This repo's Actions logs are public, and gcloud prints the job it
+      # creates, headers included: the secret stays masked, and --format=none
+      # keeps that output out of the log altogether.
+      #
       # Non-blocking: a scheduler hiccup here shouldn't fail a deploy where
       # the actual app (backend + frontend) already shipped successfully.
       - name: Schedule periodic rank polling
         continue-on-error: true
         run: |
           POLL_SECRET=$(gcloud secrets versions access latest --secret=loc-internal-poll-secret)
+          echo "::add-mask::${POLL_SECRET}"
           gcloud scheduler jobs create http loc-rank-poller \
             --location="${REGION}" \
             --schedule="*/30 * * * *" \
             --uri="${{ steps.backend_url.outputs.url }}/internal/poll-ranks" \
             --http-method=POST \
             --headers="X-Internal-Secret=${POLL_SECRET}" \
+            --format=none \
             --quiet \
           || gcloud scheduler jobs update http loc-rank-poller \
             --location="${REGION}" \
@@ -123,6 +135,7 @@ jobs:
             --uri="${{ steps.backend_url.outputs.url }}/internal/poll-ranks" \
             --http-method=POST \
             --update-headers="X-Internal-Secret=${POLL_SECRET}" \
+            --format=none \
             --quiet
 
       # Keeps a first full-season match backfill moving without anyone
@@ -136,6 +149,7 @@ jobs:
         continue-on-error: true
         run: |
           POLL_SECRET=$(gcloud secrets versions access latest --secret=loc-internal-poll-secret)
+          echo "::add-mask::${POLL_SECRET}"
           gcloud scheduler jobs create http loc-match-backfill \
             --location="${REGION}" \
             --schedule="*/5 * * * *" \
@@ -143,6 +157,7 @@ jobs:
             --http-method=POST \
             --headers="X-Internal-Secret=${POLL_SECRET}" \
             --attempt-deadline=300s \
+            --format=none \
             --quiet \
           || gcloud scheduler jobs update http loc-match-backfill \
             --location="${REGION}" \
@@ -151,4 +166,5 @@ jobs:
             --http-method=POST \
             --update-headers="X-Internal-Secret=${POLL_SECRET}" \
             --attempt-deadline=300s \
+            --format=none \
             --quiet

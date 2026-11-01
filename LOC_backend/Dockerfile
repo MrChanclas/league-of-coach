@@ -16,6 +16,7 @@ COPY . .
 ENV DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
 RUN pnpm exec prisma generate
 RUN pnpm run build
+RUN pnpm prune --prod
 
 FROM node:22-alpine AS runner
 WORKDIR /app
@@ -25,6 +26,8 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/prisma.config.ts ./prisma.config.ts
 COPY --from=build /app/package.json ./package.json
+
+USER node
 
 # Cloud Run injects PORT at runtime; main.ts already reads process.env.PORT.
 EXPOSE 8080

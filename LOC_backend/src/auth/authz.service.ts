@@ -17,7 +17,7 @@ export class AuthzService {
 
     if (!user) {
       throw new UnauthorizedException(
-        'No se encontró un usuario para esta sesión. Llamá a POST /users/me primero.',
+        'No se encontró un usuario para esta sesión. Recarga la página.',
       );
     }
 
@@ -30,7 +30,7 @@ export class AuthzService {
   ): Promise<void> {
     const userId = await this.resolveUserId(clerkUserId);
     if (userId !== targetUserId) {
-      throw new ForbiddenException('No tenés acceso a este usuario.');
+      throw new ForbiddenException('No tienes acceso a este usuario.');
     }
   }
 
@@ -45,7 +45,7 @@ export class AuthzService {
     });
 
     if (!account || account.userId !== userId) {
-      throw new ForbiddenException('No tenés acceso a esta cuenta.');
+      throw new ForbiddenException('No tienes acceso a esta cuenta.');
     }
   }
 
@@ -60,7 +60,7 @@ export class AuthzService {
     });
 
     if (!participant) {
-      throw new ForbiddenException('No tenés acceso a esta partida.');
+      throw new ForbiddenException('No tienes acceso a esta partida.');
     }
   }
 

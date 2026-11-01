@@ -10,6 +10,7 @@ import { useMediaQuery } from '../../hooks/useMediaQuery'
 import type { AccountTabPanelProps } from '../../types/components'
 
 export function AccountTabPanel({
+  onOpenAccountModal,
   userAccounts,
   activeAccount,
   currentAccountId,
@@ -45,7 +46,10 @@ export function AccountTabPanel({
           <div>
             <div className="page-head-eyebrow">BIENVENIDO</div>
             <h1>Vincula tu primera cuenta de Riot</h1>
-            <p>Usa &quot;+ Vincular cuenta Riot&quot; en la barra lateral para empezar a ver tus estadísticas.</p>
+            <p>Vincúlala para empezar a ver tus estadísticas.</p>
+            <button type="button" className="primary-btn" onClick={onOpenAccountModal}>
+              + Vincular cuenta Riot
+            </button>
           </div>
         </div>
         <AccountsGrid

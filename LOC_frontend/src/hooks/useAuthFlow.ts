@@ -16,8 +16,7 @@ export function useAuthFlow(): AuthFlow {
   const [pendingVerification, setPendingVerification] = useState(false)
   const [status, setStatus] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [remember, setRemember] = useState(true)
-  const [terms, setTerms] = useState(true)
+  const [terms, setTerms] = useState(false)
 
   const [resetEmail, setResetEmail] = useState('')
   const [resetCode, setResetCode] = useState('')
@@ -190,13 +189,11 @@ export function useAuthFlow(): AuthFlow {
     resetEmail,
     resetCode,
     newPassword,
-    remember,
     terms,
     setCode,
     setResetEmail,
     setResetCode,
     setNewPassword,
-    toggleRemember: () => setRemember((previous) => !previous),
     toggleTerms: () => setTerms((previous) => !previous),
     openForgotPassword: () => setAuthView('forgot-request'),
     handleModeChange,

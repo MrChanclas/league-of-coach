@@ -121,7 +121,7 @@ export function DashboardHeader({
       <div className="header-spacer" />
 
       <div className="header-sync-status">
-        <span className="header-sync-dot" />
+        <span className={hasSyncedThisSession ? 'header-sync-dot' : 'header-sync-dot header-sync-dot--pending'} />
         {lastSyncedLabel}
       </div>
 

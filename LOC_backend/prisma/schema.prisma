@@ -23,6 +23,7 @@ model User {
   discordId             String?      @unique
   discordUsername       String?
   accounts              LolAccount[]
+  accountVerification   AccountVerification?
   duoProfile            DuoProfile?
   sentDuoRequests       DuoRequest[] @relation("DuoRequestFrom")
   receivedDuoRequests   DuoRequest[] @relation("DuoRequestTo")
@@ -58,6 +59,9 @@ model LolAccount {
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt     DateTime @default(now())
+  // Set once the holder proved they own the Riot account (see
+  // account-verification.service.ts). Required to show up in duos.
+  verifiedAt    DateTime?
 
   // Progress of the season-wide match backfill (see matches.service.ts).
   // `seasonBackfillCursor` is the gameCreation of the oldest game already
@@ -85,6 +89,21 @@ model LolAccount {
   duosAsB                  Duo[]                     @relation("DuoAccountB")
 
   @@index([userId])
+}
+
+// A pending proof of ownership: `puuid` has to show profile icon `iconId`
+// before `expiresAt`. One per user, a new attempt replaces the last.
+model AccountVerification {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  puuid     String
+  server    String
+  summoner  String
+  tag       String
+  iconId    Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 // One teammate whose match list is being searched for games missing from an

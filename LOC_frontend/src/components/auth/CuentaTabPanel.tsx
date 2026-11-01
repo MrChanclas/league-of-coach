@@ -1,3 +1,4 @@
+import { LegalFooter } from '../shared/LegalFooter'
 import { useState } from 'react'
 import { useAuthFlow } from '../../hooks/useAuthFlow'
 import { FeedbackModal } from '../feedback/FeedbackModal'
@@ -35,7 +36,7 @@ export function CuentaTabPanel() {
         <div className="auth-mobile-brand">
           <img className="auth-mobile-brand-mark" src="/loc-mark.svg" alt="" />
           <div>
-            <div className="auth-brand-eyebrow">LEAGUE OF COACHING</div>
+            <div className="auth-brand-eyebrow">LEAGUE OF COACH</div>
             <div className="auth-mobile-brand-wordmark">LoC</div>
           </div>
         </div>
@@ -61,12 +62,17 @@ export function CuentaTabPanel() {
           ) : (
             <div />
           )}
-          <div className="auth-locale">LAS · ESPAÑOL</div>
         </div>
 
         <AuthStepContent flow={flow} />
 
         <div className="auth-form-spacer" />
+
+        <p className="auth-legal-note">
+          Al continuar aceptas los <a href="/terminos/" target="_blank" rel="noopener">Términos</a> y la{' '}
+          <a href="/privacidad/" target="_blank" rel="noopener">Política de privacidad</a>.
+        </p>
+        <LegalFooter />
       </section>
 
       {/* Fijo en la esquina (no al pie del formulario) para que se vea sin hacer scroll. */}

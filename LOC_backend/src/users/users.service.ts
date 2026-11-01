@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { DISCORD_PROVIDERS, getClerkClient } from '../auth/clerk-client';
 import { DiscordService } from '../discord/discord.service';
 import { GoalsService } from '../goals/goals.service';
@@ -50,16 +50,34 @@ export class UsersService {
     });
   }
 
-  async findOrCreateByClerkId(clerkId: string, name: string, email: string) {
+  /**
+   * The primary email Clerk verified. Read from Clerk rather than taken from
+   * the client: the email decides which existing user a new Clerk identity
+   * gets attached to, so trusting the request would hand over anyone's account.
+   */
+  private async getVerifiedEmail(clerkId: string): Promise<string> {
+    const clerkUser = await getClerkClient().users.getUser(clerkId);
+    const primary = clerkUser.emailAddresses.find(
+      (address) => address.id === clerkUser.primaryEmailAddressId,
+    );
+    if (primary?.verification?.status !== 'verified') {
+      throw new ForbiddenException('Verifica tu correo para continuar.');
+    }
+    return primary.emailAddress;
+  }
+
+  async findOrCreateByClerkId(clerkId: string, name: string) {
     const existingByClerkId = await this.prisma.user.findUnique({
       where: { clerkId },
     });
     if (existingByClerkId) {
       this.discord.notifySession(
-        `🔐 Inicio de sesión: **${existingByClerkId.name}** (${existingByClerkId.email})`,
+        `🔐 Inicio de sesión: **${existingByClerkId.name}**`,
       );
       return existingByClerkId;
     }
+
+    const email = await this.getVerifiedEmail(clerkId);
 
     // Clerk can issue a new user id for the same person (account recreated,
     // login method switched, etc). Reconcile by email instead of trying to
@@ -72,18 +90,14 @@ export class UsersService {
         where: { id: existingByEmail.id },
         data: { clerkId, name },
       });
-      this.discord.notifySession(
-        `🔐 Inicio de sesión: **${updated.name}** (${updated.email})`,
-      );
+      this.discord.notifySession(`🔐 Inicio de sesión: **${updated.name}**`);
       return updated;
     }
 
     const user = await this.prisma.user.create({
       data: { clerkId, name, email, role: 'user' },
     });
-    this.discord.notifySession(
-      `🆕 Nuevo registro: **${user.name}** (${user.email})`,
-    );
+    this.discord.notifySession(`🆕 Nuevo registro: **${user.name}**`);
     return user;
   }
 
@@ -167,14 +181,28 @@ export class UsersService {
       where: { id },
       data: {
         ...(updateUserDto.name ? { name: updateUserDto.name } : {}),
-        ...(updateUserDto.email ? { email: updateUserDto.email } : {}),
       },
     });
   }
 
+  /**
+   * Erases the user everywhere: their data cascades from the row, and the
+   * Clerk identity goes too so they can't sign back in to an empty profile.
+   * A Clerk failure is flagged for manual cleanup instead of undoing a
+   * deletion the user already asked for.
+   */
   async remove(id: string) {
-    return this.prisma.user.delete({
+    const user = await this.prisma.user.delete({
       where: { id },
+      select: { clerkId: true },
     });
+
+    try {
+      await getClerkClient().users.deleteUser(user.clerkId);
+    } catch (error) {
+      this.discord.notifyIssue(
+        `⚠️ No se pudo borrar de Clerk al usuario \`${user.clerkId}\`: ${(error as Error).message}`,
+      );
+    }
   }
 }

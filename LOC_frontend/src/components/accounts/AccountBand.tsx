@@ -106,7 +106,9 @@ export function AccountBand({ account, primaryQueue, statsSummary: periodSummary
             >
               {streak && streak.type !== 'none' ? `${streak.count}${streak.type === 'win' ? 'V' : 'D'}` : '—'}
             </div>
-            <div className="account-band-metric-sub">partidas</div>
+            <div className="account-band-metric-sub">
+              {streak?.type === 'win' ? 'victorias seguidas' : streak?.type === 'loss' ? 'derrotas seguidas' : 'sin racha'}
+            </div>
           </div>
           <div className="account-band-metric">
             <div className="account-band-metric-label">LÍNEA</div>

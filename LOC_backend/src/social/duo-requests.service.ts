@@ -39,12 +39,12 @@ export class DuoRequestsService {
         include: { account: { select: DUO_ACCOUNT_SELECT } },
       }),
     ]);
-    if (!mine?.active) {
+    if (!mine?.active || !mine.account.verifiedAt) {
       throw new BadRequestException(
         'Activa tu perfil de duo antes de enviar solicitudes.',
       );
     }
-    if (!theirs?.active) {
+    if (!theirs?.active || !theirs.account.verifiedAt) {
       throw new NotFoundException('Este jugador ya no está buscando duo.');
     }
 

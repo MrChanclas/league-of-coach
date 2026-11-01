@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { canDuo, type DuoQueue } from '../common/duo-eligibility';
 import { rankValue } from '../common/rank-order';
 import { PrismaService } from '../prisma/prisma.service';
@@ -40,6 +40,18 @@ export class DuoProfilesService {
   }
 
   async upsert(userId: string, input: UpsertDuoProfileInput) {
+    if (input.active) {
+      const account = await this.prisma.lolAccount.findUnique({
+        where: { id: input.accountId },
+        select: { verifiedAt: true },
+      });
+      if (!account?.verifiedAt) {
+        throw new BadRequestException(
+          'Verifica que esta cuenta de Riot es tuya antes de buscar duo.',
+        );
+      }
+    }
+
     const data = { ...input, note: input.note || null };
     return this.prisma.duoProfile.upsert({
       where: { userId },
@@ -58,7 +70,9 @@ export class DuoProfilesService {
       where: { userId },
       include: { account: { select: DUO_ACCOUNT_SELECT } },
     });
-    if (!mine || !mine.active) return { profileActive: false, candidates: [] };
+    if (!mine || !mine.active || !mine.account.verifiedAt) {
+      return { profileActive: false, candidates: [] };
+    }
 
     const [others, activeDuos, pendingRequests] = await Promise.all([
       this.prisma.duoProfile.findMany({
@@ -66,7 +80,7 @@ export class DuoProfilesService {
           active: true,
           queue: mine.queue,
           userId: { not: userId },
-          account: { server: mine.account.server },
+          account: { server: mine.account.server, verifiedAt: { not: null } },
         },
         include: { account: { select: DUO_ACCOUNT_SELECT } },
       }),

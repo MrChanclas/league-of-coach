@@ -127,6 +127,10 @@
   white-space: nowrap;
 }
 
+.header-sync-dot--pending {
+  background: var(--hf-gold);
+}
+
 .header-sync-dot {
   width: 6px;
   height: 6px;

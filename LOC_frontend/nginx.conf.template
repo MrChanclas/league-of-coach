@@ -4,12 +4,53 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
-    location / {
-        try_files $uri $uri/ /index.html;
+    # Behind Cloud Run: nginx's own redirects must not expose its internal port.
+    absolute_redirect off;
+
+    # One canonical host, so search engines and users don't split between two.
+    if ($host = www.leagueofcoach.pro) {
+        return 301 https://leagueofcoach.pro$request_uri;
     }
 
-    location ~* \.(?:js|css|svg|png|jpg|jpeg|gif|ico|woff2?)$ {
-        expires 30d;
+    gzip on;
+    gzip_vary on;
+    gzip_comp_level 6;
+    gzip_min_length 1024;
+    gzip_types text/css text/plain application/javascript application/json image/svg+xml application/xml;
+
+    include /etc/nginx/snippets/security-headers.conf;
+    error_page 404 /404.html;
+
+    # The app only lives at these two paths (tabs use the URL hash). Anything
+    # else is a real 404 instead of the app answering 200 to every request.
+    # Never cached as fresh: the HTML is what points at the current build.
+    location = / {
+        try_files /index.html =404;
+        add_header Cache-Control "no-cache";
+        include /etc/nginx/snippets/security-headers.conf;
+    }
+
+    location = /sso-callback {
+        try_files /index.html =404;
+        add_header Cache-Control "no-cache";
+        include /etc/nginx/snippets/security-headers.conf;
+    }
+
+    location = /index.html {
+        return 301 /;
+    }
+
+    # Vite puts a content hash in these names, so they can be cached forever.
+    location /assets/ {
+        try_files $uri =404;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        include /etc/nginx/snippets/security-headers.conf;
         access_log off;
+    }
+
+    location / {
+        try_files $uri $uri/ =404;
+        add_header Cache-Control "public, max-age=3600";
+        include /etc/nginx/snippets/security-headers.conf;
     }
 }
