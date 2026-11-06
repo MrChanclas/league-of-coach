@@ -139,3 +139,19 @@ export type SocialSummary = {
   pendingRequests: number
   unreadMessages: number
 }
+
+export type SocialStrike = {
+  id: string
+  severity: 'leve' | 'moderado' | 'grave'
+  points: number
+  reason: string
+  createdAt: string
+  expiresAt: string
+}
+
+export type SocialStanding = {
+  activePoints: number
+  banned: boolean
+  bannedUntil: string | null
+  strikes: SocialStrike[]
+}

@@ -21,7 +21,7 @@ server {
     include /etc/nginx/snippets/security-headers.conf;
     error_page 404 /404.html;
 
-    # The app only lives at these two paths (tabs use the URL hash). Anything
+    # The app only lives at these paths (tabs use the URL hash). Anything
     # else is a real 404 instead of the app answering 200 to every request.
     # Never cached as fresh: the HTML is what points at the current build.
     location = / {
@@ -33,6 +33,14 @@ server {
     location = /sso-callback {
         try_files /index.html =404;
         add_header Cache-Control "no-cache";
+        include /etc/nginx/snippets/security-headers.conf;
+    }
+
+    # The admin panel: same app, kept out of search results.
+    location = /admin {
+        try_files /index.html =404;
+        add_header Cache-Control "no-cache";
+        add_header X-Robots-Tag "noindex, nofollow" always;
         include /etc/nginx/snippets/security-headers.conf;
     }
 

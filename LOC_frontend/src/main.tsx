@@ -5,6 +5,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import * as Sentry from '@sentry/react'
 import './index.css'
 import App from './App.tsx'
+import { LazyAdminApp } from './components/admin/LazyAdminApp'
 import { CLERK_PUBLISHABLE_KEY } from './constants/runtime'
 import { queryClient } from './lib/queryClient'
 import { initSentry } from './lib/sentry'
@@ -18,14 +19,23 @@ initSentry()
 // A tab left open across a deploy still points at chunks that no longer exist.
 window.addEventListener('vite:preloadError', () => window.location.reload())
 
+// The admin panel has its own login and never touches Clerk.
+const isAdminPage = window.location.pathname === '/admin'
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Sentry.ErrorBoundary fallback={<p>Ocurrió un error inesperado. Recarga la página.</p>}>
-      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+      {isAdminPage ? (
         <QueryClientProvider client={queryClient}>
-          <App />
+          <LazyAdminApp />
         </QueryClientProvider>
-      </ClerkProvider>
+      ) : (
+        <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+          <QueryClientProvider client={queryClient}>
+            <App />
+          </QueryClientProvider>
+        </ClerkProvider>
+      )}
     </Sentry.ErrorBoundary>
   </StrictMode>,
 )

@@ -12,6 +12,7 @@ import {
 import { AuthzService } from '../auth/authz.service';
 import type { AuthenticatedRequest } from '../auth/clerk-auth.guard';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
+import { ModerationService } from '../moderation/moderation.service';
 import { DuoChatService } from './duo-chat.service';
 import { DuoProfilesService } from './duo-profiles.service';
 import { DuoRequestsService } from './duo-requests.service';
@@ -41,18 +42,27 @@ export class SocialController {
     private readonly requests: DuoRequestsService,
     private readonly duos: DuosService,
     private readonly chat: DuoChatService,
+    private readonly moderation: ModerationService,
   ) {}
 
+  // Everything past the badge and the user's own standing is off limits while
+  // their strikes keep them out of Social.
   private async me(request: AuthenticatedRequest) {
     const userId = await this.authz.resolveUserId(request.clerkUserId);
-    await this.authz.assertHasVerifiedAccount(userId);
+    await this.moderation.assertCanUseSocial(userId);
     return userId;
   }
 
-  // Polled by the navigation for its badge, whatever tab or account is open.
   @Get('summary')
   async summary(@Req() request: AuthenticatedRequest) {
     return this.duos.summary(
+      await this.authz.resolveUserId(request.clerkUserId),
+    );
+  }
+
+  @Get('standing')
+  async standing(@Req() request: AuthenticatedRequest) {
+    return this.moderation.getStanding(
       await this.authz.resolveUserId(request.clerkUserId),
     );
   }

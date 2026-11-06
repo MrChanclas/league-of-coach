@@ -1,4 +1,3 @@
-import type { AccountVerificationChallenge, AccountVerificationTarget } from './api'
 import type { ReactNode } from 'react'
 import type { AuthFlow } from './auth'
 import type {
@@ -125,11 +124,7 @@ export type TooltipPosition = {
 }
 
 export type DashboardScreenProps = {
-  verification: AccountVerificationChallenge | null
-  isStartingVerification: boolean
-  onVerifyAccount: (target: AccountVerificationTarget) => void
-  onAccountVerified: (accountId: string) => void
-  onCloseVerification: () => void
+  isCreatingAccount: boolean
   onDeleteUser: () => void
   isSignedIn: boolean
   userDisplayName: string
@@ -188,15 +183,6 @@ export type ModalProps = {
 
 export type LegalFooterProps = {
   onDeleteUser?: () => void
-}
-
-export type AccountVerificationModalProps = {
-  target: AccountVerificationTarget
-  // Already started by the caller: the modal opens straight on the icon.
-  initialChallenge?: AccountVerificationChallenge
-  ddragonVersion: string | null
-  onVerified?: (accountId: string) => void
-  onClose: () => void
 }
 
 export type RoleMetricsInfoModalProps = {
@@ -478,7 +464,6 @@ export type DiscordLinkCardProps = {
 export type DuoProfileFormProps = {
   profile: DuoProfile | null
   userAccounts: AccountCard[]
-  ddragonVersion: string | null
   defaultAccountId: string | undefined
   isSaving: boolean
   onSave: (input: DuoProfileInput) => void

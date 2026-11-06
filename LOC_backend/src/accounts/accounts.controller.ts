@@ -14,12 +14,14 @@ import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { AuthzService } from '../auth/authz.service';
 import type { AuthenticatedRequest } from '../auth/clerk-auth.guard';
 import { RankSnapshotsService } from '../rank-snapshots/rank-snapshots.service';
-import {
-  AccountVerificationService,
-  StartVerificationSchema,
-  type StartVerificationInput,
-} from './account-verification.service';
 import { AccountsService } from './accounts.service';
+
+const CreateAccountSchema = z.object({
+  summoner: z.string().min(2).max(80),
+  tag: z.string().min(2).max(20),
+  server: z.string().min(2).max(30),
+  userId: z.string().min(1),
+});
 
 // Each of these spends the shared Riot key, so they get less room than the
 // global per-IP limit.
@@ -35,27 +37,18 @@ export class AccountsController {
   constructor(
     private readonly accountsService: AccountsService,
     private readonly rankSnapshotsService: RankSnapshotsService,
-    private readonly verification: AccountVerificationService,
     private readonly authz: AuthzService,
   ) {}
 
-  // Accounts are only linked by passing this verification: see confirm().
   @Throttle(RIOT_LOOKUP_THROTTLE)
-  @Post('verification')
-  async startVerification(
+  @Post()
+  async create(
     @Req() request: AuthenticatedRequest,
-    @Body(new ZodValidationPipe(StartVerificationSchema))
-    body: StartVerificationInput,
+    @Body(new ZodValidationPipe(CreateAccountSchema))
+    body: z.infer<typeof CreateAccountSchema>,
   ) {
-    const userId = await this.authz.resolveUserId(request.clerkUserId);
-    return this.verification.start(userId, body);
-  }
-
-  @Throttle(RIOT_LOOKUP_THROTTLE)
-  @Post('verification/confirm')
-  async confirmVerification(@Req() request: AuthenticatedRequest) {
-    const userId = await this.authz.resolveUserId(request.clerkUserId);
-    return this.verification.confirm(userId);
+    await this.authz.assertUserOwnership(body.userId, request.clerkUserId);
+    return this.accountsService.create(body);
   }
 
   @Get('user/:userId')

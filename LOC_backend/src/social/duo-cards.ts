@@ -16,7 +16,6 @@ export const DUO_ACCOUNT_SELECT = {
   flexTier: true,
   flexDivision: true,
   flexLp: true,
-  verifiedAt: true,
 } satisfies Prisma.LolAccountSelect;
 
 export type DuoAccount = Prisma.LolAccountGetPayload<{

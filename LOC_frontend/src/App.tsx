@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import './styles/index.css'
 import { AuthenticateWithRedirectCallback, useAuth, useClerk, useUser } from '@clerk/clerk-react'
 import { useQueryClient } from '@tanstack/react-query'
@@ -10,8 +10,8 @@ import {
   useDeleteAccountMutation,
   useDeleteUserMutation,
   useDeleteGoalMutation,
+  useResolveAccountMutation,
   useSavePoolMutation,
-  useStartAccountVerificationMutation,
 } from './hooks/useApiMutations'
 import {
   useAccountActivity,
@@ -33,7 +33,6 @@ import { useStatusMessage } from './hooks/useStatusMessage'
 import { useTabNavigation } from './hooks/useTabNavigation'
 import { getDdragonVersion } from './lib/riotAssets'
 import { BLANK_ACCOUNT_FORM, HOME_RECENT_DAYS, queryKeys } from './constants'
-import type { AccountVerificationChallenge, AccountVerificationTarget } from './types/api'
 import type { AccountForm, GoalCreateInput, PoolSlotKey, ReplacePoolEntryInput, TimeRange } from './types/dashboard'
 
 function App() {
@@ -45,7 +44,6 @@ function App() {
   const { activeTab, handleTabChange } = useTabNavigation(isSignedIn)
   const [currentAccountId, setCurrentAccountId] = useState('')
   const [accountForm, setAccountForm] = useState<AccountForm>(BLANK_ACCOUNT_FORM)
-  const [verification, setVerification] = useState<AccountVerificationChallenge | null>(null)
   const [status, setStatus] = useStatusMessage()
   const [ddragonVersion, setDdragonVersion] = useState<string | null>(null)
   const [timeRange, setTimeRange] = useState<TimeRange>('7d')
@@ -98,9 +96,6 @@ function App() {
   )
 
   const primaryQueue = activeAccount && activeAccount.soloTier !== 'Unranked' ? 'solo' : 'flex'
-  // Until verified an account is read-only: the backend refuses lessons, pool
-  // and goals, so they aren't asked for either.
-  const verifiedAccountId = activeAccount?.verifiedAt ? currentAccountId : ''
 
   const matchesQuery = useAccountMatches(currentAccountId)
   const statsQuery = useAccountStats(currentAccountId)
@@ -115,15 +110,15 @@ function App() {
   const lanesQuery = useAccountLanes(currentAccountId)
   const activityQuery = useAccountActivity(currentAccountId)
   const rankHistoryQuery = useAccountRankHistory(currentAccountId, primaryQueue)
-  const lessonsQuery = useAccountLessons(verifiedAccountId)
+  const lessonsQuery = useAccountLessons(currentAccountId)
   // These two are slow to compute and only the tabs that show them need them.
   const behaviorFlagsQuery = useAccountBehaviorFlags(
-    verifiedAccountId,
+    currentAccountId,
     activeTab === 'aprendizaje' || activeTab === 'objetivos',
   )
   const championRosterQuery = useChampionRoster()
-  const poolQuery = useAccountPool(verifiedAccountId)
-  const poolRecommendationQuery = useAccountPoolRecommendation(verifiedAccountId, activeTab === 'pool-champ')
+  const poolQuery = useAccountPool(currentAccountId)
+  const poolRecommendationQuery = useAccountPoolRecommendation(currentAccountId, activeTab === 'pool-champ')
 
   const matches = matchesQuery.data?.items ?? []
   const statsSummary = statsQuery.data ?? null
@@ -136,11 +131,11 @@ function App() {
   const championRoster = championRosterQuery.data ?? []
 
   const goalsByAccount = useMemo(
-    () => (activeAccount?.verifiedAt ? (dashboard?.goals ?? []).filter((goal) => goal.accountId === activeAccount.id) : []),
+    () => (dashboard?.goals ?? []).filter((goal) => goal.accountId === (activeAccount?.id ?? '')),
     [activeAccount, dashboard],
   )
 
-  const startVerificationMutation = useStartAccountVerificationMutation()
+  const resolveAccountMutation = useResolveAccountMutation()
   const deleteAccountMutation = useDeleteAccountMutation()
   const deleteUserMutation = useDeleteUserMutation()
   const createGoalMutation = useCreateGoalMutation()
@@ -164,41 +159,31 @@ function App() {
     }))
   }
 
-  const handleStartVerification = async (target: AccountVerificationTarget) => {
-    try {
-      setVerification(await startVerificationMutation.mutateAsync(target))
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : 'No se pudo iniciar la verificación.')
-    }
-  }
-
-  // An account is only linked by passing the icon check, so the form just
-  // starts it. Riot's lookup errors stay on the form, where they can be fixed.
-  const handleCreateAccount = (event: React.SubmitEvent<HTMLFormElement>) => {
+  const handleCreateAccount = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
-    void handleStartVerification({
-      summoner: accountForm.summoner,
-      tag: accountForm.tag,
-      server: accountForm.server,
-    })
-  }
+    if (!internalUser) return
 
-  // Stable on purpose: the verification modal's automatic check depends on it.
-  const handleAccountVerified = useCallback(
-    (accountId: string) => {
-      setCurrentAccountId(accountId)
+    try {
+      const payload = await resolveAccountMutation.mutateAsync({
+        summoner: accountForm.summoner,
+        tag: accountForm.tag,
+        server: accountForm.server,
+        userId: internalUser.id,
+      })
+
       setAccountForm(BLANK_ACCOUNT_FORM)
-      setStatus('Cuenta verificada. Sincroniza sus partidas para que el análisis sea preciso.')
-    },
-    [setStatus],
-  )
+      await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard(internalUser.id) })
+      setCurrentAccountId(payload.account.id)
 
-  const handleSyncMatches = () => {
-    if (activeAccount && !activeAccount.verifiedAt) {
-      setStatus('Verifica esta cuenta para sincronizar sus partidas.')
-      return
+      const baseMessage = payload.message ?? 'Cuenta detectada y vinculada correctamente.'
+      setStatus(
+        payload.created
+          ? `${baseMessage} Sincroniza sus partidas para que el análisis sea preciso.`
+          : baseMessage,
+      )
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'No se pudo detectar la cuenta.')
     }
-    void syncMatches()
   }
 
   const handleDeleteAccount = async (accountId: string) => {
@@ -337,14 +322,10 @@ function App() {
       onAccountFieldChange={handleAccountFieldChange}
       onCreateAccount={handleCreateAccount}
       onDeleteAccount={handleDeleteAccount}
-      onSyncMatches={handleSyncMatches}
+      onSyncMatches={syncMatches}
       onCreateGoal={handleCreateGoal}
       onDeleteGoal={handleDeleteGoal}
-      verification={verification}
-      isStartingVerification={startVerificationMutation.isPending}
-      onVerifyAccount={(target) => void handleStartVerification(target)}
-      onAccountVerified={handleAccountVerified}
-      onCloseVerification={() => setVerification(null)}
+      isCreatingAccount={resolveAccountMutation.isPending}
       onDeleteUser={() => void handleDeleteUser()}
     />
   )

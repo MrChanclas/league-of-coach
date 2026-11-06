@@ -35,12 +35,10 @@ export function AccountSearchModal({
             <input name="server" value={accountForm.server} onChange={onAccountFieldChange} placeholder="Ej: LAS" required />
           </label>
 
-          <p className="auth-help">
-            Buscaremos la cuenta en Riot y te pediremos cambiar por un momento su ícono de perfil para comprobar que es tuya.
-          </p>
+          <p className="auth-help">Se realizará una búsqueda en Riot para comprobar que esa cuenta existe antes de vincularla a tu perfil.</p>
 
           <button type="submit" className="primary-btn auth-submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Buscando…' : 'Continuar'}
+            {isSubmitting ? 'Buscando…' : 'Detectar cuenta'}
           </button>
         </form>
 

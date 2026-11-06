@@ -10,6 +10,7 @@ import {
   useRespondDuoRequestMutation,
   useSaveDuoProfileMutation,
   useSendDuoRequestMutation,
+  useSocialStanding,
   useSyncDiscordMutation,
 } from '../../hooks/useSocial'
 import { useStatusMessage } from '../../hooks/useStatusMessage'
@@ -19,8 +20,9 @@ import { DuoDetailView } from './DuoDetailView'
 import { DuoList } from './DuoList'
 import { DuoProfileForm } from './DuoProfileForm'
 import { DuoRequestList } from './DuoRequestList'
+import { StrikeNotice } from './StrikeNotice'
 import type { SocialTabPanelProps } from '../../types/components'
-import type { DuoProfileInput } from '../../types/social'
+import type { DuoProfileInput, SocialStanding } from '../../types/social'
 
 const RESPONSE_MESSAGES = {
   accept: '¡Duo formado! Ya pueden escribirse en el chat.',
@@ -28,7 +30,34 @@ const RESPONSE_MESSAGES = {
   cancel: 'Solicitud cancelada.',
 } as const
 
-export function SocialTabPanel({ userAccounts, activeAccount, ddragonVersion }: SocialTabPanelProps) {
+/** Social, unless the user's strikes keep them out of it: then only why and until when. */
+export function SocialTabPanel(props: SocialTabPanelProps) {
+  const standingQuery = useSocialStanding()
+  const standing = standingQuery.data
+
+  if (standingQuery.isLoading) return null
+  if (standing?.banned) {
+    return (
+      <div className="view-content">
+        <div className="page-head">
+          <div>
+            <div className="page-head-eyebrow">COMUNIDAD</div>
+            <h1>Social</h1>
+          </div>
+        </div>
+        <StrikeNotice standing={standing} />
+      </div>
+    )
+  }
+  return <SocialTabContent {...props} standing={standing} />
+}
+
+function SocialTabContent({
+  userAccounts,
+  activeAccount,
+  ddragonVersion,
+  standing,
+}: SocialTabPanelProps & { standing?: SocialStanding }) {
   const queryClient = useQueryClient()
   const { user } = useUser()
   const [status, setStatus] = useStatusMessage()
@@ -128,6 +157,8 @@ export function SocialTabPanel({ userAccounts, activeAccount, ddragonVersion }: 
 
       {status && <p className="dashboard-status">{status}</p>}
 
+      {standing && standing.strikes.length > 0 && <StrikeNotice standing={standing} />}
+
       {userAccounts.length === 0 ? (
         <p className="empty-state">Vincula una cuenta de Riot en Cuentas para buscar duo.</p>
       ) : (
@@ -138,7 +169,6 @@ export function SocialTabPanel({ userAccounts, activeAccount, ddragonVersion }: 
                 key={profile?.id ?? 'new'}
                 profile={profile}
                 userAccounts={userAccounts}
-                ddragonVersion={ddragonVersion}
                 defaultAccountId={activeAccount?.id}
                 isSaving={saveProfileMutation.isPending}
                 onSave={(input) => void handleSaveProfile(input)}

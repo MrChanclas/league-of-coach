@@ -71,7 +71,7 @@ jobs:
             --max-instances=10 \
             --service-account="${{ vars.RUNTIME_SA_EMAIL }}" \
             --add-cloudsql-instances="${{ vars.CLOUDSQL_CONNECTION_NAME }}" \
-            --set-secrets="DATABASE_URL=loc-database-url:latest,CLERK_SECRET_KEY=loc-clerk-secret-key:latest,RIOT_API_KEY=loc-riot-api-key:latest,INTERNAL_POLL_SECRET=loc-internal-poll-secret:latest,DISCORD_SESSION_WEBHOOK_URL=loc-discord-session-webhook:latest,DISCORD_ISSUES_WEBHOOK_URL=loc-discord-issues-webhook:latest,DISCORD_DEPLOYS_WEBHOOK_URL=loc-discord-deploys-webhook:latest,DISCORD_FEEDBACK_WEBHOOK_URL=loc-discord-feedback-webhook:latest,TWITCH_CLIENT_ID=loc-twitch-client-id:latest,TWITCH_CLIENT_SECRET=loc-twitch-client-secret:latest" \
+            --set-secrets="DATABASE_URL=loc-database-url:latest,CLERK_SECRET_KEY=loc-clerk-secret-key:latest,RIOT_API_KEY=loc-riot-api-key:latest,INTERNAL_POLL_SECRET=loc-internal-poll-secret:latest,DISCORD_SESSION_WEBHOOK_URL=loc-discord-session-webhook:latest,DISCORD_ISSUES_WEBHOOK_URL=loc-discord-issues-webhook:latest,DISCORD_DEPLOYS_WEBHOOK_URL=loc-discord-deploys-webhook:latest,DISCORD_FEEDBACK_WEBHOOK_URL=loc-discord-feedback-webhook:latest,TWITCH_CLIENT_ID=loc-twitch-client-id:latest,TWITCH_CLIENT_SECRET=loc-twitch-client-secret:latest,ADMIN_USERNAME=loc-admin-username:latest,ADMIN_PASSWORD_HASH=loc-admin-password-hash:latest,ADMIN_SESSION_SECRET=loc-admin-session-secret:latest" \
             --set-env-vars="^|^RIOT_DEFAULT_SERVER=LAS|FRONTEND_URL=https://leagueofcoach.pro,https://www.leagueofcoach.pro|SENTRY_DSN=${{ vars.BACKEND_SENTRY_DSN }}|CURRENT_SEASON_START_DATE=${{ vars.CURRENT_SEASON_START_DATE }}" \
             --port=8080 \
             --allow-unauthenticated \

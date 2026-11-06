@@ -10,7 +10,6 @@ function account(overrides: Partial<AccountCard> = {}): AccountCard {
     tag: 'LAS',
     server: 'LAS',
     profileIconId: 1,
-    verifiedAt: null,
     summonerLevel: 300,
     soloTier: 'GOLD',
     soloDivision: 'II',

@@ -2,10 +2,10 @@ import { useAuth } from '@clerk/clerk-react'
 import { useMutation } from '@tanstack/react-query'
 import { apiFetch } from '../lib/api'
 import type {
-  AccountVerificationChallenge,
-  AccountVerificationTarget,
   FeedbackInput,
   PoolEntryMutationInput,
+  ResolveAccountInput,
+  ResolveAccountResponse,
   SavePoolMutationInput,
   SyncMatchesResponse,
   UpdatePoolEntryMutationInput,
@@ -17,25 +17,14 @@ import type { GoalCreateInput } from '../types/dashboard'
 // orchestration (status messages, selecting a new current account, etc.),
 // the same place it lived before this migration.
 
-export function useStartAccountVerificationMutation() {
+export function useResolveAccountMutation() {
   const { getToken } = useAuth()
   return useMutation({
-    mutationFn: async (target: AccountVerificationTarget) =>
-      apiFetch<AccountVerificationChallenge>('/accounts/verification', {
+    mutationFn: async (input: ResolveAccountInput) =>
+      apiFetch<ResolveAccountResponse>('/accounts', {
         method: 'POST',
         token: await getToken(),
-        body: target,
-      }),
-  })
-}
-
-export function useConfirmAccountVerificationMutation() {
-  const { getToken } = useAuth()
-  return useMutation({
-    mutationFn: async () =>
-      apiFetch<{ account: { id: string } }>('/accounts/verification/confirm', {
-        method: 'POST',
-        token: await getToken(),
+        body: input,
       }),
   })
 }

@@ -7,6 +7,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AccountsModule } from './accounts/accounts.module';
+import { AdminModule } from './admin/admin.module';
 import { ClerkAuthGuard } from './auth/clerk-auth.guard';
 import { ChampionGuidesModule } from './champion-guides/champion-guides.module';
 import { ChampionPoolsModule } from './champion-pools/champion-pools.module';
@@ -53,6 +54,7 @@ import { UsersModule } from './users/users.module';
     MatchesModule,
     StatsModule,
     TwitchModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [
