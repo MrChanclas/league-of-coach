@@ -82,6 +82,10 @@ export type DashboardHeaderProps = {
   onSyncMatches: () => void
   isSyncing: boolean
   lastSyncedLabel: string
+  userDisplayName: string
+  userDisplayEmail: string
+  onLogout: () => void
+  onReplayOnboarding: () => void
 }
 
 export type DashboardSidebarProps = {

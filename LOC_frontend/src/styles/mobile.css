@@ -28,6 +28,43 @@
   animation: hfpulse 2.4s infinite;
 }
 
+.header-profile-btn-compact {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--hf-border-strong);
+  background: var(--hf-surface);
+  color: #dcd7cb;
+  font: 600 12px/1 var(--font-mono);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  flex: none;
+}
+
+.sheet-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--hf-border-strong);
+  background: var(--hf-surface);
+}
+
+.sheet-profile .sheet-account-text {
+  min-width: 0;
+}
+
+.sheet-profile .sheet-account-tag {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .sheet-backdrop {
   display: none;
   position: fixed;
@@ -182,7 +219,8 @@
     display: none;
   }
 
-  .header-sync-btn-compact {
+  .header-sync-btn-compact,
+  .header-profile-btn-compact {
     display: flex;
   }
 
