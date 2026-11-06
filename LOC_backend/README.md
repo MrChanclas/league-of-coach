@@ -27,6 +27,8 @@ pnpm run start:dev            # http://localhost:4100 con el .env de ejemplo
 
 `SENTRY_DSN` y los webhooks de Discord son opcionales en local.
 
+El panel de admin (`/admin`) tiene su propio inicio de sesión, fuera de Clerk: `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH` y `ADMIN_SESSION_SECRET`. Guarda solo el hash de la contraseña, nunca la contraseña: `pnpm run admin:hash-password` la lee por la entrada estándar e imprime el hash. Cambiar `ADMIN_SESSION_SECRET` cierra todas las sesiones de admin.
+
 ## Scripts
 
 | Comando | Qué hace |
@@ -36,6 +38,7 @@ pnpm run start:dev            # http://localhost:4100 con el .env de ejemplo
 | `pnpm run test:e2e` | Test end-to-end de `test/`. Necesita una base de datos. |
 | `pnpm exec eslint "{src,test}/**/*.ts"` | Lint sin autocorregir, igual que en CI. `pnpm run lint` corrige solo. |
 | `pnpm run build` | Compila a `dist/`. |
+| `pnpm run admin:hash-password` | Genera el hash de la contraseña de admin para `ADMIN_PASSWORD_HASH`. |
 | `pnpm exec prisma migrate dev --name <cambio>` | Crea una migración después de editar `prisma/schema.prisma`. |
 
 ## Estructura
@@ -46,7 +49,7 @@ Cada carpeta de `src/` es un módulo de Nest con su controlador, servicio y mód
 |---|---|
 | `auth` | Guard global de Clerk (`@Public()` lo omite), `AuthzService` para validar la propiedad de las cuentas y `InternalSecretGuard`. |
 | `users` | Usuario interno asociado a la identidad de Clerk, y el payload del dashboard. |
-| `accounts` | Cuentas de Riot vinculadas: alta mediante verificación de propiedad con el ícono de perfil, baja e historial de rango. Las cuentas sin verificar quedan en solo lectura y pueden ser reclamadas por quien demuestre ser su dueño. |
+| `accounts` | Cuentas de Riot vinculadas: alta, baja e historial de rango. |
 | `riot` | Cliente de la API de Riot con throttle propio y reintentos ante 429. |
 | `matches` | Sincronización de partidas: ingesta, backfill de la temporada, recuperación de partidas compartidas e historial (últimos 90 días). |
 | `rank-snapshots` | Registro periódico del rango de cada cuenta. |
@@ -56,6 +59,8 @@ Cada carpeta de `src/` es un módulo de Nest con su controlador, servicio y mód
 | `champion-pools` | Pool Champ: pool por línea, recomendación y rendimiento por campeón. |
 | `champion-guides` | Guías por campeón (`data/manual-guides/`) y versión de Data Dragon. |
 | `feedback`, `discord` | Feedback del login y alertas a Discord, sin menciones. Además, el filtro global de excepciones. |
+| `admin` | Panel de admin: login propio con sesión firmada (`AdminSessionGuard`), resumen, usuarios, duos y resolución de reportes. |
+| `moderation` | Strikes: leve 1, moderado 2, grave 3, vencen a los 90 días. Con 3 vigentes el usuario queda fuera de Social. |
 | `common` | Lógica pura y constantes compartidas: colas, temporada, orden de rangos, benchmarks por rol, rate limit. |
 
 ## Seguridad y límites

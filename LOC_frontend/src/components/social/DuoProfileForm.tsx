@@ -8,7 +8,6 @@ import {
   ROLE_KEYS,
   ROLE_LABELS,
 } from '../../constants'
-import { AccountVerificationModal } from '../accounts/AccountVerificationModal'
 import { toggleValue } from '../../lib/social'
 import type { DuoProfileFormProps, RolePickerProps } from '../../types/components'
 import type { AvailabilitySlot, DuoQueue } from '../../types/social'
@@ -16,7 +15,7 @@ import type { AvailabilitySlot, DuoQueue } from '../../types/social'
 const QUEUES: DuoQueue[] = ['solo', 'flex']
 
 /** The player's "looking for duo" card: who they are and who they want. */
-export function DuoProfileForm({ profile, userAccounts, ddragonVersion, defaultAccountId, isSaving, onSave }: DuoProfileFormProps) {
+export function DuoProfileForm({ profile, userAccounts, defaultAccountId, isSaving, onSave }: DuoProfileFormProps) {
   const [accountId, setAccountId] = useState(profile?.accountId ?? defaultAccountId ?? '')
   const [queue, setQueue] = useState<DuoQueue>(profile?.queue ?? 'solo')
   const [roles, setRoles] = useState<string[]>(profile?.roles ?? [])
@@ -24,10 +23,6 @@ export function DuoProfileForm({ profile, userAccounts, ddragonVersion, defaultA
   const [availability, setAvailability] = useState<AvailabilitySlot[]>(profile?.availability ?? [])
   const [note, setNote] = useState(profile?.note ?? '')
 
-  const [isVerifying, setIsVerifying] = useState(false)
-
-  const selectedAccount = userAccounts.find((account) => account.id === accountId)
-  const needsVerification = Boolean(selectedAccount && !selectedAccount.verifiedAt)
   const isActive = profile?.active ?? false
   const canSave = Boolean(accountId) && roles.length > 0 && lookingFor.length > 0
 
@@ -110,17 +105,8 @@ export function DuoProfileForm({ profile, userAccounts, ddragonVersion, defaultA
         />
       </label>
 
-      {needsVerification && (
-        <div className="duo-verify-notice" role="status">
-          <p>Para buscar duo, primero confirma que esta cuenta de Riot es tuya. Así nadie puede hacerse pasar por otro jugador.</p>
-          <button type="button" className="secondary-btn" onClick={() => setIsVerifying(true)}>
-            Verificar cuenta
-          </button>
-        </div>
-      )}
-
       <div className="duo-form-actions">
-        <button type="submit" className="primary-btn" disabled={!canSave || isSaving || needsVerification}>
+        <button type="submit" className="primary-btn" disabled={!canSave || isSaving}>
           {isActive ? 'Guardar cambios' : 'Empezar a buscar'}
         </button>
         {isActive && (
@@ -129,14 +115,6 @@ export function DuoProfileForm({ profile, userAccounts, ddragonVersion, defaultA
           </button>
         )}
       </div>
-
-      {isVerifying && selectedAccount && (
-        <AccountVerificationModal
-          target={{ summoner: selectedAccount.summoner, tag: selectedAccount.tag, server: selectedAccount.server }}
-          ddragonVersion={ddragonVersion}
-          onClose={() => setIsVerifying(false)}
-        />
-      )}
     </form>
   )
 }

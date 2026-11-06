@@ -12,6 +12,7 @@ import type {
   DuoProfileInput,
   DuoProfileResponse,
   DuoRequestsResponse,
+  SocialStanding,
   SocialSummary,
 } from '../types/social'
 
@@ -25,6 +26,16 @@ export function useSocialSummary(enabled: boolean) {
     queryFn: async () => apiFetch<SocialSummary>('/social/summary', { token: await getToken() }),
     enabled,
     refetchInterval: SOCIAL_SUMMARY_POLL_MS,
+  })
+}
+
+/** The user's own strikes, readable even while they keep them out of Social. */
+export function useSocialStanding(enabled = true) {
+  const { getToken } = useAuth()
+  return useQuery({
+    queryKey: queryKeys.socialStanding(),
+    queryFn: async () => apiFetch<SocialStanding>('/social/standing', { token: await getToken() }),
+    enabled,
   })
 }
 

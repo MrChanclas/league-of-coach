@@ -23,7 +23,6 @@ model User {
   discordId             String?      @unique
   discordUsername       String?
   accounts              LolAccount[]
-  accountVerification   AccountVerification?
   duoProfile            DuoProfile?
   sentDuoRequests       DuoRequest[] @relation("DuoRequestFrom")
   receivedDuoRequests   DuoRequest[] @relation("DuoRequestTo")
@@ -31,6 +30,7 @@ model User {
   duosAsB               Duo[]        @relation("DuoUserB")
   duoMessages           DuoMessage[]
   duoReports            DuoReport[]
+  strikes               Strike[]
 }
 
 model LolAccount {
@@ -59,9 +59,6 @@ model LolAccount {
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt     DateTime @default(now())
-  // Set once the holder proved they own the Riot account (see
-  // account-verification.service.ts). Required to show up in duos.
-  verifiedAt    DateTime?
 
   // Progress of the season-wide match backfill (see matches.service.ts).
   // `seasonBackfillCursor` is the gameCreation of the oldest game already
@@ -89,21 +86,6 @@ model LolAccount {
   duosAsB                  Duo[]                     @relation("DuoAccountB")
 
   @@index([userId])
-}
-
-// A pending proof of ownership: `puuid` has to show profile icon `iconId`
-// before `expiresAt`. One per user, a new attempt replaces the last.
-model AccountVerification {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  puuid     String
-  server    String
-  summoner  String
-  tag       String
-  iconId    Int
-  expiresAt DateTime
-  createdAt DateTime @default(now())
 }
 
 // One teammate whose match list is being searched for games missing from an
@@ -419,13 +401,38 @@ model DuoMessage {
 // A report from one partner about the other; also posted to the moderation
 // channel on Discord.
 model DuoReport {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   duoId      String
-  duo        Duo      @relation(fields: [duoId], references: [id], onDelete: Cascade)
+  duo        Duo       @relation(fields: [duoId], references: [id], onDelete: Cascade)
   reporterId String
-  reporter   User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  reporter   User      @relation(fields: [reporterId], references: [id], onDelete: Cascade)
   reason     String
-  createdAt  DateTime @default(now())
+  createdAt  DateTime  @default(now())
+  // 'pending' until an admin reviews it, then 'dismissed' or 'sanctioned'.
+  status     String    @default("pending")
+  resolvedAt DateTime?
+  strikes    Strike[]
 
   @@index([duoId])
+  @@index([status])
+}
+
+// A sanction from the admin panel (see moderation.service.ts). Counts while
+// it hasn't expired or been revoked; enough of them keep the user out of
+// Social. `points` is fixed by `severity` when the strike is given.
+model Strike {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reportId  String?
+  report    DuoReport? @relation(fields: [reportId], references: [id], onDelete: SetNull)
+  severity  String // 'leve' | 'moderado' | 'grave'
+  points    Int
+  // Written by the admin and shown to the sanctioned user.
+  reason    String
+  createdAt DateTime   @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  @@index([userId])
 }

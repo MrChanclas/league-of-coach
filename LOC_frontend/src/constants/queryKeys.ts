@@ -29,6 +29,7 @@ export const queryKeys = {
   // refreshes the panel after any action.
   social: () => ['social'] as const,
   socialSummary: () => ['social', 'summary'] as const,
+  socialStanding: () => ['social', 'standing'] as const,
   socialProfile: () => ['social', 'profile'] as const,
   socialCandidates: () => ['social', 'candidates'] as const,
   socialRequests: () => ['social', 'requests'] as const,

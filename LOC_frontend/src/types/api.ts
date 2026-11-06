@@ -8,15 +8,17 @@ export type ApiFetchOptions = {
   parseJson?: boolean
 }
 
-export type AccountVerificationTarget = {
+export type ResolveAccountInput = {
   summoner: string
   tag: string
   server: string
+  userId: string
 }
 
-export type AccountVerificationChallenge = AccountVerificationTarget & {
-  iconId: number
-  expiresAt: string
+export type ResolveAccountResponse = {
+  account: { id: string }
+  created: boolean
+  message?: string
 }
 
 export type PlatformStatsResponse = {

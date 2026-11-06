@@ -4,12 +4,14 @@ import { API_URL } from '../constants/runtime'
 export { API_URL }
 
 export class ApiError extends Error {
-  // Machine-readable reason, when the backend sends one (e.g. ICON_NOT_UPDATED).
+  // Machine-readable reason, when the backend sends one (e.g. to tell one conflict from another).
   readonly code?: string
+  readonly status?: number
 
-  constructor(message: string, code?: string) {
+  constructor(message: string, code?: string, status?: number) {
     super(message)
     this.code = code
+    this.status = status
   }
 }
 
@@ -44,6 +46,7 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
     throw new ApiError(
       detailedMessage || payload?.message || `No se pudo completar la solicitud (${response.status}).`,
       payload?.code,
+      response.status,
     )
   }
 

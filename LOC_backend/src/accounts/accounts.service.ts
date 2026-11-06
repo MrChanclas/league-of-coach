@@ -29,7 +29,7 @@ export class AccountsService {
     });
     if (existing && existing.userId !== resolved.userId) {
       throw new ConflictException(
-        'Esta cuenta de Riot ya está vinculada a otro perfil.',
+        'Esta cuenta de Riot ya está vinculada a otro perfil. Si es tuya, escríbenos a captainchala@gmail.com.',
       );
     }
 

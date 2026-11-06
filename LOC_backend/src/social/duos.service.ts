@@ -4,7 +4,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { accountNotVerified } from '../auth/authz.service';
 import { QUEUE_IDS } from '../common/queue';
 import { DiscordService } from '../discord/discord.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -62,11 +61,6 @@ export class DuosService {
     }
 
     const isA = duo.userAId === userId;
-    // A user can hold a verified account and an unverified one: what counts
-    // is the account this duo runs on.
-    if (!(isA ? duo.accountA : duo.accountB).verifiedAt) {
-      throw accountNotVerified();
-    }
     return {
       duo,
       isA,
