@@ -13,9 +13,15 @@ export function DashboardHeader({
   onSyncMatches,
   isSyncing,
   lastSyncedLabel,
+  userDisplayName,
+  userDisplayEmail,
+  onLogout,
+  onReplayOnboarding,
 }: DashboardHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSyncSheetOpen, setIsSyncSheetOpen] = useState(false)
+  const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false)
+  const userInitials = userDisplayName.trim().slice(0, 2).toUpperCase() || '?'
 
   const contextLabel = activeAccount ? `${activeAccount.server} · LEAGUE OF COACH` : 'LEAGUE OF COACH'
   // Sin sincronizar todavía en esta sesión = oro; ya sincronizó = verde — el
@@ -158,6 +164,49 @@ export function DashboardHeader({
           }}
         >
           {isSyncing ? 'Sincronizando…' : 'Sincronizar ahora'}
+        </button>
+      </BottomSheet>
+
+      {/* En mobile el sidebar (y su menú de perfil) está oculto: este botón es
+          la única vía para salir o repetir el recorrido. Siempre visible, haya
+          o no cuentas vinculadas. */}
+      <button
+        type="button"
+        className="header-profile-btn-compact"
+        onClick={() => setIsProfileSheetOpen(true)}
+        aria-label="Perfil y sesión"
+      >
+        {userInitials}
+      </button>
+
+      <BottomSheet isOpen={isProfileSheetOpen} onClose={() => setIsProfileSheetOpen(false)} ariaLabel="Perfil y sesión">
+        <div className="sheet-label">PERFIL</div>
+        <div className="sheet-profile">
+          <div className="avatar-tile avatar-tile--md">{userInitials}</div>
+          <div className="sheet-account-text">
+            <div className="sheet-account-name">{userDisplayName}</div>
+            <div className="sheet-account-tag">{userDisplayEmail}</div>
+          </div>
+        </div>
+        <button
+          type="button"
+          className="sheet-ghost-btn"
+          onClick={() => {
+            setIsProfileSheetOpen(false)
+            onReplayOnboarding()
+          }}
+        >
+          Ver el recorrido
+        </button>
+        <button
+          type="button"
+          className="sheet-ghost-btn sheet-ghost-btn--danger"
+          onClick={() => {
+            setIsProfileSheetOpen(false)
+            onLogout()
+          }}
+        >
+          Salir
         </button>
       </BottomSheet>
     </header>

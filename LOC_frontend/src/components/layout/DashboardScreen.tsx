@@ -188,6 +188,10 @@ export function DashboardScreen({
           onSyncMatches={onSyncMatches}
           isSyncing={isSyncing}
           lastSyncedLabel={lastSyncedLabel}
+          userDisplayName={userDisplayName}
+          userDisplayEmail={userDisplayEmail}
+          onLogout={onLogout}
+          onReplayOnboarding={handleReplayOnboarding}
         />
 
         <TwitchLiveBanner />
