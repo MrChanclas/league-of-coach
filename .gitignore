@@ -42,3 +42,7 @@ infra/
 
 # Personal notes (not part of the repo)
 GUIA_PERSONAL.md
+MIGRACION_SUPABASE.md
+CONTEXTO_MIGRACION.md
+# Local database dumps from the Supabase migration (user data)
+dumps/

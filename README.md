@@ -8,7 +8,7 @@ En producción: https://leagueofcoach.pro (API en https://api.leagueofcoach.pro)
 
 - **Backend** ([LOC_backend/](LOC_backend/)): NestJS 11, Prisma 7 y PostgreSQL. Autenticación con Clerk, validación con Zod, monitoreo con Sentry y alertas en Discord.
 - **Frontend** ([LOC_frontend/](LOC_frontend/)): React 19, Vite, TypeScript y TanStack Query.
-- **Infraestructura**: Google Cloud Run (backend y frontend), Cloud SQL (Postgres) y Cloud Scheduler para las tareas periódicas.
+- **Infraestructura**: Google Cloud Run (backend y frontend), Supabase (Postgres) y Cloud Scheduler para las tareas periódicas y el backup semanal de la base.
 
 ## Funcionalidades
 

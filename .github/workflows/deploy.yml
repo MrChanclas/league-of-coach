@@ -14,6 +14,8 @@ env:
   AR_HOST: ${{ vars.GCP_REGION }}-docker.pkg.dev
   BACKEND_IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.AR_REPO }}/backend:${{ github.sha }}
   FRONTEND_IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.AR_REPO }}/frontend:${{ github.sha }}
+  BACKUP_IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.AR_REPO }}/db-backup:${{ github.sha }}
+  BACKUP_BUCKET: ${{ vars.GCP_PROJECT_ID }}-db-backups
 
 jobs:
   verify:
@@ -42,14 +44,19 @@ jobs:
           docker build -t "${BACKEND_IMAGE}" .
           docker push "${BACKEND_IMAGE}"
 
+      # Migrations go through Supabase's session pooler (port 5432), not the
+      # transaction pooler the app uses: Prisma's migration engine needs a
+      # session of its own (advisory lock, multi-statement migrations).
+      # --clear-cloudsql-instances detaches the old Cloud SQL instance, which
+      # a redeploy would otherwise carry over from the previous revision.
       - name: Run Prisma migrations (Cloud Run Job)
         run: |
           gcloud run jobs deploy loc-migrate \
             --image="${BACKEND_IMAGE}" \
             --region="${REGION}" \
             --service-account="${{ vars.RUNTIME_SA_EMAIL }}" \
-            --set-cloudsql-instances="${{ vars.CLOUDSQL_CONNECTION_NAME }}" \
-            --set-secrets="DATABASE_URL=loc-database-url:latest" \
+            --clear-cloudsql-instances \
+            --set-secrets="DATABASE_URL=loc-database-session-url:latest" \
             --command="npx" \
             --args="prisma,migrate,deploy" \
             --max-retries=0 \
@@ -57,11 +64,12 @@ jobs:
           gcloud run jobs execute loc-migrate --region="${REGION}" --wait
 
       # --max-instances caps total database connections: each instance opens
-      # a pool of up to DATABASE_POOL_MAX (8, see PrismaService), and Cloud
-      # SQL db-custom-1-3840 allows 100 connections with some reserved.
-      # 10 x 8 = 80 leaves headroom for the migration job and manual
-      # sessions. Raise both numbers only together with a bigger database
-      # tier.
+      # a pool of up to DATABASE_POOL_MAX (8, see PrismaService) against
+      # Supabase's transaction pooler, which takes up to 200 clients on the
+      # free plan. 10 x 8 = 80 leaves plenty of headroom. Raise both numbers
+      # only together, and check the pooler's limit for the plan in use.
+      # DATABASE_SSL_CA is Supabase's root certificate: PrismaService verifies
+      # the database against it.
       - name: Deploy backend to Cloud Run
         run: |
           gcloud run deploy loc-backend \
@@ -70,8 +78,8 @@ jobs:
             --platform=managed \
             --max-instances=10 \
             --service-account="${{ vars.RUNTIME_SA_EMAIL }}" \
-            --add-cloudsql-instances="${{ vars.CLOUDSQL_CONNECTION_NAME }}" \
-            --set-secrets="DATABASE_URL=loc-database-url:latest,CLERK_SECRET_KEY=loc-clerk-secret-key:latest,RIOT_API_KEY=loc-riot-api-key:latest,INTERNAL_POLL_SECRET=loc-internal-poll-secret:latest,DISCORD_SESSION_WEBHOOK_URL=loc-discord-session-webhook:latest,DISCORD_ISSUES_WEBHOOK_URL=loc-discord-issues-webhook:latest,DISCORD_DEPLOYS_WEBHOOK_URL=loc-discord-deploys-webhook:latest,DISCORD_FEEDBACK_WEBHOOK_URL=loc-discord-feedback-webhook:latest,TWITCH_CLIENT_ID=loc-twitch-client-id:latest,TWITCH_CLIENT_SECRET=loc-twitch-client-secret:latest,ADMIN_USERNAME=loc-admin-username:latest,ADMIN_PASSWORD_HASH=loc-admin-password-hash:latest,ADMIN_SESSION_SECRET=loc-admin-session-secret:latest" \
+            --clear-cloudsql-instances \
+            --set-secrets="DATABASE_URL=loc-database-pooler-url:latest,DATABASE_SSL_CA=loc-database-ca:latest,CLERK_SECRET_KEY=loc-clerk-secret-key:latest,RIOT_API_KEY=loc-riot-api-key:latest,INTERNAL_POLL_SECRET=loc-internal-poll-secret:latest,DISCORD_SESSION_WEBHOOK_URL=loc-discord-session-webhook:latest,DISCORD_ISSUES_WEBHOOK_URL=loc-discord-issues-webhook:latest,DISCORD_DEPLOYS_WEBHOOK_URL=loc-discord-deploys-webhook:latest,DISCORD_FEEDBACK_WEBHOOK_URL=loc-discord-feedback-webhook:latest,TWITCH_CLIENT_ID=loc-twitch-client-id:latest,TWITCH_CLIENT_SECRET=loc-twitch-client-secret:latest,ADMIN_USERNAME=loc-admin-username:latest,ADMIN_PASSWORD_HASH=loc-admin-password-hash:latest,ADMIN_SESSION_SECRET=loc-admin-session-secret:latest" \
             --set-env-vars="^|^RIOT_DEFAULT_SERVER=LAS|FRONTEND_URL=https://leagueofcoach.pro,https://www.leagueofcoach.pro|SENTRY_DSN=${{ vars.BACKEND_SENTRY_DSN }}|CURRENT_SEASON_START_DATE=${{ vars.CURRENT_SEASON_START_DATE }}" \
             --port=8080 \
             --allow-unauthenticated \
@@ -166,5 +174,47 @@ jobs:
             --http-method=POST \
             --update-headers="X-Internal-Secret=${POLL_SECRET}" \
             --attempt-deadline=300s \
+            --format=none \
+            --quiet
+
+      # Supabase's free plan keeps no backups, so a Cloud Run Job dumps the
+      # database to Cloud Storage once a week (see ops/db-backup). The bucket
+      # deletes dumps older than 8 weeks on its own (lifecycle rule, set up
+      # once by hand). Non-blocking like the other schedules: a failure here
+      # must not fail a deploy that already shipped.
+      - name: Build & push database backup image
+        continue-on-error: true
+        working-directory: ops/db-backup
+        run: |
+          docker build -t "${BACKUP_IMAGE}" .
+          docker push "${BACKUP_IMAGE}"
+
+      - name: Deploy and schedule weekly database backup
+        continue-on-error: true
+        run: |
+          gcloud run jobs deploy loc-db-backup \
+            --image="${BACKUP_IMAGE}" \
+            --region="${REGION}" \
+            --service-account="${{ vars.RUNTIME_SA_EMAIL }}" \
+            --set-secrets="DATABASE_URL=loc-database-session-url:latest,DATABASE_SSL_CA=loc-database-ca:latest" \
+            --set-env-vars="BACKUP_BUCKET=${BACKUP_BUCKET}" \
+            --max-retries=2 \
+            --task-timeout=15m \
+            --quiet
+          JOB_URI="https://run.googleapis.com/v2/projects/${PROJECT_ID}/locations/${REGION}/jobs/loc-db-backup:run"
+          gcloud scheduler jobs create http loc-db-backup \
+            --location="${REGION}" \
+            --schedule="0 9 * * 1" \
+            --uri="${JOB_URI}" \
+            --http-method=POST \
+            --oauth-service-account-email="${{ vars.RUNTIME_SA_EMAIL }}" \
+            --format=none \
+            --quiet \
+          || gcloud scheduler jobs update http loc-db-backup \
+            --location="${REGION}" \
+            --schedule="0 9 * * 1" \
+            --uri="${JOB_URI}" \
+            --http-method=POST \
+            --oauth-service-account-email="${{ vars.RUNTIME_SA_EMAIL }}" \
             --format=none \
             --quiet
