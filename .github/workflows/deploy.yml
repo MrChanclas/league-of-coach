@@ -47,15 +47,16 @@ jobs:
       # Migrations go through Supabase's session pooler (port 5432), not the
       # transaction pooler the app uses: Prisma's migration engine needs a
       # session of its own (advisory lock, multi-statement migrations).
-      # --clear-cloudsql-instances detaches the old Cloud SQL instance, which
-      # a redeploy would otherwise carry over from the previous revision.
+      # --set-cloudsql-instances="" detaches the old Cloud SQL instance, which
+      # a redeploy would otherwise carry over (`jobs deploy` has no
+      # --clear-cloudsql-instances, unlike `gcloud run deploy`).
       - name: Run Prisma migrations (Cloud Run Job)
         run: |
           gcloud run jobs deploy loc-migrate \
             --image="${BACKEND_IMAGE}" \
             --region="${REGION}" \
             --service-account="${{ vars.RUNTIME_SA_EMAIL }}" \
-            --clear-cloudsql-instances \
+            --set-cloudsql-instances="" \
             --set-secrets="DATABASE_URL=loc-database-session-url:latest" \
             --command="npx" \
             --args="prisma,migrate,deploy" \
